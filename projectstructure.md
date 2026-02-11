@@ -2,7 +2,7 @@
 hier ist der Projektstrukturplan
 
 ```mermaid
-flowchart TD
+flowchart LR
 
     A[Project Start] --> B[Requirements & Planning]
     B --> B1[Stakeholder Interviews]
