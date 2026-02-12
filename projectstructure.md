@@ -6,6 +6,15 @@ flowchart LR
 
     A[SAFT Work Packages]
 
+    A --> Z[AP0 Spectrogram Core]
+    
+    Z --> Z1[AP0.1 Spectrogram Data Model Definition 6h]
+    Z --> Z2[AP0.2 Canvas Spectrogram Renderer 10h]
+    Z --> Z3[AP0.3 Audio ↔ Spectrogram Conversion 14h]
+    Z --> Z4[AP0.4 Spectrogram Coordinate System 6h]
+    Z --> Z5[AP0.5 Safe Spectrogram Write Helpers 8h]
+    Z --> Z6[AP0.6 Spectrogram Save / Load Format 6h]
+
     A --> B[AP1 Audio Import and Decode]
     B --> B1[AP1.1 File Upload Format Check 6h]
     B --> B2[AP1.2 Audio Parsing WebAudio 10h]
@@ -49,4 +58,7 @@ flowchart LR
     J --> J1[AP8.1 Large Audio Handling 8h]
     J --> J2[AP8.2 Invalid Files Errors 6h]
     J --> J3[AP8.3 Cross Browser Tests 8h]
+
+    
+
 ```
