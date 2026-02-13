@@ -84,7 +84,7 @@ gantt
 
 %% -- Iteration 6 --
   section Iteration 6 - <br/>Image Encoding + Testing - <br/>(Mar 19 → Mar 25)
-  Iteration 6                  :i6, 2026-03-19, 5d
+  Iteration 6                  :i6, 2026-03-19, 4d
   Milestone I6 - System Complete          :milestone, mi6, 2026-03-25, 0d
   MS 4 Abschlusspräsentation              :milestone, ms4, 2026-03-27, 0d
   
@@ -94,5 +94,14 @@ gantt
   AP8.2 Invalid Files Errors               :ap8_2, after ap8_1, 0.75d
   AP8.3 Cross Browser Tests                :ap8_3, after ap8_2, 1d
 
+
+%% -- Iteration 7 --
+  section Iteration 6 - <br/>Documentation & Automatic tests - <br/>(Mar 27 → Apr 7)
+  Iteration 7                  :i7, 2026-03-27, 7d
+  Milestone I7 - Tests created          :milestone, mi7, 2026-04-07, 0d
+  MS 4' Dokumentation, Tests und Implementierung              :milestone, ms4b, 2026-04-10, 0d
+  
+  %% -- Working Packages
+  
 
 ```
