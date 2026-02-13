@@ -98,7 +98,7 @@ gantt
 %% -- Iteration 7 --
   section Iteration 6 - <br/>Documentation & Automatic tests - <br/>(Mar 27 → Apr 7)
   Iteration 7                  :i7, 2026-03-27, 7d
-  Milestone I7 - Tests created          :milestone, mi7, 2026-04-07, 0d
+  Milestone I7 - Tests and Docs          :milestone, mi7, 2026-04-07, 0d
   MS 4' Dokumentation, Tests und Implementierung              :milestone, ms4b, 2026-04-10, 0d
   
   %% -- Working Packages
