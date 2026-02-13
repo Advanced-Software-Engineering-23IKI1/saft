@@ -18,7 +18,7 @@ gantt
 %% Milestone I2 - Requirements          :milestone, mi2, 2026-02-04, 0d
 
 %% -- Iteration 3 --
-  section Iteration 3 - Planning & Prototype (Core Foundation AP0 + AP6 base) - (Feb 5 → Feb 18)
+  section Iteration 3 - <br/> Planning & Prototype <br/>(Core Foundation AP0 + AP6 base) - <br/>(Feb 5 → Feb 18)
   Iteration 3                  :i3, 2026-02-05, 9d
   Milestone I3 - Planning and Prototype   :milestone, mi3, 2026-02-18, 0d
   MS 2 Requirements, Planning & Prototype : milestone, ms2, 2026-02-20, 0d
@@ -39,7 +39,7 @@ gantt
 
 
 %% -- Iteration 4 --
-  section Iteration 4 - Producers (AP1 + AP2) + UI start - (Feb 19 → Mar 4)
+  section Iteration 4 - <br/>Producers (AP1 + AP2) + UI start - <br/>(Feb 19 → Mar 4)
   Iteration 4                  :i4, 2026-02-19, 9d
   Milestone I4 - Audio Input Ready          :milestone, mi4, 2026-03-04, 0d
   MS 3 Architecture & Design              : milestone, ms3, 2026-03-05, 0d
@@ -60,7 +60,7 @@ gantt
   AP2.4 Offline PWA Service Worker          :ap2_4, after ap2_3, 1.5d
 
 %% -- Iteration 5 --
-  section Iteration 5 - Editing + Reverse Engine - (Mar 5 → Mar 18)
+  section Iteration 5 - <br/>Editing + Reverse Engine - <br/>(Mar 5 → Mar 18)
   Iteration 5                  :i5, 2026-03-05, 9d
   Milestone I5 - Editing Complete          :milestone, mi5, 2026-03-18, 0d
   
@@ -81,7 +81,7 @@ gantt
 
 
 %% -- Iteration 6 --
-  section Iteration 6 - Image Encoding + Testing - (Mar 19 → Mar 25)
+  section Iteration 6 - <br/>Image Encoding + Testing - <br/>(Mar 19 → Mar 25)
   Iteration 6                  :i6, 2026-03-19, 5d
   Milestone I6 - System Complete          :milestone, mi6, 2026-03-25, 0d
   MS 4 Abschlusspräsentation              :milestone, ms4, 2026-03-27, 0d
