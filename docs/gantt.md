@@ -5,6 +5,8 @@ gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
     excludes    weekends
+    todayMarker stroke-width:.5, stroke:#ff0000
+
 
 %% Iterations (from Github) every 9 days
 
