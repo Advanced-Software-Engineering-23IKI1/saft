@@ -1,5 +1,4 @@
-@import './base.css';
-
+@import "tailwindcss";
 #app {
   max-width: 1280px;
   margin: 0 auto;
@@ -31,5 +30,10 @@ a,
     display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 0 2rem;
+  }
+}
+@layer base {
+  html {
+    font-family: ui-sans-serif, system-ui, sans-serif;
   }
 }
