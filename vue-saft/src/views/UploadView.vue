@@ -1,3 +1,25 @@
+<script setup>
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { Upload, RotateCcw } from 'lucide-vue-next'
+import Card from '@/components/ui/Card.vue'
+import Button from '@/components/ui/Button.vue'
+import { getState, setHasUpload, resetState } from '@/store/saftState'
+
+const router = useRouter()
+const state = computed(() => getState())
+
+function goNext() {
+  setHasUpload(true)
+  router.push({ name: 'canvas' })
+}
+
+function reset() {
+  resetState()
+  router.push({ name: 'upload' })
+}
+</script>
+
 <template>
   <section class="space-y-6">
     <Card>
@@ -24,25 +46,3 @@
     </div>
   </section>
 </template>
-
-<script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { Upload, RotateCcw } from 'lucide-vue-next'
-import Card from '@/components/ui/Card.vue'
-import Button from '@/components/ui/Button.vue'
-import { getState, setHasUpload, resetState } from '@/store/saftState'
-
-const router = useRouter()
-const state = computed(() => getState())
-
-function goNext() {
-  setHasUpload(true)
-  router.push({ name: 'canvas' })
-}
-
-function reset() {
-  resetState()
-  router.push({ name: 'upload' })
-}
-</script>
