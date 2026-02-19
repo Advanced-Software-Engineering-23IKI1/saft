@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <title>S.A.F.T. Import</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./saft-palette.js"></script>
+    <script>
+        tailwind.config = window.tailwindConfig;
+    </script>
+
+</head>
+
+<body class="min-h-screen bg-slate-100 flex items-center justify-center"
+    style="background-image: url('./img/background.png');">
+    <div class="w-full max-w-sm mx-auto p-4">
+        <div class="flex flex-col gap-3 mb-4">
+            <div class="flex justify-center mb-6">
+                <button class=" w-24 h-24
+                            bg-saft-main-500
+                            hover:bg-saft-main-600
+                            active:scale-[0.95] 
+                            rounded-full
+                            flex items-center justify-center
+                            shadow-lg 
+                            transition-all duration-200
+                            touch-manipulation">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                </button>
+            </div>
+            <button class="w-full py-4 text-lg rounded-lg bg-saft-mint-600 text-white 
+           active:scale-[0.98] touch-manipulation hover:bg-saft-mint-700">
+                Button 1
+            </button>
+
+            <button class="w-full py-4 text-lg rounded-lg bg-orange-600 text-white 
+           active:scale-[0.98] touch-manipulation hover:bg-orange-700">
+                Button 2
+            </button>
+        </div>
+
+        <!-- Eingerahmtes Fenster für Canvas -->
+        <div class="border border-gray-300 rounded bg-white h-80 flex items-center justify-center">
+            <!-- Später Canvas hier -->
+            <!-- <canvas id="myCanvas" class="w-full h-full"></canvas> -->
+            <span class="text-gray-400 text-sm">Canvas-Bereich</span>
+        </div>
+    </div>
+</body>
+
+</html>
