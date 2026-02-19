@@ -14,7 +14,7 @@ const steps = computed(() => ([
 function stepClass(enabled, active) {
   if (!enabled) return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-slate-800 text-slate-400 cursor-not-allowed'
   if (active) return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white'
-  return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-indigo-600/20 text-indigo-200 hover:bg-indigo-600/30'
+  return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-indigo-600/50 text-indigo-200 hover:bg-indigo-600/30'
 }
 </script>
 
