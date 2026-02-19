@@ -1,21 +1,16 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Wand2 } from 'lucide-vue-next'
+import { Wand2 } from 'lucide-vue-next'
 import Card from '@/components/ui/Card.vue'
-import Button from '@/components/ui/Button.vue'
 import { getState, setHasExport } from '@/store/saftState'
 
 const router = useRouter()
 const state = computed(() => getState())
 
-function back() {
-  router.push({ name: 'upload' })
-}
-
-function goNext() {
+function goNext(navigate) {
   setHasExport(true)
-  router.push({ name: 'download' })
+  navigate()
 }
 </script>
 
@@ -28,15 +23,16 @@ function goNext() {
       </p>
 
       <div class="mt-6 flex flex-wrap gap-3">
-        <Button variant="outline" @click="back">
-          <ArrowLeft class="h-4 w-4" />
-          Zurück zu Upload
-        </Button>
+        <RouterLink :to="{ name: 'download' }" custom v-slot="{ navigate }">
+            <button
+            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            @click="goNext(navigate)"
+            >
+                <Wand2 class="h-4 w-4" />
+                „Export ready“ → Download
+            </button>
+        </RouterLink>
 
-        <Button variant="success" @click="goNext">
-          <Wand2 class="h-4 w-4" />
-          „Export ready“ → Download
-        </Button>
       </div>
     </Card>
 
@@ -45,4 +41,3 @@ function goNext() {
     </div>
   </section>
 </template>
-
