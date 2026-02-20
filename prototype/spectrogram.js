@@ -3,6 +3,8 @@ const math = require('mathjs');
 const { fft } = require('./fft');
 const { createCanvas } = require('canvas');
 const fs = require('fs');
+const path = require('path');
+
 
 /**
  * @brief Computes the magnitude spectrogram of a real-valued audio signal.
@@ -241,6 +243,9 @@ function save_to_png(spectrogram, outputPath = 'spectrogram.png') {
             imageData.data[idx + 3] = 255;
         }
     }
+
+    const dir = path.dirname(outputPath);
+    fs.mkdirSync(dir, { recursive: true });
 
     ctx.putImageData(imageData, 0, 0);
     fs.writeFileSync(outputPath, canvas.toBuffer('image/png'));

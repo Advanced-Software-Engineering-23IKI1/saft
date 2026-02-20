@@ -39,3 +39,7 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 ../prototype/node_modules
+
+
+*.png
+*.wav

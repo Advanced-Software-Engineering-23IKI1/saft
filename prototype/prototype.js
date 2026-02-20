@@ -4,7 +4,7 @@ const wav = require('node-wav');
 const math = require('mathjs');
 const { computeSpectrogram, save_to_png } = require('./spectrogram');
 
-const filePath = "./testfiles/test.wav";
+const filePath = "./input/808 pop.wav";
 
 try {
     const buffer = fs.readFileSync(filePath);
@@ -42,7 +42,7 @@ try {
 
     console.log('\nFirst 10 time samples:', result.channelData[0].slice(0, 10));
 
-    save_to_png(spectrogram, `spectrogram-${Date.now()}.png`);
+    save_to_png(spectrogram, `./output/spectrogram-${Date.now()}.png`);
 
 } catch (err) {
     console.error('Failed to read WAV file:', err);
