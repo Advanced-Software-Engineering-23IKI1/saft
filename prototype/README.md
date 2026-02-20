@@ -1,11 +1,12 @@
 # FFT und Rendering Prototyp
 
+## Begründung
+Es wurde die kritische Komponente der Umwandlung einer `.wav` Audiodatei in en Png Bild umgesetzt. Dies wurde ausgewählt da es einerseits komplex ist und essentiell ist für die funktionsweise von SAFT.
 
 ## Installation
 getestet und ausgeführt auf
 - npm version   >= 11.6.2
 - node version  >= v24.13.0
-
 
 ## Ausführung
 ````bash
