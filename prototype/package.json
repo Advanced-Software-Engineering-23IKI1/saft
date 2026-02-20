@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "canvas": "^3.2.1",
+    "fft-js": "^0.0.12",
+    "mathjs": "^15.1.1",
+    "node-wav": "^0.0.2",
+    "pngjs": "^7.0.0"
+  }
+}
