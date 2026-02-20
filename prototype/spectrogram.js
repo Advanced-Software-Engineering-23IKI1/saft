@@ -1,9 +1,10 @@
-
-const math = require('mathjs');
-const { fft } = require('./fft');
+const { fft } = require('./fft');         // local module
 const { createCanvas } = require('canvas');
 const fs = require('fs');
 const path = require('path');
+const math = require('mathjs');
+const { PNG } = require('pngjs');
+
 
 
 /**
@@ -188,15 +189,9 @@ function save_to_png(
 
     const visibleBins = maxBin - minBin + 1;
 
-
-    const maxWidth = 2000; 
-    const canvasHeight = 1024
-    const canvasWidth = Math.min(timeFrames, maxWidth);
-
-    const canvas = createCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext('2d');
-    const imageData = ctx.createImageData(canvasWidth, canvasHeight);
-
+    const height = visibleBins
+    const width = timeFrames;
+    const pixels = new Uint8ClampedArray(width * height * 4); // RGBA
 
     // Compute global dB range 
     let minDB = Infinity;
@@ -229,10 +224,16 @@ function save_to_png(
     for (let t = 0; t < timeFrames; t++) {
         const frame = data[t] || [];
 
-        for (let y = 0; y < canvasHeight; y++) {
+        for (let y = 0; y < height; y++) {
 
-            const binFloat = minBin + (y / canvasHeight) * visibleBins;
+            // Logarithmic mapping:
+            // const logMin = Math.log10(minBin + 1);
+            // const logMax = Math.log10(maxBin + 1);
+            // const logBin = logMin + (y / height) * (logMax - logMin);
+            // const binFloat = Math.pow(10, logBin) - 1;
+            const binFloat = minBin + (y / height) * visibleBins;
             const bin = Math.floor(binFloat);
+
 
             const val = Math.max(frame[bin] || 0, 1e-12);
             const db = 20 * Math.log10(val);
@@ -242,23 +243,27 @@ function save_to_png(
 
             const [r, g, b] = colormap(clamped);
 
-            const flippedY = canvasHeight - 1 - y;
-            const idx = (flippedY * canvasWidth + t) * 4;
+            const flippedY = height - 1 - y;
+            const idx = (flippedY * width + t) * 4;
 
-            imageData.data[idx] = r;
-            imageData.data[idx + 1] = g;
-            imageData.data[idx + 2] = b;
-            imageData.data[idx + 3] = 255;
+            pixels[idx] = r;
+            pixels[idx + 1] = g;
+            pixels[idx + 2] = b;
+            pixels[idx + 3] = 255;
         }
     }
 
-ctx.putImageData(imageData, 0, 0);
 
-const dir = path.dirname(outputPath);
-fs.mkdirSync(dir, { recursive: true });
+    const png = new PNG({ width, height });
+    png.data = pixels; // assign your pixel array directly
 
-fs.writeFileSync(outputPath, canvas.toBuffer('image/png'));
-console.log(`PNG saved: ${outputPath}`);
+    // Ensure output directory exists
+    const dir = path.dirname(outputPath);
+    fs.mkdirSync(dir, { recursive: true });
+
+    // Write PNG file
+    png.pack().pipe(fs.createWriteStream(outputPath))
+    .on('finish', () => console.log(`PNG saved: ${outputPath}`));
 }
 
 

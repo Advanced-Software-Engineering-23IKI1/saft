@@ -12,7 +12,7 @@ try {
 
     const windowSize = 2048
     const hopSize = 125
-    const maxFreq = 32000
+    const maxFreq = 64000
     const minFreq = 0
 
     
