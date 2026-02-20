@@ -1,18 +1,27 @@
-// read-wav.js
 const fs = require('fs');
 const wav = require('node-wav');
 const math = require('mathjs');
 const { computeSpectrogram, save_to_png } = require('./spectrogram');
 
-const filePath = "./input/test.wav";
 
 try {
+    const args = process.argv.slice(2);
+
+
+    let filePath = "./input/test.wav";
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === "-f") {
+            filePath = args[i + 1];
+            console.log("File:", filePath);
+        }
+    }
+
     const buffer = fs.readFileSync(filePath);
     const result = wav.decode(buffer);
 
     const windowSize = 2048
     const hopSize = 125
-    const maxFreq = 64000
+    const maxFreq = 128000
     const minFreq = 0
 
     

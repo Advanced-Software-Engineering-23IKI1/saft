@@ -1,5 +1,4 @@
 const { fft } = require('./fft');         // local module
-const { createCanvas } = require('canvas');
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
