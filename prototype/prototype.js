@@ -4,11 +4,18 @@ const wav = require('node-wav');
 const math = require('mathjs');
 const { computeSpectrogram, save_to_png } = require('./spectrogram');
 
-const filePath = "./input/808 pop.wav";
+const filePath = "./input/test.wav";
 
 try {
     const buffer = fs.readFileSync(filePath);
     const result = wav.decode(buffer);
+
+    const windowSize = 2048
+    const hopSize = 125
+    const maxFreq = 32000
+    const minFreq = 0
+
+    
     // Check raw audio data
     console.log('Raw samples stats:');
     console.log('First 10:', result);
@@ -31,7 +38,9 @@ try {
         console.error('WAV file is empty');
         process.exit(1);
     };
-    const spectrogram = computeSpectrogram(result.channelData[0], result.sampleRate);
+
+    const spectrogram = computeSpectrogram(result.channelData[0], result.sampleRate,{windowSize, hopSize});
+
     console.log('\n=== SPECTROGRAM RESULTS ===');
     console.log(`Shape: ${spectrogram.freqBins} freq bins × ${spectrogram.timeFrames} time frames`);
     console.log(`Freq resolution: ${spectrogram.freqResolution.toFixed(1)} Hz`);
@@ -42,7 +51,7 @@ try {
 
     console.log('\nFirst 10 time samples:', result.channelData[0].slice(0, 10));
 
-    save_to_png(spectrogram, `./output/spectrogram-${Date.now()}.png`);
+    save_to_png(spectrogram,result.sampleRate, `./output/spectrogram-${Date.now()}.png`, minFreq, maxFreq);
 
 } catch (err) {
     console.error('Failed to read WAV file:', err);

@@ -87,7 +87,7 @@ const path = require('path');
 function computeSpectrogram(samples, sampleRate, params = {}) {
     console.log('DEBUG: samples.length:', samples.length);
 
-    const { windowSize = 1024, hopSize = 256 } = params;
+    const { windowSize = 2048, hopSize = 512 } = params;
 
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
@@ -161,96 +161,106 @@ function applyHannWindow(frame, size) {
     return out;
 }
 
-function save_to_png(spectrogram, outputPath = 'spectrogram.png') {
+
+function save_to_png(
+    spectrogram,
+    sampleRate,
+    outputPath = 'spectrogram.png',
+    minFreq = 0,
+    maxFreq = sampleRate / 2
+) {
     const { data, freqBins, timeFrames } = spectrogram;
 
-    console.log('\n🔍 SPECTROGRAM DEBUG:');
-    console.log(`Shape: ${freqBins} freq × ${timeFrames} time`);
+    // Compute frequency resolution
+    // freqBins = windowSize/2 + 1
+    const windowSize = (freqBins - 1) * 2;
+    const freqResolution = sampleRate / windowSize;
 
-    console.log('First 5 time frames (10 freq bins each):');
-    for (let t = 0; t < Math.min(5, timeFrames); t++) {
-        const row = (data[t] || []).slice(0, 10).map(v => (Number.isFinite(v) ? v : 0).toExponential(2));
-        console.log(`  t=${t}: [${row.join(', ')}]`);
+    const minBin = Math.max(0, Math.floor(minFreq / freqResolution));
+    const maxBin = Math.min(freqBins - 1, Math.ceil(maxFreq / freqResolution));
+
+    if (minBin >= maxBin) {
+        throw new Error("Invalid frequency range");
     }
 
-    let totalEnergy = 0, dcEnergy = 0, highFreqEnergy = 0;
-    for (let t = 0; t < timeFrames; t++) {
-        const frame = data[t];
-        if (!Array.isArray(frame)) continue;
-        for (let f = 0; f < Math.min(freqBins, frame.length); f++) {
-            const val = Number.isFinite(frame[f]) ? frame[f] : 0;
-            totalEnergy += val;
-            if (f === 0) dcEnergy += val;
-            if (f > freqBins * 0.8) highFreqEnergy += val; // Top 20%
-        }
-    }
+    console.log(`Showing frequencies ${minFreq}Hz – ${maxFreq}Hz`);
+    console.log(`Bins ${minBin} – ${maxBin}`);
 
-    if (totalEnergy > 0) {
-        console.log(`Total energy: ${totalEnergy.toExponential(2)}`);
-        console.log(`DC energy (f=0): ${(dcEnergy / totalEnergy * 100).toFixed(1)}%`);
-        console.log(`High freq energy: ${(highFreqEnergy / totalEnergy * 100).toFixed(1)}%`);
-    } else {
-        console.log('Total energy: 0 (spectrogram appears silent)');
-    }
+    const visibleBins = maxBin - minBin + 1;
 
-    // QUICK VISUALIZATION TEST - plot first 100 time frames at some freq bins
-    const testData = [];
-    const testBins = [0, 10, 50, 100, 200].map(b => Math.min(b, freqBins - 1));
-    for (let t = 0; t < Math.min(100, timeFrames); t++) {
-        const frame = data[t] || [];
-        testData.push(testBins.map(b => Number.isFinite(frame[b]) ? frame[b] : 0));
-    }
 
-    console.table(testData.map(row => ({
-        DC: row[0].toExponential(2),
-        'bin10': row[1].toExponential(2),
-        'bin50': row[2].toExponential(2),
-        'bin100': row[3].toExponential(2),
-        'bin200': row[4].toExponential(2)
-    })));
+    const maxWidth = 2000; 
+    const canvasHeight = 1024
+    const canvasWidth = Math.min(timeFrames, maxWidth);
 
-    // Simple grayscale PNG 
-    const canvasWidth = 800;
-    const canvasHeight = 200; // low freqs
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
     const imageData = ctx.createImageData(canvasWidth, canvasHeight);
 
-    const maxT = Math.min(400, timeFrames);
-    const maxF = Math.min(200, freqBins);
 
-    for (let t = 0; t < maxT; t++) {
+    // Compute global dB range 
+    let minDB = Infinity;
+    let maxDB = -Infinity;
+
+    for (let t = 0; t < timeFrames; t++) {
+        const frame = data[t] || [];
+        for (let f = minBin; f <= maxBin; f++) {
+            const val = Math.max(frame[f] || 0, 1e-12);
+            const db = 20 * Math.log10(val);
+            if (db < minDB) minDB = db;
+            if (db > maxDB) maxDB = db;
+        }
+    }
+
+    // Clamp dynamic range (better visuals)
+    maxDB = Math.max(maxDB, -10);
+    minDB = maxDB - 80; 
+
+    //  Colormap (Inferno-like smooth gradient) 
+    function colormap(x) {
+        const r = Math.min(255, Math.max(0, 255 * Math.pow(x, 0.5)));
+        const g = Math.min(255, Math.max(0, 255 * Math.pow(x, 1.5)));
+        const b = Math.min(255, Math.max(0, 255 * Math.pow(x, 3)));
+        return [r, g, b];
+    }
+
+
+    // Render 
+    for (let t = 0; t < timeFrames; t++) {
         const frame = data[t] || [];
 
-        let maxFrame = 0;
-        for (let f = 0; f < maxF; f++) {
-            const v = Number.isFinite(frame[f]) ? frame[f] : 0;
-            if (v > maxFrame) maxFrame = v;
-        }
+        for (let y = 0; y < canvasHeight; y++) {
 
-        for (let f = 0; f < maxF; f++) {
-            const val = Number.isFinite(frame[f]) ? frame[f] : 0;
-            const norm = maxFrame > 0 ? (val / maxFrame) : 0;
-            const intensity = Math.max(0, Math.min(255, Math.floor(255 * norm)));
+            const binFloat = minBin + (y / canvasHeight) * visibleBins;
+            const bin = Math.floor(binFloat);
 
-            const x = Math.floor(t * canvasWidth / maxT);
-            const y = Math.floor(f * canvasHeight / maxF);
-            const idx = (y * canvasWidth + x) * 4;
+            const val = Math.max(frame[bin] || 0, 1e-12);
+            const db = 20 * Math.log10(val);
 
-            imageData.data[idx] = intensity;
-            imageData.data[idx + 1] = intensity;
-            imageData.data[idx + 2] = intensity;
+            const norm = (db - minDB) / (maxDB - minDB);
+            const clamped = Math.max(0, Math.min(1, norm));
+
+            const [r, g, b] = colormap(clamped);
+
+            const flippedY = canvasHeight - 1 - y;
+            const idx = (flippedY * canvasWidth + t) * 4;
+
+            imageData.data[idx] = r;
+            imageData.data[idx + 1] = g;
+            imageData.data[idx + 2] = b;
             imageData.data[idx + 3] = 255;
         }
     }
 
-    const dir = path.dirname(outputPath);
-    fs.mkdirSync(dir, { recursive: true });
+ctx.putImageData(imageData, 0, 0);
 
-    ctx.putImageData(imageData, 0, 0);
-    fs.writeFileSync(outputPath, canvas.toBuffer('image/png'));
-    console.log(` Debug PNG saved: ${outputPath}`);
+const dir = path.dirname(outputPath);
+fs.mkdirSync(dir, { recursive: true });
+
+fs.writeFileSync(outputPath, canvas.toBuffer('image/png'));
+console.log(`PNG saved: ${outputPath}`);
 }
+
 
 function dBToColor(norm) {
     let r, g, b;
