@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <title>S.A.F.T. Audio Export</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./saft-palette.js"></script>
+    <script>
+        tailwind.config = window.tailwindConfig;
+    </script>
+</head>
+
+<body class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+    style="background-image: url('./img/background.png');">
+
+    <!-- Card Container (frosted glass) -->
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="w-full max-w-sm backdrop-blur-sm bg-saft-brown-50/80 
+                    border border-saft-blue-200/50 rounded-3xl shadow-2xl 
+                    p-8 max-h-[90vh] overflow-auto">
+
+            <!-- Inhalt (Buttons + Canvas) -->
+            <div class="flex flex-col gap-6 mb-6 ">
+
+                <img src="./img/saftLogoTransparent.png" class="w-60 h-auto mx-auto mb-6" />
+
+                <div class="w-full flex justify-center">
+                    <!-- Play Button -->
+                    <button class=" w-32 h-32
+                                        bg-saft-main-500
+                                        hover:bg-saft-main-600 
+                                        active:scale-[0.95]
+                                        rounded-full flex items-center justify-center 
+                                        shadow-xl
+                                        border-2 border-white/50 
+                                        transition-all duration-200
+                                        touch-manipulation">
+                        <img src="./img/speaker.png" class="w-20 h-20 brightness-0 invert" alt="Mikrofon" />
+                    </button>
+                </div>
+
+                <button class=" w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-blue-500
+                                hover:bg-saft-blue-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation">
+                    Export to MP3
+                </button>
+
+            </div>
+
+
+        </div>
+    </div>
+</body>
+
+</html>
