@@ -1,8 +1,6 @@
-const { fft } = require('./fft');         // local module
-const fs = require('fs');
-const path = require('path');
-const math = require('mathjs');
-const { PNG } = require('pngjs');
+import { fft } from './fft.js';
+import UPNG from "upng-js";
+
 
 
 
@@ -84,7 +82,7 @@ const { PNG } = require('pngjs');
  */
 
 
-function computeSpectrogram(samples, sampleRate, params = {}) {
+export function computeSpectrogram(samples, sampleRate, params = {}) {
     console.log('DEBUG: samples.length:', samples.length);
 
     const { windowSize = 2048, hopSize = 512 } = params;
@@ -147,6 +145,7 @@ function computeSpectrogram(samples, sampleRate, params = {}) {
     };
 }
 
+
 // Hann window -> returns plain JS array of numbers
 function applyHannWindow(frame, size) {
     const out = new Array(size);
@@ -162,12 +161,13 @@ function applyHannWindow(frame, size) {
 }
 
 
-function save_to_png(
+export function drawSpectrogram(
     spectrogram,
     sampleRate,
-    outputPath = 'spectrogram.png',
     minFreq = 0,
-    maxFreq = sampleRate / 2
+    maxFreq = sampleRate / 2,
+    imgId = 'spectrogram',
+    downloadBtnId = 'downloadBtn'
 ) {
     const { data, freqBins, timeFrames } = spectrogram;
 
@@ -253,33 +253,28 @@ function save_to_png(
     }
 
 
-    const png = new PNG({ width, height });
-    png.data = pixels; // assign your pixel array directly
+    // pixels: Uint8ClampedArray of RGBA values
+    // UPNG wants ArrayBuffer
+    const rgbaBytes = new Uint8Array(pixels.buffer); // pixels = Uint8ClampedArray
+    // Encode as PNG
+    const pngBuffer = UPNG.encode([rgbaBytes.buffer], width, height, 0); // 0 = truecolor RGBA    const blob = new Blob([pngBuffer], { type: 'image/png' });
 
-    // Ensure output directory exists
-    const dir = path.dirname(outputPath);
-    fs.mkdirSync(dir, { recursive: true });
+    const img = document.getElementById(imgId);
+    if (!img) throw new Error(`No <img> with id="${imgId}" found`);
 
-    // Write PNG file
-    png.pack().pipe(fs.createWriteStream(outputPath))
-    .on('finish', () => console.log(`PNG saved: ${outputPath}`));
-}
+    const blob = new Blob([pngBuffer], { type: 'image/png' });
+    const url = URL.createObjectURL(blob)
+    img.src = url
 
-
-function dBToColor(norm) {
-    let r, g, b;
-
-    if (norm < 0.2) {
-        r = 0; g = norm * 5; b = 1;
-    } else if (norm < 0.4) {
-        r = 0; g = 1; b = 1 - (norm - 0.2) * 2.5;
-    } else if (norm < 0.7) {
-        r = (norm - 0.4) * 2.5; g = 1; b = 0;
-    } else {
-        r = 1; g = 1 - (norm - 0.7) * 2.5; b = 0;
+    const downloadBtn = document.getElementById(downloadBtnId);
+    if (downloadBtn) {
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `spectrogram-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
     }
-
-    return { r: Math.floor(r * 255), g: Math.floor(g * 255), b: Math.floor(b * 255) };
 }
-
-module.exports = { computeSpectrogram, save_to_png };

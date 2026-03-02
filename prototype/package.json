@@ -1,9 +1,21 @@
 {
+  "name": "prototype",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.0.0-beta.13"
+  },
+  "overrides": {
+    "vite": "^8.0.0-beta.13"
+  },
   "dependencies": {
-    "canvas": "^3.2.1",
-    "fft-js": "^0.0.12",
-    "mathjs": "^15.1.1",
-    "node-wav": "^0.0.2",
-    "pngjs": "^7.0.0"
+    "pako": "^2.1.0",
+    "upng-js": "^2.1.0"
   }
 }

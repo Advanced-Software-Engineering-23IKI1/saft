@@ -12,10 +12,8 @@ getestet und ausgeführt auf
 npm install
 ````
 
-
 ## Ausführung
 ````bash
-node prototype.js -f ./input/test.wav 
+npm run dev
 ````
 
-output ist in `./output`
