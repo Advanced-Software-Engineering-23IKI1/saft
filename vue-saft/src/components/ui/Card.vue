@@ -9,5 +9,3 @@ defineProps({
     <slot />
   </div>
 </template>
-
-

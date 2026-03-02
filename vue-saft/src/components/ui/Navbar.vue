@@ -34,20 +34,11 @@ function stepClass(enabled, active) {
 </script>
 
 <template>
-    <nav class="flex border-b border-white/20 mb-6 pb-2">
-            <RouterLink
-              v-for="s in steps"
-              :key="s.name"
-              :to="{ name: s.name }"
-              custom
-              v-slot="{ navigate }"
-            >
-              <button
-                :class="stepClass(s.enabled, route.name === s.name)"
-                @click="s.enabled && navigate()"
-              >
-                {{ s.label }}
-              </button>
-            </RouterLink>
-          </nav>
+  <nav class="flex border-b border-white/20 mb-6 pb-2">
+    <RouterLink v-for="s in steps" :key="s.name" :to="{ name: s.name }" custom v-slot="{ navigate }">
+      <button :class="stepClass(s.enabled, route.name === s.name)" @click="s.enabled && navigate()">
+        {{ s.label }}
+      </button>
+    </RouterLink>
+  </nav>
 </template>

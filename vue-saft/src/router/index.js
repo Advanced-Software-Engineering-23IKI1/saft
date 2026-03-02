@@ -10,7 +10,7 @@ const routes = [
   { path: '/upload', name: 'upload', component: UploadView },
   { path: '/canvas', name: 'canvas', component: CanvasView, meta: { requiresUpload: true } },
   { path: '/download', name: 'download', component: DownloadView, meta: { requiresExport: true } },
-  { path: '/:catchAll(.*)', name: 'not-found', component: NotFoundView},
+  { path: '/:catchAll(.*)', name: 'not-found', component: NotFoundView },
 ]
 
 const router = createRouter({
