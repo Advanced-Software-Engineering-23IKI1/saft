@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <title>S.A.F.T.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./saft-palette.js"></script>
+    <script>
+        tailwind.config = window.tailwindConfig;
+    </script>
+</head>
+
+<body class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+    style="background-image: url('./img/background.png');">
+
+    <!-- Card Container (frosted glass) -->
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="w-full max-w-md backdrop-blur-sm bg-saft-brown-50/80 
+                    border border-saft-blue-200/50 rounded-3xl shadow-2xl 
+                    p-8 max-h-[90vh] overflow-auto">
+
+            <img src="./img/saftLogoTransparent.png" class="w-60 h-auto mx-auto mb-6" />
+
+            <!-- Tabs -->
+            <div class="flex border-b border-white/20 mb-6 pb-2">
+                <button class="tab-btn flex-1 px-4 py-3 font-semibold text-lg
+                               text-saft-brown-900 bg-white/30 rounded-t-xl border-b-2 border-saft-main-500
+                               hover:bg-white/50 transition-all duration-200 active:scale-[0.98]">
+                    Import
+                </button>
+                <button class="tab-btn flex-1 px-4 py-3 font-semibold text-lg
+                               text-saft-brown-900 bg-white/30 rounded-t-xl border-b-2 border-saft-main-500
+                               hover:bg-white/50 transition-all duration-200 active:scale-[0.98]">
+                    Spektrogramm
+                </button>
+                <button class="tab-btn flex-1 px-4 py-3 font-semibold text-lg
+                               text-saft-brown-900 bg-white/30 rounded-t-xl border-b-2 border-saft-main-500
+                               hover:bg-white/50 transition-all duration-200 active:scale-[0.98]">
+                    Export
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-content">
+                <!-- Tab 1: Import (aktiv) -->
+                <div class="tab-panel active">
+                    <button class=" w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-blue-500
+                                hover:bg-saft-blue-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation">
+                        Platzhalter 1
+                    </button>
+                </div>
+
+                <!-- Tab 2: Settings -->
+                <div class="tab-panel hidden">
+                    <button class=" w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-main-500
+                                hover:bg-saft-main-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation">
+                        Platzhalter 2
+                    </button>
+                </div>
+
+                <!-- Tab 3: Analysis -->
+                <div class="tab-panel hidden">
+                    <button class=" w-full py-4
+                                text-lg text-black font-semibold
+                                bg-saft-mint-500
+                                hover:bg-saft-mint-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation">
+                        Platzhalter 3
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Tab Switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabBtns.forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                // Active Tab deaktivieren
+                tabBtns.forEach(b => {
+                    b.classList.remove('bg-white/30', 'text-saft-brown-900', 'border-saft-main-500');
+                    b.classList.add('text-saft-brown-500', 'bg-transparent');
+                });
+                tabPanels.forEach(p => p.classList.add('hidden'));
+                
+                // Aktiven Tab aktivieren
+                btn.classList.add('bg-white/30', 'text-saft-brown-900', 'border-saft-main-500');
+                btn.classList.remove('text-saft-brown-500', 'bg-transparent');
+                tabPanels[index].classList.remove('hidden');
+            });
+        });
+    </script>
+
+</body>
+
+</html>

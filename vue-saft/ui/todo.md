@@ -1,0 +1,3 @@
+- Icon wird aktuell durch Code gezeichnet. Nimm ein fertiges SVG
+- Buttons einen hervorgehobenen Rahmen geben, damit sich die GUI vom Hintergrund abhebt
+- Canvas gegen weitere Buttons ersetzen?
