@@ -3,20 +3,27 @@ import { RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <main class="min-h-screen grid place-items-center bg-slate-950 text-slate-100 px-6">
-    <section class="text-center max-w-md">
-      <p class="text-sm text-slate-400">404</p>
+  <section class="text-center max-w-md">
+      <p class="text-2xl text-slate-500">404</p>
       <h1 class="mt-2 text-2xl font-semibold">Page not found</h1>
-      <p class="mt-2 text-sm text-slate-300">
+      <p class="mt-2 pb-5 text-sm text-slate-500">
         The page you’re looking for doesn’t exist.
       </p>
 
       <RouterLink
         to="/upload"
-        class="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 "
+        class="w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-blue-500
+                                hover:bg-saft-blue-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation"
       >
         Go to Upload
       </RouterLink>
     </section>
-  </main>
 </template>
