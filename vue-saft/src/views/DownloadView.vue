@@ -10,31 +10,59 @@ function startOver(navigate) {
   resetState()
   navigate()
 }
+const speakericon = '/img/speaker.png'
+
 </script>
 
 <template>
-  <section class="space-y-6">
-    <div class="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-      <h1 class="text-xl font-semibold">Download</h1>
-      <p class="mt-2 text-sm text-slate-300">
-        Placeholder: hier kommt später Abspielen/Download hin.
-      </p>
 
-      <div class="mt-6 flex flex-wrap gap-3">
-        <RouterLink :to="{ name: 'upload' }" custom v-slot="{ navigate }">
+<div class="flex flex-col gap-6 mb-6 ">
+                <div class="w-full flex justify-center">
+                    <!-- Play Button -->
+                    <button class=" w-32 h-32
+                                        bg-saft-main-500
+                                        hover:bg-saft-main-600 
+                                        active:scale-[0.95]
+                                        rounded-full flex items-center justify-center 
+                                        shadow-xl
+                                        border-2 border-white/50 
+                                        transition-all duration-200
+                                        touch-manipulation">
+                        <img :src="speakericon" class="w-20 h-20 brightness-0 invert" alt="Mikrofon" />
+                    </button>
+                </div>
+
+                <button class=" w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-main-500
+                                hover:bg-saft-main-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation">
+                    Export to MP3
+                </button>
+                <RouterLink :to="{ name: 'upload' }" custom v-slot="{ navigate }">
           <button
-            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class=" w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-blue-500
+                                hover:bg-saft-blue-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation"
             @click="startOver(navigate)"
           >
-            <Home class="h-4 w-4" />
             Neuer Durchlauf
           </button>
         </RouterLink>
-      </div>
-    </div>
-
+            </div>
     <div class="text-xs text-slate-400">
       Debug state: {{ state }}
     </div>
-  </section>
 </template>

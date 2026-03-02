@@ -12,14 +12,29 @@ const steps = computed(() => ([
 ]))
 
 function stepClass(enabled, active) {
-  if (!enabled) return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-slate-800 text-slate-400 cursor-not-allowed'
-  if (active) return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white'
-  return 'px-3 py-1.5 text-sm font-semibold rounded-lg bg-indigo-600/50 text-indigo-200 hover:bg-indigo-600/30'
+  // same logic/order as your original:
+  // 1) disabled
+  // 2) active
+  // 3) default (enabled but inactive)
+  if (!enabled) {
+    return 'tab-btn flex-1 px-4 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
+      'text-saft-brown-500 bg-transparent cursor-not-allowed opacity-60'
+  }
+
+  if (active) {
+    return 'tab-btn flex-1 px-4 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
+      'bg-white/30 text-saft-brown-900 border-saft-main-500 ' +
+      'hover:bg-white/50 transition-all duration-200 active:scale-[0.98]'
+  }
+
+  return 'tab-btn flex-1 px-4 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
+    'text-saft-brown-500 bg-transparent border-transparent ' +
+    'hover:bg-white/50 hover:text-saft-brown-900 transition-all duration-200 active:scale-[0.98]'
 }
 </script>
 
 <template>
-    <nav class="flex items-center gap-2">
+    <nav class="flex border-b border-white/20 mb-6 pb-2">
             <RouterLink
               v-for="s in steps"
               :key="s.name"
