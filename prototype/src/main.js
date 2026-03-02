@@ -6,7 +6,11 @@ globalThis.pako = pako;
 
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
-const downloadBtn = document.getElementById("downloadBtn");
+
+const maxFreq = 15000
+const minFreq = 0
+const windowSize = 2048
+const hopSize = 250
 
 
 processBtn.addEventListener("click", async () => {
@@ -29,12 +33,9 @@ processBtn.addEventListener("click", async () => {
   console.log("Sample Rate:", sampleRate);
 
   const spectrogram = computeSpectrogram(samples, sampleRate, {
-    windowSize: 2048,
-    hopSize: 125
+    windowSize: windowSize,
+    hopSize: hopSize
   });
-
-  const maxFreq = 128000
-  const minFreq = 0
 
   drawSpectrogram(spectrogram,sampleRate,minFreq, maxFreq,"spectrogramImg","downloadBtn");
 });
