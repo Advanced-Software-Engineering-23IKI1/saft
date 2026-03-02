@@ -16,8 +16,43 @@
   <br><br>
 
   <script type="module" src="/src/main.js"></script>
-  <canvas id="spectrogramCanvas" width="1" height="1"></canvas>
+  
+ <div id="wrapper">
+  <div id="canvasRow">
+    <canvas id="spectrogramCanvas" width="1" height="1"></canvas>
+    <input type="range" id="vScrollbar" min="0" max="100" value="0" orient="vertical">
+  </div>
 
+  <input type="range" id="hScrollbar" min="0" max="100" value="0">
+</div>
 
+<style>
+#wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#canvasRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+#vScrollbar{
+  writing-mode: vertical-lr;  
+  direction: rtl;             
+  appearance: slider-vertical; 
+  -webkit-appearance: slider-vertical;
+  height: 1px;        
+  accent-color: #9aa0a6;
+}
+
+#hScrollbar {
+  width: 1px;             
+  margin-top: 1px;
+  accent-color: #9aa0a6;
+}
+</style>
 </body>
 </html>
