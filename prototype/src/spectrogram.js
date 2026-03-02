@@ -3,7 +3,6 @@ import UPNG from "upng-js";
 
 
 
-
 /**
  * Compute a magnitude spectrogram from audio samples.
  *
@@ -121,13 +120,9 @@ function applyHannWindow(frame, size) {
 }
 
 
-export function computeSpectrogramPixels(
+export function computeSpectrogramRenderingData(
     spectrogram,
     sampleRate,
-    boxheight,
-    boxwidth,
-    height_offset,
-    width_offset,
     minFreq = 0,
     maxFreq = sampleRate / 2
 ) {
@@ -138,8 +133,7 @@ export function computeSpectrogramPixels(
     const width = timeFrames;
 
     const { maxDB, minDB } = computeDBrange(width, data, minBin, maxBin);
-    const pixels = renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, colormapInferno);
-    return {pixels, width, height}
+    return {data, width, height, minBin, maxBin, minDB, maxDB}
 }
 
 
@@ -179,6 +173,8 @@ export function generatePNG(pixels, width, height, imgId, downloadBtnId) {
     }
 }
 
+
+// TODO: needs to be adjusted
 /**
  * Render spectrogram RGBA pixels from FFT magnitude frames.
  *
@@ -192,13 +188,31 @@ export function generatePNG(pixels, width, height, imgId, downloadBtnId) {
  * @param {(x: number) => [number, number, number]} colormap Function mapping [0,1] → RGB.
  * @returns {Uint8ClampedArray} RGBA pixel buffer.
  */
-function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, colormap) {
-    let pixels = new Uint8ClampedArray(width * height * 4); // RGBA
+export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, boxheight, boxwidth, height_offset, width_offset, colormap) {
+    let pixels = new Uint8ClampedArray(boxwidth * boxheight * 4); // RGBA
 
-    for (let t = 0; t < width; t++) {
+    for (let tx = 0; tx < boxwidth; tx++) {
+
+        if (width_offset<0){
+            width_offset = 0
+
+        }else if (width_offset>(width-boxwidth)){
+            width_offset = width-boxwidth
+        }
+
+        let t = width_offset + tx;
         const frame = data[t] || [];
 
-        for (let y = 0; y < height; y++) {
+
+        for (let ly = 0; ly < boxheight; ly++) {
+
+            if (height_offset<0){
+                height_offset=0
+            }else if(height_offset>(height-boxheight)){
+                height_offset = height-boxheight
+            }
+
+            let y = height_offset + ly;
 
             // Logarithmic mapping:
             // const logMin = Math.log10(minBin + 1);
@@ -217,8 +231,8 @@ function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, colorma
 
             const [r, g, b] = colormap(clamped);
 
-            const flippedY = height - 1 - y;
-            const idx = (flippedY * width + t) * 4;
+            const flippedY = boxheight - 1 - ly;
+            const idx = (flippedY * boxwidth + tx) * 4;
 
             pixels[idx] = r;
             pixels[idx + 1] = g;
@@ -226,21 +240,8 @@ function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, colorma
             pixels[idx + 3] = 255;
         }
     }
-    return pixels
+    return {pixels, width_offset, height_offset}
 }
-
-/**
- * Map a normalized value to an Inferno-like RGB color.
- *
- * @param {number} x Normalized value in range [0, 1].
- * @returns {[number, number, number]} RGB values in range [0, 255].
- */
-function colormapInferno(x) {
-        const r = Math.min(255, Math.max(0, 255 * Math.pow(x, 0.5)));
-        const g = Math.min(255, Math.max(0, 255 * Math.pow(x, 1.5)));
-        const b = Math.min(255, Math.max(0, 255 * Math.pow(x, 3)));
-        return [r, g, b];
-    }
 
 
 
