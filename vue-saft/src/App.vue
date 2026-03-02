@@ -1,14 +1,21 @@
 <script setup>
-import { Activity } from 'lucide-vue-next';
-import  Canvas  from '@/components/Canvas.vue';
+import { RouterView} from 'vue-router'
+import Navbar from './components/ui/Navbar.vue';
 </script>
 
 <template>
-  <h1 class="text-4xl font-bold text-blue-600">
-    Set up Taishjdgflnd for CSS classes and Lucide for icons
-    <Activity />
-    <Canvas />
-  </h1>
+  <div class="min-h-screen bg-slate-950 text-slate-100">
+    <header class="border-b border-slate-800">
+      <div class="mx-auto max-w-5xl px-4 py-4">
+        <div class="flex items-center gap-3">
+          <Navbar />
+          <div class="h-px flex-1 bg-slate-800"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-8">
+      <RouterView />
+    </main>
+  </div>
 </template>
-
-
