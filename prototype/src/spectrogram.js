@@ -188,29 +188,24 @@ export function generatePNG(pixels, width, height, imgId, downloadBtnId) {
  * @param {(x: number) => [number, number, number]} colormap Function mapping [0,1] → RGB.
  * @returns {Uint8ClampedArray} RGBA pixel buffer.
  */
-export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, boxheight, boxwidth, height_offset, width_offset, colormap) {
-    let pixels = new Uint8ClampedArray(boxwidth * boxheight * 4); // RGBA
+export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, height_offset, width_offset, colormap, canvas) {
+    // let pixels = new Uint8ClampedArray(boxwidth * boxheight * 4); // RGBA
+    const boxwidth = canvas.width
+    const boxheight = canvas.height
+    
+    var ctx = canvas.getContext("2d");
+    var imagedata = ctx.createImageData(boxwidth, boxheight);
 
     for (let tx = 0; tx < boxwidth; tx++) {
 
-        if (width_offset<0){
-            width_offset = 0
-
-        }else if (width_offset>(width-boxwidth)){
-            width_offset = width-boxwidth
-        }
-
+        
         let t = width_offset + tx;
         const frame = data[t] || [];
 
 
         for (let ly = 0; ly < boxheight; ly++) {
 
-            if (height_offset<0){
-                height_offset=0
-            }else if(height_offset>(height-boxheight)){
-                height_offset = height-boxheight
-            }
+            
 
             let y = height_offset + ly;
 
@@ -234,13 +229,21 @@ export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, 
             const flippedY = boxheight - 1 - ly;
             const idx = (flippedY * boxwidth + tx) * 4;
 
-            pixels[idx] = r;
-            pixels[idx + 1] = g;
-            pixels[idx + 2] = b;
-            pixels[idx + 3] = 255;
+            // pixels[idx] = r;
+            // pixels[idx + 1] = g;
+            // pixels[idx + 2] = b;
+            // pixels[idx + 3] = 255;
+
+            imagedata.data[idx] = r;
+            imagedata.data[idx+1] = g;
+            imagedata.data[idx+2] = b;
+            imagedata.data[idx+3] = 255;
+
         }
     }
-    return {pixels, width_offset, height_offset}
+    ctx.putImageData(imagedata, 0,0);
+
+    return {width_offset, height_offset}
 }
 
 
