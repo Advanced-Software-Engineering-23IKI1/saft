@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <title>S.A.F.T. Spektrogramm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./saft-palette.js"></script>
+    <script>
+        tailwind.config = window.tailwindConfig;
+    </script>
+</head>
+
+<body class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+    style="background-image: url('./img/background.png');">
+
+    <!-- Card Container (frosted glass) -->
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="w-full max-w-sm backdrop-blur-sm bg-saft-brown-50/80 
+                    border border-saft-blue-200/50 rounded-3xl shadow-2xl 
+                    p-3 max-h-[90vh] overflow-auto">
+
+            <!-- Inhalt -->
+            <div class="flex flex-col gap-3 mb-4">
+
+                <img src="./img/saftLogoTransparent.png" class="w-60 h-auto mx-auto mb-0" />
+
+                <!-- Image Container – Responsive + Horizontal Scroll -->
+                <div class="w-full h-[60vh] flex flex-col p-1">
+                    <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
+                rounded-3xl shadow-2xl relative overflow-hidden">
+
+                        <!-- Scrollable Image Area -->
+                            <div class="absolute inset-0 overflow-x-auto overflow-y-hidden bg-gradient-to-br from-saft-brown-100/60 to-saft-blue-50/60
+            [&::-webkit-scrollbar]:h-4 sm:[&::-webkit-scrollbar]:h-5
+            [&::-webkit-scrollbar-track]:bg-saft-blue-100/80 [&::-webkit-scrollbar-track]:rounded-full
+            [&::-webkit-scrollbar-thumb]:bg-saft-blue-500 hover:[&::-webkit-scrollbar-thumb]:bg-saft-blue-600
+            [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:shadow-lg">
+                                
+                                <img src="./img/exampleSpectro.png"
+                                    class="h-full w-[160%] min-w-[200%] block !object-none flex-shrink-0"
+                                    alt="Spectrogramm" id="dynamic-image" />
+                            </div>
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div class="w-full flex justify-center gap-3 py-4 px-2">
+                        <div
+                            class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
+                            <button
+                                class="w-14 h-14 bg-saft-main-500 hover:bg-saft-main-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                                data-tool="1">
+                                <img src="./img/scroll.png" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"
+                                    alt="Scroll">
+                            </button>
+                            <button
+                                class="w-14 h-14 bg-saft-blue-500 hover:bg-saft-blue-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                                data-tool="2">
+                                <img src="./img/brush.png" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"
+                                    alt="Brush">
+                            </button>
+                            <button
+                                class="w-14 h-14 bg-saft-brown-500 hover:bg-saft-brown-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                                data-tool="3">
+                                <img src="./img/text.png" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"
+                                    alt="Text">
+                            </button>
+                            <button
+                                class="w-14 h-14 bg-saft-mint-500 hover:bg-saft-mint-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                                data-tool="4">
+                                <img src="./img/eraser.png" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"
+                                    alt="Eraser">
+                            </button>
+                            <button
+                                class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                                data-tool="5">
+                                <img src="./img/delete.png" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"
+                                    alt="Delete">
+                            </button>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <button class=" w-full py-4
+                                text-lg text-white font-semibold
+                                bg-saft-blue-500
+                                hover:bg-saft-blue-600 
+                                active:scale-[0.95]
+                                rounded-full flex items-center justify-center 
+                                shadow-xl
+                                border-2 border-white/50 
+                                transition-all duration-200
+                                touch-manipulation">
+                    Compute Spectrogram
+                </button>
+
+            </div>
+
+
+        </div>
+    </div>
+</body>
+
+</html>
