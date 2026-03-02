@@ -1,4 +1,5 @@
-import { computeSpectrogram, drawSpectrogram } from './spectrogram.js';
+import { computeSpectrogram, computeSpectrogramPixels, generatePNG } from './spectrogram.js';
+import { getSample} from './input.js'
 import pako from "pako";
 
 globalThis.pako = pako; 
@@ -11,33 +12,28 @@ const maxFreq = 15000
 const minFreq = 0
 const windowSize = 2048
 const hopSize = 250
+const boxheight = 0
+const boxwidth = 0
+const height_offset = 0
+const width_offset = 0
+
+const imgId = 'spectrogramImg'
+const downloadBtnId = 'downloadBtn'
+
 
 
 processBtn.addEventListener("click", async () => {
-  const file = fileInput.files[0];
-  if (!file) {
-    alert("Please select a WAV file.");
-    return;
-  }
 
-  const arrayBuffer = await file.arrayBuffer();
+  const { samples, sampleRate } = await getSample(fileInput);
 
-  // Decode audio using Web Audio API
-  const audioCtx = new AudioContext();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const spectrogram = computeSpectrogram(samples, sampleRate, windowSize, hopSize);
 
-  const samples = audioBuffer.getChannelData(0);
-  const sampleRate = audioBuffer.sampleRate;
+  const { pixels, width, height }  = computeSpectrogramPixels(spectrogram, sampleRate, boxheight, boxwidth, height_offset, width_offset, minFreq, maxFreq);
 
-  console.log("Samples:", samples.length);
-  console.log("Sample Rate:", sampleRate);
-
-  const spectrogram = computeSpectrogram(samples, sampleRate, {
-    windowSize: windowSize,
-    hopSize: hopSize
-  });
-
-  drawSpectrogram(spectrogram,sampleRate,minFreq, maxFreq,"spectrogramImg","downloadBtn");
+  generatePNG(pixels, width, height, imgId, downloadBtnId);
 });
+
+
+
 
 

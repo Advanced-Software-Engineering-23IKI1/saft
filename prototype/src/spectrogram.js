@@ -5,87 +5,24 @@ import UPNG from "upng-js";
 
 
 /**
- * @brief Computes the magnitude spectrogram of a real-valued audio signal.
+ * Compute a magnitude spectrogram from audio samples.
  *
- * This function performs a Short-Time Fourier Transform (STFT) on the input
- * signal using overlapping Hann-windowed frames and a radix-2 FFT. For each
- * frame, only the positive frequency bins (0 Hz through Nyquist) are retained,
- * and their magnitudes are stored in the output spectrogram matrix.
- *
- * The resulting spectrogram is organized as a 2D array indexed by
- * time frame first and frequency bin second:
- *
- *     spectrogram.data[timeIndex][freqIndex]
- *
- * where freqIndex = 0 corresponds to DC (0 Hz), and freqIndex = freqBins-1
- * corresponds to the Nyquist frequency (sampleRate / 2).
- *
- * @param {ArrayLike<number>} samples
- *     Real-valued input audio samples. Typically a Float32Array from a WAV
- *     decoder. All values must be finite numbers (no NaN or Infinity).
- *
- * @param {number} sampleRate
- *     Sampling rate of the input signal in Hz (e.g., 44100).
- *
- * @param {Object} [params]
- *     Optional spectrogram parameters.
- *
- * @param {number} [params.windowSize=1024]
- *     FFT window size in samples. Must be a power of two. Determines frequency
- *     resolution: freqResolution = sampleRate / windowSize.
- *
- * @param {number} [params.hopSize=256]
- *     Hop size (frame advance) in samples. Determines time resolution:
- *     timeResolution = hopSize / sampleRate.
- *
- * @return {Object} Spectrogram object with the following properties:
- *
- * @return {number[][]} return.data
- *     2D array of magnitude values indexed as [timeFrame][frequencyBin].
- *     Units are linear magnitude (not dB).
- *
- * @return {number} return.freqBins
- *     Number of frequency bins per frame. Equals windowSize/2 + 1.
- *
- * @return {number} return.timeFrames
- *     Number of time frames in the spectrogram.
- *
- * @return {number} return.freqResolution
- *     Frequency spacing between bins in Hz.
- *
- * @return {number} return.timeResolution
- *     Time spacing between frames in seconds.
- *
- * @throws {Error}
- *     If windowSize is not a power of two.
- *
- * @throws {Error}
- *     If input samples contain NaN or Infinity.
- *
- * @note
- *     The FFT operates on Hann-windowed frames to reduce spectral leakage.
- *
- * @note
- *     Output magnitudes are linear. Convert to decibels with:
- *         dB = 20 * log10(magnitude + epsilon)
- *
- * @note
- *     Memory layout is optimized for visualization and sequential time access.
- *
- * @example
- * const spec = computeSpectrogram(samples, 44100, {
- *     windowSize: 1024,
- *     hopSize: 256
- * });
- *
- * console.log(spec.data[0][0]); // magnitude at t=0, f=0 Hz
+ * @param {ArrayLike<number>} samples Real-valued audio samples (Float32Array).
+ * @param {number} sampleRate Sample rate in Hz.
+ * @param {number} [windowSize=2048] FFT window size (power of 2).
+ * @param {number} [hopSize=512] Hop size between frames in samples.
+ * @returns {{
+ *   data: number[][],
+ *   freqBins: number,
+ *   timeFrames: number,
+ *   freqResolution: number,
+ *   timeResolution: number
+ * }}
  */
 
-
-export function computeSpectrogram(samples, sampleRate, params = {}) {
+export function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512 ) {
     console.log('DEBUG: samples.length:', samples.length);
 
-    const { windowSize = 2048, hopSize = 512 } = params;
 
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
@@ -101,6 +38,30 @@ export function computeSpectrogram(samples, sampleRate, params = {}) {
         throw new Error(`Input samples contain NaN/Infinity at index ${firstBad}: ${samples[firstBad]}`);
     }
 
+    const { spectrogram, half } = computeFFTs(windowSize, samples, hopSize);
+
+    return {
+        data: spectrogram,
+        freqBins: half,
+        timeFrames: spectrogram.length,
+        freqResolution: sampleRate / windowSize,
+        timeResolution: hopSize / sampleRate
+    };
+}
+
+
+
+/**
+ * Compute FFT magnitudes over sliding windows to generate a spectrogram.
+ *
+ * @param {number} windowSize Number of samples per FFT window.
+ * @param {Float32Array|Array<number>} samples Input audio samples.
+ * @param {number} hopSize Step size between successive windows.
+ * @returns {{ spectrogram: Array<Array<number>>, half: number }}
+ *          - spectrogram: 2D array [time][frequency] of magnitudes.
+ *          - half: Number of positive frequency bins per window.
+ */
+function computeFFTs(windowSize, samples, hopSize) {
     const spectrogram = [];
     const half = Math.floor(windowSize / 2) + 1;
 
@@ -113,6 +74,7 @@ export function computeSpectrogram(samples, sampleRate, params = {}) {
 
         // Numeric FFT (returns {re, im})
         const out = fft(windowed);
+
         if (!out || !out.re || !out.im) {
             throw new TypeError('fft() must return an object { re, im }');
         }
@@ -135,18 +97,16 @@ export function computeSpectrogram(samples, sampleRate, params = {}) {
 
         spectrogram.push(magnitude);
     }
-
-    return {
-        data: spectrogram,
-        freqBins: half,
-        timeFrames: spectrogram.length,
-        freqResolution: sampleRate / windowSize,
-        timeResolution: hopSize / sampleRate
-    };
+    return { spectrogram, half };
 }
 
-
-// Hann window -> returns plain JS array of numbers
+/**
+ * Apply a Hann window to a frame of samples.
+ *
+ * @param {Array<number>} frame Array of input samples.
+ * @param {number} size Number of samples in the frame.
+ * @returns {Array<number>} Windowed samples.
+ */
 function applyHannWindow(frame, size) {
     const out = new Array(size);
     const denom = (size - 1) || 1;
@@ -161,66 +121,81 @@ function applyHannWindow(frame, size) {
 }
 
 
-export function drawSpectrogram(
+export function computeSpectrogramPixels(
     spectrogram,
     sampleRate,
+    boxheight,
+    boxwidth,
+    height_offset,
+    width_offset,
     minFreq = 0,
-    maxFreq = sampleRate / 2,
-    imgId = 'spectrogram',
-    downloadBtnId = 'downloadBtn'
+    maxFreq = sampleRate / 2
 ) {
     const { data, freqBins, timeFrames } = spectrogram;
+    const { maxBin, minBin } = computeBins(freqBins, sampleRate, minFreq, maxFreq);
 
-    // Compute frequency resolution
-    // freqBins = windowSize/2 + 1
-    const windowSize = (freqBins - 1) * 2;
-    const freqResolution = sampleRate / windowSize;
-
-    const minBin = Math.max(0, Math.floor(minFreq / freqResolution));
-    const maxBin = Math.min(freqBins - 1, Math.ceil(maxFreq / freqResolution));
-
-    if (minBin >= maxBin) {
-        throw new Error("Invalid frequency range");
-    }
-
-    console.log(`Showing frequencies ${minFreq}Hz – ${maxFreq}Hz`);
-    console.log(`Bins ${minBin} – ${maxBin}`);
-
-    const visibleBins = maxBin - minBin + 1;
-
-    const height = visibleBins
+    const height = maxBin - minBin + 1
     const width = timeFrames;
-    const pixels = new Uint8ClampedArray(width * height * 4); // RGBA
 
-    // Compute global dB range 
-    let minDB = Infinity;
-    let maxDB = -Infinity;
+    const { maxDB, minDB } = computeDBrange(width, data, minBin, maxBin);
+    const pixels = renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, colormapInferno);
+    return {pixels, width, height}
+}
 
-    for (let t = 0; t < timeFrames; t++) {
-        const frame = data[t] || [];
-        for (let f = minBin; f <= maxBin; f++) {
-            const val = Math.max(frame[f] || 0, 1e-12);
-            const db = 20 * Math.log10(val);
-            if (db < minDB) minDB = db;
-            if (db > maxDB) maxDB = db;
-        }
+
+/**
+ * Encode RGBA pixels as a PNG, display it in an <img>, and attach download handler.
+ *
+ * @param {Uint8ClampedArray} pixels RGBA pixel buffer.
+ * @param {number} width Image width in pixels.
+ * @param {number} height Image height in pixels.
+ * @param {string} imgId ID of the target <img> element.
+ * @param {string} downloadBtnId ID of the download button element.
+ * @throws {Error} If the target <img> element is not found.
+ */
+export function generatePNG(pixels, width, height, imgId, downloadBtnId) {
+    const rgbaBytes = new Uint8Array(pixels.buffer); // pixels = Uint8ClampedArray
+
+    // Encode as PNG
+    const pngBuffer = UPNG.encode([rgbaBytes.buffer], width, height, 0); // 0 = truecolor RGBA    const blob = new Blob([pngBuffer], { type: 'image/png' });
+
+    const img = document.getElementById(imgId);
+    if (!img) throw new Error(`No <img> with id="${imgId}" found`);
+
+    const blob = new Blob([pngBuffer], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    img.src = url;
+
+    const downloadBtn = document.getElementById(downloadBtnId);
+    if (downloadBtn) {
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `spectrogram-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
     }
+}
 
-    // Clamp dynamic range (better visuals)
-    maxDB = Math.max(maxDB, -10);
-    minDB = maxDB - 80; 
+/**
+ * Render spectrogram RGBA pixels from FFT magnitude frames.
+ *
+ * @param {number} width Image width (time axis).
+ * @param {Array<Array<number>>} data 2D array [time][frequency] of magnitudes.
+ * @param {number} height Image height (frequency axis).
+ * @param {number} minBin Starting frequency bin (inclusive).
+ * @param {number} maxBin Ending frequency bin (inclusive).
+ * @param {number} minDB Minimum dB for normalization.
+ * @param {number} maxDB Maximum dB for normalization.
+ * @param {(x: number) => [number, number, number]} colormap Function mapping [0,1] → RGB.
+ * @returns {Uint8ClampedArray} RGBA pixel buffer.
+ */
+function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, colormap) {
+    let pixels = new Uint8ClampedArray(width * height * 4); // RGBA
 
-    //  Colormap (Inferno-like smooth gradient) 
-    function colormap(x) {
-        const r = Math.min(255, Math.max(0, 255 * Math.pow(x, 0.5)));
-        const g = Math.min(255, Math.max(0, 255 * Math.pow(x, 1.5)));
-        const b = Math.min(255, Math.max(0, 255 * Math.pow(x, 3)));
-        return [r, g, b];
-    }
-
-
-    // Render 
-    for (let t = 0; t < timeFrames; t++) {
+    for (let t = 0; t < width; t++) {
         const frame = data[t] || [];
 
         for (let y = 0; y < height; y++) {
@@ -230,7 +205,7 @@ export function drawSpectrogram(
             // const logMax = Math.log10(maxBin + 1);
             // const logBin = logMin + (y / height) * (logMax - logMin);
             // const binFloat = Math.pow(10, logBin) - 1;
-            const binFloat = minBin + (y / height) * visibleBins;
+            const binFloat = minBin + (y / height) * height;
             const bin = Math.floor(binFloat);
 
 
@@ -251,30 +226,80 @@ export function drawSpectrogram(
             pixels[idx + 3] = 255;
         }
     }
-
-
-    // pixels: Uint8ClampedArray of RGBA values
-    // UPNG wants ArrayBuffer
-    const rgbaBytes = new Uint8Array(pixels.buffer); // pixels = Uint8ClampedArray
-    // Encode as PNG
-    const pngBuffer = UPNG.encode([rgbaBytes.buffer], width, height, 0); // 0 = truecolor RGBA    const blob = new Blob([pngBuffer], { type: 'image/png' });
-
-    const img = document.getElementById(imgId);
-    if (!img) throw new Error(`No <img> with id="${imgId}" found`);
-
-    const blob = new Blob([pngBuffer], { type: 'image/png' });
-    const url = URL.createObjectURL(blob)
-    img.src = url
-
-    const downloadBtn = document.getElementById(downloadBtnId);
-    if (downloadBtn) {
-        downloadBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `spectrogram-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-    }
+    return pixels
 }
+
+/**
+ * Map a normalized value to an Inferno-like RGB color.
+ *
+ * @param {number} x Normalized value in range [0, 1].
+ * @returns {[number, number, number]} RGB values in range [0, 255].
+ */
+function colormapInferno(x) {
+        const r = Math.min(255, Math.max(0, 255 * Math.pow(x, 0.5)));
+        const g = Math.min(255, Math.max(0, 255 * Math.pow(x, 1.5)));
+        const b = Math.min(255, Math.max(0, 255 * Math.pow(x, 3)));
+        return [r, g, b];
+    }
+
+
+
+/**
+ * Compute and clamp global dB range across time frames and bin range.
+ *
+ * @param {number} timeFrames Number of time frames.
+ * @param {Array<Array<number>>} data 2D array [time][frequency] of magnitudes.
+ * @param {number} minBin Starting bin index (inclusive).
+ * @param {number} maxBin Ending bin index (inclusive).
+ * @returns {{ minDB: number, maxDB: number }}
+ */
+function computeDBrange(timeFrames, data, minBin, maxBin) {
+
+    let minDB = Infinity;
+    let maxDB = -Infinity;
+
+    for (let t = 0; t < timeFrames; t++) {
+        const frame = data[t] || [];
+        for (let f = minBin; f <= maxBin; f++) {
+            const val = Math.max(frame[f] || 0, 1e-12);
+            const db = 20 * Math.log10(val);
+            if (db < minDB) minDB = db;
+            if (db > maxDB) maxDB = db;
+        }
+    }
+
+    // Clamp dynamic range (better visuals)
+    maxDB = Math.max(maxDB, -10);
+    minDB = maxDB - 80; 
+
+    return { maxDB, minDB };
+}
+
+/**
+ * Convert a frequency range (Hz) to FFT bin indices.
+ *
+ * @param {number} freqBins   Number of FFT bins (windowSize / 2 + 1).
+ * @param {number} sampleRate Sample rate in Hz.
+ * @param {number} minFreq    Minimum frequency in Hz.
+ * @param {number} maxFreq    Maximum frequency in Hz.
+ * @returns {{ minBin: number, maxBin: number }}
+ * @throws {Error} If the computed range is invalid.
+ */
+function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
+    // Compute frequency resolution
+    // freqBins = windowSize/2 + 1
+    const windowSize = (freqBins - 1) * 2;
+    const freqResolution = sampleRate / windowSize;
+
+    const minBin = Math.max(0, Math.floor(minFreq / freqResolution));
+    const maxBin = Math.min(freqBins - 1, Math.ceil(maxFreq / freqResolution));
+
+    if (minBin >= maxBin) {
+        throw new Error("Invalid frequency range");
+    }
+    // console.log(`Showing frequencies ${minFreq}Hz – ${maxFreq}Hz`);
+    // console.log(`Bins ${minBin} – ${maxBin}`);
+
+    return { maxBin, minBin };
+}
+
