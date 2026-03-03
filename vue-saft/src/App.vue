@@ -8,7 +8,7 @@ import logoUrl from '@/assets/img/saftLogoTransparent.png'
 
 <template>
   <div class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed" :style="{ backgroundImage: `url(${bgUrl})` }">
-    <div class="min-h-screen flex items-center justify-center p-6">
+    <div class="min-h-screen flex items-start justify-center p-6">
       <div class="w-full max-w-md backdrop-blur-sm bg-saft-brown-50/80
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                p-8 max-h-[90vh] overflow-auto">
