@@ -9,22 +9,22 @@
   </head>
   <body>
 
-  <h2>Spectrogram Viewer</h2>
-
-  <input type="file" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" />
-
-  <button id="processBtn">Compute Spectrogram</button>
-  
-  <div id="progressLabel">no work</div> 
-  <progress id="progressBar" max="100" value="0"></progress>
-
-  <br><br>
-
   <script type="module" src="/src/main.js"></script>
   
  <div id="wrapper">
+  <div>
+  <h2>Spectrogram Viewer</h2>
+
+  <input type="file" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" />
+  <div><button id="processBtn">Compute Spectrogram</button></div>
+  
+
+</div>
+  <div id="progressLabel">no work</div> 
+  <progress id="progressBar" max="100" value="0"></progress>
   <div id="canvasRow">
-    <canvas id="spectrogramCanvas" width="1" height="1"></canvas>
+    
+    <canvas id="spectrogramCanvas" width="300" height="600"></canvas>
     <input type="range" id="vScrollbar" min="0" max="100" value="0" orient="vertical">
   </div>
 

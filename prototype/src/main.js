@@ -32,21 +32,25 @@ let renderData
 let rafId = 0;
 let needsRedraw = false;
 
-processBtn.addEventListener("click", async () => {
-  canvas.width = boxwidth
-  canvas.height = boxheight
+//colour canvas pixels black
+canvas.style.backgroundColor = "black";
 
-  horizontalSlider.style.width = boxwidth+'px';   
-  verticalSlider.style.height = boxheight+'px';
+
+processBtn.addEventListener("click", async () => {
   
   const sample = await getSample(fileInput, channel);
+
   progressLabel.textContent = `FFT progress:`;
   const spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, progressBar);
+
+  closeAudio();
+
   progressLabel.textContent = `Pre rendering progress:`;
   renderData = await computeSpectrogramRenderingData(spectrogram, sample.sampleRate, minFreq, maxFreq, progressBar);
+
   progressLabel.textContent = `no work`;
   progressBar.value = 0;
-  closeAudio();
+
 
   horizontalSlider.min = 0;
   horizontalSlider.max = renderData.width - boxwidth;
