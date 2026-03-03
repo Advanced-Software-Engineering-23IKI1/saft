@@ -105,6 +105,22 @@ canvas.addEventListener("pointermove", (e) => {
   checkOffsetValues();
 });
 
+canvas.addEventListener("pointerup", endPan);
+canvas.addEventListener("pointercancel", endPan);
+
+
+function endPan(e) {
+  isPanning = false;
+  try { canvas.releasePointerCapture(e.pointerId); } catch {}
+}
+
+
+/**
+ * Clamp the current render offsets so the visible box stays within the rendered image bounds,
+ * then sync the horizontal/vertical slider UI values to the updated offsets.
+ *
+ * @returns {void} Does not return a value.
+ */
 function checkOffsetValues() {
   if (renderData) {
 
@@ -126,24 +142,28 @@ function checkOffsetValues() {
   verticalSlider.value = height_offset;
 }
 
-function endPan(e) {
-  isPanning = false;
-  try { canvas.releasePointerCapture(e.pointerId); } catch {}
-}
-canvas.addEventListener("pointerup", endPan);
-canvas.addEventListener("pointercancel", endPan);
 
-
-
+/**
+ * Render the current spectrogram view to the canvas using the current render data,
+ * offsets, and the configured colormap.
+ *
+ * @returns {void} Does not return a value.
+ */
 function renderSpectrogram() {
   if (!renderData){
     return
   }
-  renderPixels(renderData.width, renderData.data, renderData.height, renderData.minBin, renderData.maxBin, renderData.minDB, renderData.maxDB, height_offset, width_offset, colormapInferno, canvas);
+  renderPixels(renderData, height_offset, width_offset, colormapInferno, canvas);
   // generatePNG(pixels, boxwidth, boxheight, imgId, downloadBtnId);
 }
 
 
+/**
+ * Render one chunk of work and schedule the next chunk using a zero-delay timer,
+ * forming a cooperative rendering loop while `rendering` is true.
+ *
+ * @returns {void} Does not return a value.
+ */
 function workChunk() {
   if (!rendering) return;
 
@@ -151,6 +171,17 @@ function workChunk() {
   setTimeout(workChunk, 0);
 }
 
+/**
+ * Start the continuous rendering loop.
+ *
+ * @returns {void} Does not return a value.
+ */
 function startRendering() { rendering = true; workChunk(); }
-function stopRendering() {rendering = false;}
+
+/**
+ * Stop the continuous rendering loop.
+ *
+ * @returns {void} Does not return a value.
+ */
+function stopRendering() { rendering = false; }
 

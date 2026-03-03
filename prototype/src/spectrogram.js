@@ -1,5 +1,6 @@
 import { fft } from './fft.js';
 
+
 /**
  * Compute a magnitude spectrogram from audio samples.
  *
@@ -15,7 +16,6 @@ import { fft } from './fft.js';
  *   timeResolution: number
  * }}
  */
-
 export function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512 ) {
     console.log('DEBUG: samples.length:', samples.length);
 
@@ -116,7 +116,19 @@ function applyHannWindow(frame, size) {
     return out;
 }
 
-
+/**
+ * Prepare derived rendering metadata for a spectrogram so it can be drawn efficiently
+ * (dimensions, bin range, and dB normalization range).
+ *
+ * @param {{ data: Array<Array<number>>, freqBins: number, timeFrames: number }} spectrogram
+ * Spectrogram object containing the magnitude data and its time/frequency dimensions.
+ * @param {number} sampleRate Sample rate of the original audio (Hz).
+ * @param {number} [minFreq=0] Minimum frequency to include (Hz).
+ * @param {number} [maxFreq=sampleRate/2] Maximum frequency to include (Hz).
+ * @returns {{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }}
+ * Rendering data including the original spectrogram data plus computed width/height, selected bin range,
+ * and dB range for normalization.
+ */
 export function computeSpectrogramRenderingData(
     spectrogram,
     sampleRate,
@@ -133,22 +145,37 @@ export function computeSpectrogramRenderingData(
     return {data, width, height, minBin, maxBin, minDB, maxDB}
 }
 
-// TODO: needs to be adjusted
+
+
 /**
- * Render spectrogram RGBA pixels from FFT magnitude frames.
+ * Render a spectrogram-like pixel view onto a canvas by mapping normalized dB values
+ * through a colormap function and writing the resulting RGBA pixels via `ImageData`.
  *
- * @param {number} width Image width (time axis).
- * @param {Array<Array<number>>} data 2D array [time][frequency] of magnitudes.
- * @param {number} height Image height (frequency axis).
- * @param {number} minBin Starting frequency bin (inclusive).
- * @param {number} maxBin Ending frequency bin (inclusive).
- * @param {number} minDB Minimum dB for normalization.
- * @param {number} maxDB Maximum dB for normalization.
- * @param {(x: number) => [number, number, number]} colormap Function mapping [0,1] → RGB.
- * @returns {Uint8ClampedArray} RGBA pixel buffer.
+ * @param {Object} renderData Render source containing the 2D magnitude data and scaling metadata.
+ * @param {number} renderData.width Total width of the render buffer (time frames / columns).
+ * @param {number} renderData.height Total height of the render buffer (frequency bins / rows).
+ * @param {Array<Array<number>>} renderData.data 2D array indexed as `data[t][bin]`.
+ * @param {number} renderData.minBin Minimum bin index represented in the view.
+ * @param {number} renderData.maxBin Maximum bin index represented in the view.
+ * @param {number} renderData.minDB Minimum dB value used for normalization.
+ * @param {number} renderData.maxDB Maximum dB value used for normalization.
+ * @param {number} height_offset Vertical offset (in bins/pixels) into the render buffer.
+ * @param {number} width_offset Horizontal offset (in frames/pixels) into the render buffer.
+ * @param {(value: number) => Array<number>} colormap Function that maps a normalized value in [0, 1]
+ * to an RGB triplet `[r, g, b]` (0–255).
+ * @param {HTMLCanvasElement} canvas Target canvas to draw into (uses its current width/height).
+ * @returns {{ width_offset: number, height_offset: number }} The offsets used for rendering.
  */
-export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, height_offset, width_offset, colormap, canvas) {
-    // let pixels = new Uint8ClampedArray(boxwidth * boxheight * 4); // RGBA
+export function renderPixels(renderData, height_offset, width_offset, colormap, canvas) {
+
+    const width = renderData.width
+    const height = renderData.height
+    const data = renderData.data
+    const minBin = renderData.minBin
+    const maxBin = renderData.maxBin
+    const minDB = renderData.minDB
+    const maxDB = renderData.maxDB
+
     const boxwidth = canvas.width
     const boxheight = canvas.height
     
@@ -164,11 +191,6 @@ export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, 
 
             let y = height_offset + ly;
 
-            // Logarithmic mapping:
-            // const logMin = Math.log10(minBin + 1);
-            // const logMax = Math.log10(maxBin + 1);
-            // const logBin = logMin + (y / height) * (logMax - logMin);
-            // const binFloat = Math.pow(10, logBin) - 1;
             const binFloat = minBin + (y / height) * height;
             const bin = Math.floor(binFloat);
 
@@ -183,11 +205,6 @@ export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, 
 
             const flippedY = boxheight - 1 - ly;
             const idx = (flippedY * boxwidth + tx) * 4;
-
-            // pixels[idx] = r;
-            // pixels[idx + 1] = g;
-            // pixels[idx + 2] = b;
-            // pixels[idx + 3] = 255;
 
             imagedata.data[idx] = r;
             imagedata.data[idx+1] = g;
@@ -245,8 +262,6 @@ function computeDBrange(timeFrames, data, minBin, maxBin) {
  * @throws {Error} If the computed range is invalid.
  */
 function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
-    // Compute frequency resolution
-    // freqBins = windowSize/2 + 1
     const windowSize = (freqBins - 1) * 2;
     const freqResolution = sampleRate / windowSize;
 
@@ -256,8 +271,6 @@ function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
     if (minBin >= maxBin) {
         throw new Error("Invalid frequency range");
     }
-    // console.log(`Showing frequencies ${minFreq}Hz – ${maxFreq}Hz`);
-    // console.log(`Bins ${minBin} – ${maxBin}`);
 
     return { maxBin, minBin };
 }

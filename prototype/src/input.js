@@ -1,15 +1,16 @@
-// import { fetchFile } from '@ffmpeg/util';
-// import { FFmpeg } from '@ffmpeg/ffmpeg';  
-
-// export const ffmpeg = new FFmpeg();
-
+// for memory reasons declared once and reused
 let audioCtx; 
 
+
+
 /**
- * Load a WAV file and return its samples and sample rate.
+ * Load an audio file from an `<input type="file">`, decode it via the Web Audio API,
+ * and return PCM samples for a chosen channel along with the sample rate.
  *
- * @param {HTMLInputElement} fileInput File input element with a WAV file.
- * @returns {Promise<{samples: Float32Array, sampleRate: number}>} Audio data.
+ * @param {HTMLInputElement} fileInput File input element whose first selected file will be read.
+ * @param {number} [channel=0] Zero-based channel index to extract (clamped to the available channels).
+ * @returns {Promise<{ samples: Float32Array, sampleRate: number } | undefined>} Resolves to an object
+ * containing the channel samples and sample rate, or `undefined` if no file was selected.
  */
 export async function getSample(fileInput, channel = 0) {
   const file = fileInput.files?.[0];
@@ -32,6 +33,11 @@ export async function getSample(fileInput, channel = 0) {
 }
 
 
+/**
+ * Close the shared Web Audio `AudioContext` (if it exists) and clear the reference.
+ *
+ * @returns {Promise<void>} Resolves when the audio context has been closed (or immediately if none exists).
+ */
 export async function closeAudio() {
   if (audioCtx) {
     await audioCtx.close();
