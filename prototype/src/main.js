@@ -1,5 +1,5 @@
-import { computeSpectrogram, computeSpectrogramRenderingData, generatePNG, renderPixels } from './spectrogram.js';
-import { getSample } from './input.js'
+import { computeSpectrogram, computeSpectrogramRenderingData, renderPixels } from './spectrogram.js';
+import { getSample, closeAudio } from './input.js'
 import { colormapInferno } from './colormaps.js';
 
 
@@ -15,12 +15,13 @@ var canvas = document.getElementById("spectrogramCanvas");
 var horizontalSlider = document.getElementById("hScrollbar")
 var verticalSlider = document.getElementById("vScrollbar")
 
-const maxFreq = 18000
+const maxFreq = 20000
 const minFreq = 0
 const windowSize = 2048
 const hopSize = 250
 const boxheight = 600
 const boxwidth = 300
+const channel = 0
 let height_offset = 0
 let width_offset = 0
 
@@ -37,9 +38,10 @@ processBtn.addEventListener("click", async () => {
   horizontalSlider.style.width = boxwidth+'px';   
   verticalSlider.style.height = boxheight+'px';
   
-  const sample = await getSample(fileInput);
+  const sample = await getSample(fileInput, channel);
   const spectrogram = computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize);
   renderData = computeSpectrogramRenderingData(spectrogram, sample.sampleRate, minFreq, maxFreq);
+  closeAudio();
 
   horizontalSlider.min = 0;
   horizontalSlider.max = renderData.width - boxwidth;

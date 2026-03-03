@@ -1,4 +1,9 @@
+// import { fetchFile } from '@ffmpeg/util';
+// import { FFmpeg } from '@ffmpeg/ffmpeg';  
 
+// export const ffmpeg = new FFmpeg();
+
+let audioCtx; 
 
 /**
  * Load a WAV file and return its samples and sample rate.
@@ -6,25 +11,30 @@
  * @param {HTMLInputElement} fileInput File input element with a WAV file.
  * @returns {Promise<{samples: Float32Array, sampleRate: number}>} Audio data.
  */
-export async function getSample(fileInput){
-  const file = fileInput.files[0];
+export async function getSample(fileInput, channel = 0) {
+  const file = fileInput.files?.[0];
   if (!file) {
-    alert("Please select a WAV file.");
+    alert("Please select an audio file.");
     return;
   }
 
-  const arrayBuffer = await file.arrayBuffer();
+  audioCtx ??= new AudioContext();
 
-  // Decode audio using Web Audio API
-  const audioCtx = new AudioContext();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const arrayBuffer = await file.arrayBuffer(); 
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer); 
 
-  const samples = audioBuffer.getChannelData(0);
-  const sampleRate = audioBuffer.sampleRate;
+  const ch = Math.min(channel, audioBuffer.numberOfChannels - 1);
 
-  console.log("Samples:", samples.length);
-  console.log("Sample Rate:", sampleRate);
+  const samples = audioBuffer.getChannelData(ch); 
+  const sampleRate = audioBuffer.sampleRate; 
 
-  return {samples, sampleRate}
-
+  return { samples, sampleRate };
 }
+
+
+export async function closeAudio() {
+  if (audioCtx) {
+    await audioCtx.close();
+    audioCtx = null;
+  }
+  }

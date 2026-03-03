@@ -1,7 +1,4 @@
 import { fft } from './fft.js';
-import UPNG from "upng-js";
-
-
 
 /**
  * Compute a magnitude spectrogram from audio samples.
@@ -136,44 +133,6 @@ export function computeSpectrogramRenderingData(
     return {data, width, height, minBin, maxBin, minDB, maxDB}
 }
 
-
-/**
- * Encode RGBA pixels as a PNG, display it in an <img>, and attach download handler.
- *
- * @param {Uint8ClampedArray} pixels RGBA pixel buffer.
- * @param {number} width Image width in pixels.
- * @param {number} height Image height in pixels.
- * @param {string} imgId ID of the target <img> element.
- * @param {string} downloadBtnId ID of the download button element.
- * @throws {Error} If the target <img> element is not found.
- */
-export function generatePNG(pixels, width, height, imgId, downloadBtnId) {
-    const rgbaBytes = new Uint8Array(pixels.buffer); // pixels = Uint8ClampedArray
-
-    // Encode as PNG
-    const pngBuffer = UPNG.encode([rgbaBytes.buffer], width, height, 0); // 0 = truecolor RGBA    const blob = new Blob([pngBuffer], { type: 'image/png' });
-
-    const img = document.getElementById(imgId);
-    if (!img) throw new Error(`No <img> with id="${imgId}" found`);
-
-    const blob = new Blob([pngBuffer], { type: 'image/png' });
-    const url = URL.createObjectURL(blob);
-    img.src = url;
-
-    const downloadBtn = document.getElementById(downloadBtnId);
-    if (downloadBtn) {
-        downloadBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `spectrogram-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-    }
-}
-
-
 // TODO: needs to be adjusted
 /**
  * Render spectrogram RGBA pixels from FFT magnitude frames.
@@ -198,14 +157,10 @@ export function renderPixels(width, data, height, minBin, maxBin, minDB, maxDB, 
 
     for (let tx = 0; tx < boxwidth; tx++) {
 
-        
         let t = width_offset + tx;
         const frame = data[t] || [];
 
-
         for (let ly = 0; ly < boxheight; ly++) {
-
-            
 
             let y = height_offset + ly;
 
