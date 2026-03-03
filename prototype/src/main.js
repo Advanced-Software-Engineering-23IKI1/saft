@@ -4,6 +4,7 @@ import { colormapInferno } from './colormaps.js';
 
 
 import pako from "pako";
+import { fft } from './fft.js';
 
 
 globalThis.pako = pako;
@@ -13,6 +14,8 @@ const processBtn = document.getElementById("processBtn");
 var canvas = document.getElementById("spectrogramCanvas");
 var horizontalSlider = document.getElementById("hScrollbar")
 var verticalSlider = document.getElementById("vScrollbar")
+var progressBar = document.getElementById("progressBar")
+var progressLabel = document.getElementById("progressLabel")
 
 const maxFreq = 20000
 const minFreq = 0
@@ -37,8 +40,12 @@ processBtn.addEventListener("click", async () => {
   verticalSlider.style.height = boxheight+'px';
   
   const sample = await getSample(fileInput, channel);
-  const spectrogram = computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize);
-  renderData = computeSpectrogramRenderingData(spectrogram, sample.sampleRate, minFreq, maxFreq);
+  progressLabel.textContent = `FFT progress:`;
+  const spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, progressBar);
+  progressLabel.textContent = `Pre rendering progress:`;
+  renderData = await computeSpectrogramRenderingData(spectrogram, sample.sampleRate, minFreq, maxFreq, progressBar);
+  progressLabel.textContent = `no work`;
+  progressBar.value = 0;
   closeAudio();
 
   horizontalSlider.min = 0;

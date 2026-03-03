@@ -1,5 +1,6 @@
 import { fft } from './fft.js';
 
+const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
 /**
  * Compute a magnitude spectrogram from audio samples.
@@ -8,6 +9,7 @@ import { fft } from './fft.js';
  * @param {number} sampleRate Sample rate in Hz.
  * @param {number} [windowSize=2048] FFT window size (power of 2).
  * @param {number} [hopSize=512] Hop size between frames in samples.
+ * @param {HTMLProgressElement} fftProgressBar Progress bar to update during FFT computation.
  * @returns {{
  *   data: number[][],
  *   freqBins: number,
@@ -16,9 +18,8 @@ import { fft } from './fft.js';
  *   timeResolution: number
  * }}
  */
-export function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512 ) {
+export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgressBar ) {
     console.log('DEBUG: samples.length:', samples.length);
-
 
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
@@ -34,7 +35,7 @@ export function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSi
         throw new Error(`Input samples contain NaN/Infinity at index ${firstBad}: ${samples[firstBad]}`);
     }
 
-    const { spectrogram, half } = computeFFTs(windowSize, samples, hopSize);
+    const { spectrogram, half } = await computeFFTs(windowSize, samples, hopSize, fftProgressBar);
 
     return {
         data: spectrogram,
@@ -53,15 +54,20 @@ export function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSi
  * @param {number} windowSize Number of samples per FFT window.
  * @param {Float32Array|Array<number>} samples Input audio samples.
  * @param {number} hopSize Step size between successive windows.
+ * @param {HTMLProgressElement} fftProgressBar Progress bar to update during FFT computation.
  * @returns {{ spectrogram: Array<Array<number>>, half: number }}
  *          - spectrogram: 2D array [time][frequency] of magnitudes.
  *          - half: Number of positive frequency bins per window.
  */
-function computeFFTs(windowSize, samples, hopSize) {
+async function computeFFTs(windowSize, samples, hopSize, fftProgressBar) {
     const spectrogram = [];
     const half = Math.floor(windowSize / 2) + 1;
+    const maxVal = samples.length;
+    fftProgressBar.max = maxVal;
+    fftProgressBar.value = 0;
 
-    for (let start = 0; start + windowSize <= samples.length; start += hopSize) {
+    for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
+        
         // Frame (works for Float32Array too)
         const frame = samples.slice(start, start + windowSize);
 
@@ -92,7 +98,13 @@ function computeFFTs(windowSize, samples, hopSize) {
         }
 
         spectrogram.push(magnitude);
+
+        if ((start & (Math.floor(maxVal/50)-1)) === 0) {
+            fftProgressBar.value = start;
+            await nextFrame(); 
+        }
     }
+    fftProgressBar.value = maxVal;
     return { spectrogram, half };
 }
 
@@ -125,15 +137,17 @@ function applyHannWindow(frame, size) {
  * @param {number} sampleRate Sample rate of the original audio (Hz).
  * @param {number} [minFreq=0] Minimum frequency to include (Hz).
  * @param {number} [maxFreq=sampleRate/2] Maximum frequency to include (Hz).
+ * @param {HTMLProgressElement} renderDataProgressBar Progress bar to update during dB range computation.
  * @returns {{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }}
  * Rendering data including the original spectrogram data plus computed width/height, selected bin range,
  * and dB range for normalization.
  */
-export function computeSpectrogramRenderingData(
+export async function computeSpectrogramRenderingData(
     spectrogram,
     sampleRate,
     minFreq = 0,
-    maxFreq = sampleRate / 2
+    maxFreq = sampleRate / 2,
+    renderDataProgressBar
 ) {
     const { data, freqBins, timeFrames } = spectrogram;
     const { maxBin, minBin } = computeBins(freqBins, sampleRate, minFreq, maxFreq);
@@ -141,7 +155,7 @@ export function computeSpectrogramRenderingData(
     const height = maxBin - minBin + 1
     const width = timeFrames;
 
-    const { maxDB, minDB } = computeDBrange(width, data, minBin, maxBin);
+    const { maxDB, minDB } = await computeDBrange(width, data, minBin, maxBin, renderDataProgressBar);
     return {data, width, height, minBin, maxBin, minDB, maxDB}
 }
 
@@ -227,12 +241,16 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
  * @param {Array<Array<number>>} data 2D array [time][frequency] of magnitudes.
  * @param {number} minBin Starting bin index (inclusive).
  * @param {number} maxBin Ending bin index (inclusive).
+ * @param {HTMLProgressElement} renderDataProgressBar Progress bar to update during computation.
  * @returns {{ minDB: number, maxDB: number }}
  */
-function computeDBrange(timeFrames, data, minBin, maxBin) {
+async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgressBar) {
 
     let minDB = Infinity;
     let maxDB = -Infinity;
+
+    renderDataProgressBar.value = 0;
+    renderDataProgressBar.max = timeFrames;
 
     for (let t = 0; t < timeFrames; t++) {
         const frame = data[t] || [];
@@ -242,11 +260,17 @@ function computeDBrange(timeFrames, data, minBin, maxBin) {
             if (db < minDB) minDB = db;
             if (db > maxDB) maxDB = db;
         }
+        if ((t & (Math.floor(timeFrames/50) - 1)) === 0) {
+            renderDataProgressBar.value = t;
+            await nextFrame();
+        }
     }
 
     // Clamp dynamic range (better visuals)
     maxDB = Math.max(maxDB, -10);
     minDB = maxDB - 80; 
+
+    renderDataProgressBar.value = timeFrames;
 
     return { maxDB, minDB };
 }
