@@ -177,10 +177,11 @@ export async function computeSpectrogramRenderingData(
  * @param {number} width_offset Horizontal offset (in frames/pixels) into the render buffer.
  * @param {(value: number) => Array<number>} colormap Function that maps a normalized value in [0, 1]
  * to an RGB triplet `[r, g, b]` (0–255).
+ * @param {number} zoom Zoom level for the rendering.
  * @param {HTMLCanvasElement} canvas Target canvas to draw into (uses its current width/height).
  * @returns {{ width_offset: number, height_offset: number }} The offsets used for rendering.
  */
-export function renderPixels(renderData, height_offset, width_offset, colormap, canvas) {
+export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas) {
 
     const width = renderData.width
     const height = renderData.height
@@ -192,22 +193,26 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
 
     const boxwidth = canvas.width
     const boxheight = canvas.height
+
+    // How many source pixels (frames/bins) you advance per 1 screen pixel.
+    // zoom = 1 => 1:1, zoom = 2 => 0.5 source px per screen px (zoomed in),
+    // zoom = 0.5 => 2 source px per screen px (zoomed out).
+    const step = 1 / zoom;
+
     
     var ctx = canvas.getContext("2d");
     var imagedata = ctx.createImageData(boxwidth, boxheight);
 
     for (let tx = 0; tx < boxwidth; tx++) {
-
-        let t = width_offset + tx;
+        const tFloat = width_offset + tx * step;
+        const t = Math.floor(tFloat);
         const frame = data[t] || [];
 
         for (let ly = 0; ly < boxheight; ly++) {
+            const yFloat = height_offset + ly * step;
 
-            let y = height_offset + ly;
-
-            const binFloat = minBin + (y / height) * height;
+            const binFloat = minBin + yFloat;
             const bin = Math.floor(binFloat);
-
 
             const val = Math.max(frame[bin] || 0, 1e-12);
             const db = 20 * Math.log10(val);

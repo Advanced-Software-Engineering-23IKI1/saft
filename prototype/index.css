@@ -1,6 +1,7 @@
 
 #spectrogramCanvas {
   touch-action: none; /* prevents browser pan/zoom gestures on this element */
+  background-color: black;
   padding:0;
 }
 

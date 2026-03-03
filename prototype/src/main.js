@@ -21,19 +21,19 @@ const maxFreq = 20000
 const minFreq = 0
 const windowSize = 2048
 const hopSize = 250
-const boxheight = 600
-const boxwidth = 300
+const boxheight = canvas.height
+const boxwidth = canvas.width
 const channel = 0
+
 let height_offset = 0
 let width_offset = 0
+let zoom = 1;
+const minZoom = 0.2, maxZoom = 10;
 
 let renderData
 
 let rafId = 0;
 let needsRedraw = false;
-
-//colour canvas pixels black
-canvas.style.backgroundColor = "black";
 
 
 processBtn.addEventListener("click", async () => {
@@ -96,36 +96,74 @@ verticalSlider.addEventListener('input', (e) => {
 
 
 
-let isPanning = false;
+
+let pointers = new Map(); // pointerId -> {x,y}
 let lastX = 0, lastY = 0;
+
+// Pinch state
+let startDist = 0;
+let startZoom = 1;
+
+
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
 
 canvas.addEventListener("pointerdown", (e) => {
   canvas.setPointerCapture(e.pointerId);
-  isPanning = true;
-  lastX = e.clientX;
-  lastY = e.clientY;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size === 1) {
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+  } else if (pointers.size === 2) {
+    const [p1, p2] = [...pointers.values()];
+    startDist = distance(p1, p2);
+    startZoom = zoom;
+  }
 });
 
 canvas.addEventListener("pointermove", (e) => {
-  if (!isPanning) return;
-  const dx = e.clientX - lastX;
-  const dy = e.clientY - lastY;
-  lastX = e.clientX;
-  lastY = e.clientY;
-  width_offset -= Math.round(dx);
-  height_offset += Math.round(dy);
-  checkOffsetValues();
-  invalidate();
+  if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+ 
+  if (pointers.size === 1) {
+    // pan with one finger (movement => offset change)
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+    width_offset -= Math.round(dx);
+    height_offset += Math.round(dy);
+    checkOffsetValues();
+    invalidate();
+    return;
+  }
+
+  if (pointers.size === 2) {
+    // 2-finger pinch zoom (distance change => scale)
+    const [p1, p2] = [...pointers.values()];
+    const d = distance(p1, p2);
+    if (startDist > 0) {
+      const nextZoom = startZoom * (d / startDist);
+      zoom = Math.max(minZoom, Math.min(maxZoom, nextZoom));
+      invalidate();
+    }
+  }
 });
 
-canvas.addEventListener("pointerup", endPan);
-canvas.addEventListener("pointercancel", endPan);
+function endPointer(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) startDist = 0;
 
-function endPan(e) {
-  isPanning = false;
   try { canvas.releasePointerCapture(e.pointerId); } catch {}
 }
-
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("pointerleave", endPointer);
 
 /**
  * Clamp the current render offsets so the visible box stays within the rendered image bounds,
@@ -165,7 +203,7 @@ function renderSpectrogram() {
   if (!renderData){
     return
   }
-  renderPixels(renderData, height_offset, width_offset, colormapInferno, canvas);
+  renderPixels(renderData, height_offset, width_offset, colormapInferno, zoom, canvas);
   // generatePNG(pixels, boxwidth, boxheight, imgId, downloadBtnId);
 }
 
