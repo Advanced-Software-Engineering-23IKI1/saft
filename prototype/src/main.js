@@ -8,7 +8,6 @@ import pako from "pako";
 
 globalThis.pako = pako;
 
-
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 var canvas = document.getElementById("spectrogramCanvas");
@@ -25,13 +24,12 @@ const channel = 0
 let height_offset = 0
 let width_offset = 0
 
-
 let renderData
-let rendering = false;
 
+let rafId = 0;
+let needsRedraw = false;
 
 processBtn.addEventListener("click", async () => {
-  stopRendering();
   canvas.width = boxwidth
   canvas.height = boxheight
 
@@ -48,8 +46,8 @@ processBtn.addEventListener("click", async () => {
 
   verticalSlider.min = 0;
   verticalSlider.max = renderData.height - boxheight
+  invalidate();
 
-  startRendering();
 });
 
 
@@ -66,6 +64,7 @@ canvas.addEventListener('wheel', (e) => {
   height_offset -= Math.floor(dy/2);
 
   checkOffsetValues();
+  invalidate()
 
 }, { passive: false });
 
@@ -73,12 +72,14 @@ canvas.addEventListener('wheel', (e) => {
 horizontalSlider.addEventListener('input', (e) => {
     const value = Number(e.target.value);
     width_offset = value
+    invalidate()
 });
 
 
 verticalSlider.addEventListener('input', (e) => {
     const value = Number(e.target.value);
     height_offset = value
+    invalidate()
 });
 
 
@@ -103,11 +104,11 @@ canvas.addEventListener("pointermove", (e) => {
   width_offset -= Math.round(dx);
   height_offset += Math.round(dy);
   checkOffsetValues();
+  invalidate();
 });
 
 canvas.addEventListener("pointerup", endPan);
 canvas.addEventListener("pointercancel", endPan);
-
 
 function endPan(e) {
   isPanning = false;
@@ -157,31 +158,21 @@ function renderSpectrogram() {
   // generatePNG(pixels, boxwidth, boxheight, imgId, downloadBtnId);
 }
 
-
 /**
- * Render one chunk of work and schedule the next chunk using a zero-delay timer,
- * forming a cooperative rendering loop while `rendering` is true.
+ * Mark the spectrogram view as needing a redraw and schedule a single render on the next
+ * browser repaint using `requestAnimationFrame`.
+ *
+ * Multiple calls to `invalidate()` within the same frame are coalesced into one render.
  *
  * @returns {void} Does not return a value.
  */
-function workChunk() {
-  if (!rendering) return;
-
-  renderSpectrogram()
-  setTimeout(workChunk, 0);
+function invalidate() {
+  needsRedraw = true;
+  if (rafId) return;
+  rafId = requestAnimationFrame(() => {
+    rafId = 0;
+    if (!needsRedraw) return;
+    needsRedraw = false;
+    renderSpectrogram();
+  });
 }
-
-/**
- * Start the continuous rendering loop.
- *
- * @returns {void} Does not return a value.
- */
-function startRendering() { rendering = true; workChunk(); }
-
-/**
- * Stop the continuous rendering loop.
- *
- * @returns {void} Does not return a value.
- */
-function stopRendering() { rendering = false; }
-
