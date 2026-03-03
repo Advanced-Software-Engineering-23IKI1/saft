@@ -27,6 +27,11 @@
 </div>
 
 <style>
+
+#spectrogramCanvas {
+  touch-action: none; /* prevents browser pan/zoom gestures on this element */
+}
+
 #wrapper {
   display: flex;
   flex-direction: column;
@@ -39,20 +44,94 @@
   align-items: center;
 }
 
-#vScrollbar{
-  writing-mode: vertical-lr;  
-  direction: rtl;             
-  appearance: slider-vertical; 
-  -webkit-appearance: slider-vertical;
-  height: 1px;        
-  accent-color: #9aa0a6;
+/* Reset default styling */
+#vScrollbar,
+#hScrollbar {
+
+  margin: 1;
+  padding: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  touch-action: none;
 }
 
-#hScrollbar {
-  width: 1px;             
-  margin-top: 1px;
-  accent-color: #9aa0a6;
+/* -------------------- */
+/* VERTICAL SCROLLBAR   */
+/* -------------------- */
+
+#vScrollbar {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 8px;      /* thickness */
+  height: 120px;   /* length */
 }
+
+/* Transparent track */
+#vScrollbar::-webkit-slider-runnable-track {
+background: gray;
+}
+
+/* Black thumb */
+#vScrollbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: black;
+  width: 12px;
+  height: 12px;
+border-radius: 3px;   cursor: pointer;
+  margin-top: -2px;
+}
+
+/* Firefox */
+#vScrollbar::-moz-range-track {
+background: gray;}
+
+#vScrollbar::-moz-range-thumb {
+  background: black;
+  border: none;
+  width: 12px;
+  height: 12px;
+border-radius: 3px; }
+
+
+/* -------------------- */
+/* HORIZONTAL SCROLLBAR */
+/* -------------------- */
+
+#hScrollbar {
+  width: 120px;
+  height: 8px;
+}
+
+/* Transparent track */
+#hScrollbar::-webkit-slider-runnable-track {
+  background: gray;
+}
+
+/* Black thumb */
+#hScrollbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: black;
+  width: 12px;
+  height: 12px;
+border-radius: 3px;   cursor: pointer;
+}
+
+/* Firefox */
+#hScrollbar::-moz-range-track {
+  background: gray;
+}
+
+#hScrollbar::-moz-range-thumb {
+  background: black;
+  border: none;
+  width: 12px;
+  height: 12px;
+border-radius: 3px; }
+
+
 </style>
 </body>
 </html>
