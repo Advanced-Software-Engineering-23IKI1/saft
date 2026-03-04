@@ -67,20 +67,43 @@ processBtn.addEventListener("click", async () => {
 
 
 
-
 canvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
+  e.preventDefault(); 
+
+  // Ctrl+wheel => zoom
+  if (e.ctrlKey) {
+    const mouseX = e.offsetX;
+    const mouseY = e.offsetY;
+
+    const zoomFactor = Math.exp(-e.deltaY * 0.001);
+
+    const oldZoom = zoom;
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, oldZoom * zoomFactor));
+
+    // for stable zooming
+    const internalX = internalWidthOffset  + mouseX * (1 / oldZoom);
+    const internalY = internalHeightOffset + mouseY * (1 / oldZoom);
+
+    zoom = newZoom;
+
+    const internalValuesPerPixel = (1 / zoom)
+
+    internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
+    internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
+
+    checkInternalOffsetValues();
+    invalidate();
+    return;
+  }
 
   const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
   const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
 
-  internalWidthOffset += Math.floor(dx/2);
-
-  internalHeightOffset += Math.floor(dy/2);
+  internalWidthOffset  += Math.floor(dx / 2);
+  internalHeightOffset += Math.floor(dy / 2);
 
   checkInternalOffsetValues();
-  invalidate()
-
+  invalidate();
 }, { passive: false });
 
 
