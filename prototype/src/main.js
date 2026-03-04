@@ -168,7 +168,18 @@ canvas.addEventListener("pointermove", (e) => {
 
 function endPointer(e) {
   pointers.delete(e.pointerId);
-  if (pointers.size < 2) pinchStartDist = 0;
+
+
+  // new pan origin
+  if (pointers.size === 1) {
+    const [p] = pointers.values();
+    lastX = p.x;
+    lastY = p.y;
+  }
+
+   if (pointers.size < 2) {
+    pinchStartDist = 0;
+  }
 
   try { canvas.releasePointerCapture(e.pointerId); } catch {}
 }
