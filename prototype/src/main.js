@@ -20,17 +20,18 @@ const hopSize = 250
 const channel = 0
 
 
+
+// Animation
 let renderData
 let needsRedraw = false;
+let rafId = 0;
 
 
 // panning and pinching 
-let rafId = 0;
-
 let internalHeightOffset = 0
 let internalWidthOffset = 0
 let zoom = 1;
-let minZoom = 0.2, maxZoom = 20;
+let minZoom = 0.2, maxZoom = 25;
 
 let pointers = new Map(); // pointerId -> {x,y}
 let lastX = 0, lastY = 0;
@@ -59,8 +60,8 @@ processBtn.addEventListener("click", async () => {
   progressLabel.textContent = `no work`;
   progressBar.value = 0;
 
-  checkInternalOffsetValues()
   updateMinZoom()
+  checkInternalOffsetValues()
   invalidate();
 
 });
@@ -99,8 +100,8 @@ canvas.addEventListener('wheel', (e) => {
   const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
   const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
 
-  internalWidthOffset  += Math.floor(dx / 2);
-  internalHeightOffset += Math.floor(dy / 2);
+  internalWidthOffset  += Math.floor(dx / 2)*(1/zoom);
+  internalHeightOffset += Math.floor(dy / 2)*(1/zoom);
 
   checkInternalOffsetValues();
   invalidate();
@@ -255,6 +256,16 @@ function updateMinZoom(){
   const minZoomW = canvas.width  / renderData.width;
   const minZoomH = canvas.height / renderData.height;
   minZoom = Math.max(minZoomW, minZoomH);
+  if (zoom<minZoom){
+    zoom=minZoom
+    checkInternalOffsetValues();
+    invalidate()
+  }
+  if (zoom>maxZoom){
+    zoom=maxZoom
+    checkInternalOffsetValues();
+    invalidate()
+  }
 
 }
 
