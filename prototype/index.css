@@ -35,8 +35,8 @@
 /* -------------------- */
 
 #vScrollbar {
-  writing-mode: vertical-lr;
-  direction: rtl;
+  writing-mode: vertical-rl;
+  direction: ltr;
   width: 8px;      /* thickness */
   height: 600px;   /* length */
 }

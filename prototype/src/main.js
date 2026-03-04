@@ -1,17 +1,13 @@
 import { computeSpectrogram, computeSpectrogramRenderingData, renderPixels } from './spectrogram.js';
 import { getSample, closeAudio } from './input.js'
 import { colormapInferno } from './colormaps.js';
+import {distance, getMidpoint } from './utils.js';
 
 
-import pako from "pako";
-import { fft } from './fft.js';
-
-
-globalThis.pako = pako;
 
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
-var canvas = document.getElementById("spectrogramCanvas");
+export var canvas = document.getElementById("spectrogramCanvas");
 var horizontalSlider = document.getElementById("hScrollbar")
 var verticalSlider = document.getElementById("vScrollbar")
 var progressBar = document.getElementById("progressBar")
@@ -21,19 +17,31 @@ const maxFreq = 20000
 const minFreq = 0
 const windowSize = 2048
 const hopSize = 250
-const boxheight = canvas.height
-const boxwidth = canvas.width
 const channel = 0
 
-let height_offset = 0
-let width_offset = 0
-let zoom = 1;
-const minZoom = 0.2, maxZoom = 10;
 
 let renderData
-
-let rafId = 0;
 let needsRedraw = false;
+
+
+// panning and pinching 
+let rafId = 0;
+
+let internalHeightOffset = 0
+let internalWidthOffset = 0
+let zoom = 1;
+let minZoom = 0.2, maxZoom = 20;
+
+let pointers = new Map(); // pointerId -> {x,y}
+let lastX = 0, lastY = 0;
+
+// Pinch state
+let pinchStartDist = 0;
+let pinchStartZoom = 1;
+let pinchStartCenterCanvas = null;
+let pinchStartCenterInternal = null; 
+
+
 
 
 processBtn.addEventListener("click", async () => {
@@ -51,12 +59,8 @@ processBtn.addEventListener("click", async () => {
   progressLabel.textContent = `no work`;
   progressBar.value = 0;
 
-
-  horizontalSlider.min = 0;
-  horizontalSlider.max = renderData.width - boxwidth;
-
-  verticalSlider.min = 0;
-  verticalSlider.max = renderData.height - boxheight
+  checkInternalOffsetValues()
+  updateMinZoom()
   invalidate();
 
 });
@@ -70,11 +74,11 @@ canvas.addEventListener('wheel', (e) => {
   const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
   const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
 
-  width_offset += Math.floor(dx/2);
+  internalWidthOffset += Math.floor(dx/2);
 
-  height_offset -= Math.floor(dy/2);
+  internalHeightOffset += Math.floor(dy/2);
 
-  checkOffsetValues();
+  checkInternalOffsetValues();
   invalidate()
 
 }, { passive: false });
@@ -82,74 +86,81 @@ canvas.addEventListener('wheel', (e) => {
 
 horizontalSlider.addEventListener('input', (e) => {
     const value = Number(e.target.value);
-    width_offset = value
+    internalWidthOffset = value
     invalidate()
 });
 
 
 verticalSlider.addEventListener('input', (e) => {
     const value = Number(e.target.value);
-    height_offset = value
+    internalHeightOffset = value
     invalidate()
 });
 
 
-
-
-
-let pointers = new Map(); // pointerId -> {x,y}
-let lastX = 0, lastY = 0;
-
-// Pinch state
-let startDist = 0;
-let startZoom = 1;
-
-
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
 canvas.addEventListener("pointerdown", (e) => {
   canvas.setPointerCapture(e.pointerId);
-  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const point = {x: e.clientX,y: e.clientY};
+  pointers.set(e.pointerId, point);
 
   if (pointers.size === 1) {
-    lastX = e.clientX;
-    lastY = e.clientY;
+    lastX = point.x;
+    lastY = point.y;
 
-  } else if (pointers.size === 2) {
+  } if (pointers.size === 2) {
     const [p1, p2] = [...pointers.values()];
-    startDist = distance(p1, p2);
-    startZoom = zoom;
+
+    pinchStartDist = distance(p1, p2);
+    pinchStartZoom = zoom;
+    pinchStartCenterCanvas = getMidpoint(p1, p2);
+
+    const internalValuesPerPixel = (1 / pinchStartZoom)
+
+    // for stable panning and zooming
+    pinchStartCenterInternal = {
+      x: internalWidthOffset + pinchStartCenterCanvas.x * internalValuesPerPixel,
+      y: internalHeightOffset + pinchStartCenterCanvas.y * internalValuesPerPixel,
+    };
   }
 });
 
+
 canvas.addEventListener("pointermove", (e) => {
   if (!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const point = {x: e.clientX,y: e.clientY};
+  pointers.set(e.pointerId, point);
 
+  const step = 1 / zoom;
  
   if (pointers.size === 1) {
-    // pan with one finger (movement => offset change)
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-    lastX = e.clientX;
-    lastY = e.clientY;
+    // pan: screen px -> source px via step
+    const dx = point.x - lastX;
+    const dy = point.y - lastY;
+    lastX = point.x;
+    lastY = point.y;
 
-    width_offset -= Math.round(dx);
-    height_offset += Math.round(dy);
-    checkOffsetValues();
+    internalWidthOffset  -= dx * step;
+    internalHeightOffset -= dy * step; 
+
+    checkInternalOffsetValues();     
     invalidate();
     return;
   }
 
-  if (pointers.size === 2) {
-    // 2-finger pinch zoom (distance change => scale)
+   if (pointers.size === 2) {
     const [p1, p2] = [...pointers.values()];
-    const d = distance(p1, p2);
-    if (startDist > 0) {
-      const nextZoom = startZoom * (d / startDist);
-      zoom = Math.max(minZoom, Math.min(maxZoom, nextZoom));
+    const pinchCurrentDist = distance(p1, p2);
+
+    if (pinchStartDist > 0) {
+      const newZoom = pinchStartZoom * (pinchCurrentDist / pinchStartDist);
+      zoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+
+      const internalValuesPerPixel = (1 / zoom)
+
+      internalWidthOffset  = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
+      internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
+
+      checkInternalOffsetValues();
       invalidate();
     }
   }
@@ -157,7 +168,7 @@ canvas.addEventListener("pointermove", (e) => {
 
 function endPointer(e) {
   pointers.delete(e.pointerId);
-  if (pointers.size < 2) startDist = 0;
+  if (pointers.size < 2) pinchStartDist = 0;
 
   try { canvas.releasePointerCapture(e.pointerId); } catch {}
 }
@@ -165,31 +176,52 @@ canvas.addEventListener("pointerup", endPointer);
 canvas.addEventListener("pointercancel", endPointer);
 canvas.addEventListener("pointerleave", endPointer);
 
+
+
 /**
  * Clamp the current render offsets so the visible box stays within the rendered image bounds,
  * then sync the horizontal/vertical slider UI values to the updated offsets.
  *
  * @returns {void} Does not return a value.
  */
-function checkOffsetValues() {
-  if (renderData) {
+function checkInternalOffsetValues() {
+  if (!renderData) return;
 
-    if (width_offset < 0 || boxwidth > renderData.width) {
-      width_offset = 0;
+  const internalValuesPerPixel = 1 / zoom;
 
-    } else if (width_offset > (renderData.width - boxwidth)) {
-      width_offset = renderData.width - boxwidth;
-    }
-    if (height_offset < 0 || boxheight > renderData.height) {
-      height_offset = 0;
+  const internalWidth = canvas.width * internalValuesPerPixel;
+  const internalHeight = canvas.height * internalValuesPerPixel;
 
-    } else if (height_offset > (renderData.height - boxheight)) {
-      height_offset = renderData.height - boxheight;
-    }
+  const maxInternalWidthOffset = Math.max(0, renderData.width  - internalWidth);
+  const maxInternalHeightOffset = Math.max(0, renderData.height - internalHeight);
+
+  internalWidthOffset  = Math.min(Math.max(internalWidthOffset,  0), maxInternalWidthOffset);
+  internalHeightOffset = Math.min(Math.max(internalHeightOffset, 0), maxInternalHeightOffset);
+
+  if (horizontalSlider) {
+    horizontalSlider.min = 0;
+    horizontalSlider.max = maxInternalWidthOffset;
+    horizontalSlider.value = internalWidthOffset;
   }
+  if (verticalSlider) {
+    verticalSlider.min = 0;
+    verticalSlider.max = maxInternalHeightOffset;
+    verticalSlider.value = internalHeightOffset;
+  }
+}
 
-  horizontalSlider.value = width_offset;
-  verticalSlider.value = height_offset;
+
+
+/**
+ * Updates `minZoom` to the smallest zoom that still is inside of dimension of the render data.
+ */
+function updateMinZoom(){
+  
+  if (!renderData) return;
+  const minZoomW = canvas.width  / renderData.width;
+  const minZoomH = canvas.height / renderData.height;
+  minZoom = Math.max(minZoomW, minZoomH);
+
 }
 
 
@@ -203,9 +235,11 @@ function renderSpectrogram() {
   if (!renderData){
     return
   }
-  renderPixels(renderData, height_offset, width_offset, colormapInferno, zoom, canvas);
+  renderPixels(renderData, internalHeightOffset, internalWidthOffset, colormapInferno, zoom, canvas);
   // generatePNG(pixels, boxwidth, boxheight, imgId, downloadBtnId);
 }
+
+
 
 /**
  * Mark the spectrogram view as needing a redraw and schedule a single render on the next

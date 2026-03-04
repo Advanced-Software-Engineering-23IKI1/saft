@@ -211,7 +211,7 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
         for (let ly = 0; ly < boxheight; ly++) {
             const yFloat = height_offset + ly * step;
 
-            const binFloat = minBin + yFloat;
+            const binFloat = maxBin - yFloat;
             const bin = Math.floor(binFloat);
 
             const val = Math.max(frame[bin] || 0, 1e-12);
@@ -222,8 +222,8 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
 
             const [r, g, b] = colormap(clamped);
 
-            const flippedY = boxheight - 1 - ly;
-            const idx = (flippedY * boxwidth + tx) * 4;
+            // const flippedY = boxheight - 1 - ly;
+            const idx = (ly * boxwidth + tx) * 4;
 
             imagedata.data[idx] = r;
             imagedata.data[idx+1] = g;
