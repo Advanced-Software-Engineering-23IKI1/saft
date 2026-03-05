@@ -1,15 +1,6 @@
 <script setup>
-import { computed } from 'vue' //
-import { useRouter } from 'vue-router'
-import { Upload, RotateCcw } from 'lucide-vue-next'
-import Card from '@/components/ui/Card.vue'
-import { getState, setHasUpload } from '@/store/saftState'
-
-const router = useRouter()
-const state = computed(() => getState())
 
 function goNext(navigate) {
-    setHasUpload(true)
     navigate()
 }
 import microfonicon from '@/assets/img/micIcon.png'
@@ -98,8 +89,5 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                 Create Spectrogram
             </button>
         </RouterLink>
-    </div>
-    <div class="text-xs text-slate-400">
-        Debug state: {{ state }}
     </div>
 </template>

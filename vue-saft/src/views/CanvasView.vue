@@ -1,15 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { Wand2 } from 'lucide-vue-next'
-import Card from '@/components/ui/Card.vue'
-import { getState, setHasExport } from '@/store/saftState'
-
-const router = useRouter()
-const state = computed(() => getState())
 
 function goNext(navigate) {
-    setHasExport(true)
     navigate()
 }
 import canvasimage from '@/assets/img/exampleSpectro.png'
@@ -83,8 +74,5 @@ import deleteicon from '@/assets/img/delete.png'
                 Compute Spectrogram
             </button>
         </RouterLink>
-    </div>
-    <div class="text-xs text-slate-400">
-        Debug state: {{ state }}
     </div>
 </template>

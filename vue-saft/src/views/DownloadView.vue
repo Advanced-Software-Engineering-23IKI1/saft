@@ -1,15 +1,6 @@
 <script setup>
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Home } from 'lucide-vue-next'
-import { getState, resetState } from '@/store/saftState'
 
-const state = computed(() => getState())
-
-function startOver(navigate) {
-  resetState()
-  navigate()
-}
 import speakericon from '@/assets/img/speaker.png'
 
 </script>
@@ -42,22 +33,5 @@ import speakericon from '@/assets/img/speaker.png'
                                 touch-manipulation">
       Export to MP3
     </button>
-    <RouterLink :to="{ name: 'upload' }" custom v-slot="{ navigate }">
-      <button class=" w-full py-4
-                                text-lg text-white font-semibold
-                                bg-saft-blue-500
-                                hover:bg-saft-blue-600 
-                                active:scale-[0.95]
-                                rounded-full flex items-center justify-center 
-                                shadow-xl
-                                border-2 border-white/50 
-                                transition-all duration-200
-                                touch-manipulation" @click="startOver(navigate)">
-        Neuer Durchlauf
-      </button>
-    </RouterLink>
-  </div>
-  <div class="text-xs text-slate-400">
-    Debug state: {{ state }}
   </div>
 </template>
