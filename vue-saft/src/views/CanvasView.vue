@@ -3,12 +3,12 @@
 function goNext(navigate) {
     navigate()
 }
-import canvasimage from '@/assets/img/exampleSpectro.png'
 import scrollicon from '@/assets/img/scroll.png'
 import brushicon from '@/assets/img/brush.png'
 import texticon from '@/assets/img/text.png'
 import erasericon from '@/assets/img/eraser.png'
 import deleteicon from '@/assets/img/delete.png'
+import SpektrogramCanvas from '@/components/ui/SpektrogramCanvas.vue'
 
 </script>
 
@@ -18,7 +18,8 @@ import deleteicon from '@/assets/img/delete.png'
         <div class="w-full h-[60vh] flex flex-col p-1">
             <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
       rounded-3xl shadow-2xl relative overflow-hidden">
-                <!-- Scrollable Image Area -->
+                <SpektrogramCanvas />
+                <!-- Scrollable Image Area 
                 <div class="absolute inset-0 overflow-x-auto overflow-y-hidden bg-gradient-to-br from-saft-brown-100/60 to-saft-blue-50/60
   [&::-webkit-scrollbar]:h-4 sm:[&::-webkit-scrollbar]:h-5
   [&::-webkit-scrollbar-track]:bg-saft-blue-100/80 [&::-webkit-scrollbar-track]:rounded-full
@@ -26,7 +27,7 @@ import deleteicon from '@/assets/img/delete.png'
   [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:shadow-lg">
                     <img :src="canvasimage" class="h-full w-[160%] min-w-[200%] block !object-none flex-shrink-0"
                         alt="Spectrogramm" id="dynamic-image" />
-                </div>
+                </div>-->
             </div>
             <!-- Toolbar -->
             <div class="w-full flex justify-center gap-3 py-4 px-2">
