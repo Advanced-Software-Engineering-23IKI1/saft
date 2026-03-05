@@ -12,10 +12,9 @@ getestet und ausgeführt auf
 npm install
 ````
 
-
 ## Ausführung
 ````bash
-node prototype.js -f ./input/test.wav 
+npm run dev
+npm run dev -- --host 0.0.0.0
 ````
 
-output ist in `./output`
