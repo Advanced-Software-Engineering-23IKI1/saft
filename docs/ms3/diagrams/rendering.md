@@ -14,12 +14,7 @@ sequenceDiagram
   
   end
 
-    opt Max edits
-   Edit->>Canvas: getRenderModel()
-   Canvas-->>Edit: renderModel
-   Edit->>Edit: addEarliestEdit(renderModel)
-   Edit->>Canvas: setRenderModel()
-  end
+
 
   opt User undoes
    User->>Canvas: undo button
