@@ -7,6 +7,7 @@ import { spectrogramStore } from '@/store/store';
 
 const fileInput = useTemplateRef('fileInput');
 const conversionProgress = ref(0);
+const fileSelected = ref(false);
 
 const maxFreq = 20000
 const minFreq = 0
@@ -30,6 +31,10 @@ async function retrieveSample() {
   //updateMinZoom()
   //checkInternalOffsetValues()
   //invalidate();
+}
+
+function handleFileSelect() {
+    fileSelected.value = fileInput.value?.files?.length > 0;
 }
 
 async function goNext(navigate) {
@@ -62,9 +67,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                 <img :src="microfonicon" class="w-12 h-12 brightness-0 invert" alt="Mikrofon" />
             </button>
             <!-- Upload Button (identisch) -->
-            <label for="fileInput" class=" w-24 h-24
-                          bg-saft-main-500
-                          hover:bg-saft-main-600 
+            <label for="fileInput" :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']" class=" w-24 h-24
                           active:scale-[0.95]
                           rounded-full flex items-center justify-center 
                           shadow-xl
@@ -73,7 +76,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                           touch-manipulation" >
                 <img :src="uploadicon" class="w-11 h-11 brightness-0 invert" alt="Upload" />
             </label>
-            <input style="display: none" type="file" ref="fileInput" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" alt="">
+            <input style="display: none" type="file" ref="fileInput" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" alt="" @change="handleFileSelect">
         </div>
         <div class="flex flex-col gap-1 mb-4">
             <label for="stride" class="text-lg font-semibold text-saft-brown-700">
