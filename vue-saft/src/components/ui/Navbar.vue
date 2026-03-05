@@ -1,14 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { state } from '@/store/saftState'
 
 const route = useRoute()
 
 const steps = computed(() => ([
   { name: 'upload', label: 'Upload', enabled: true },
-  { name: 'canvas', label: 'Canvas', enabled: state.hasUpload },
-  { name: 'download', label: 'Download', enabled: state.hasExport },
+  { name: 'canvas', label: 'Canvas', enabled: true },
+  { name: 'download', label: 'Download', enabled: true },
 ]))
 
 function stepClass(enabled, active) {
