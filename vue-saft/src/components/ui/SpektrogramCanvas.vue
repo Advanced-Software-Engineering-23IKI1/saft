@@ -1,11 +1,15 @@
 <script setup>
 import { spectrogramStore } from '@/store/store';
-import { reactive, useTemplateRef } from 'vue'
+import { reactive, useTemplateRef, computed } from 'vue'
 import { computeSpectrogram, computeSpectrogramRenderingData, renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
+import { nextTick } from 'vue';
 
-    
+
+// subject to fine-tuning
+const maxPixelCount = 200*200;
+let canvasScaleFactor = 1;
 
 const canvasRef = useTemplateRef('spectrogramCanvas');
 const canvasOffsets = reactive({
@@ -15,9 +19,32 @@ const canvasOffsets = reactive({
   maxInternalWidthOffset: 1,
 })
 
+const canvasDimensions = reactive({
+  width: 300,
+  height: 300,
+})
+
+const canvasResizeObserver = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    if (entry.target === canvasRef.value) {
+      const { width, height } = entry.contentRect;
+      canvasDimensions.width = width;
+      canvasDimensions.height = height;
+      
+      const currentPixelCount = width * height;
+      canvasScaleFactor = Math.min(Math.sqrt(maxPixelCount / currentPixelCount), 1);
+      canvasDimensions.width = width * canvasScaleFactor;
+      canvasDimensions.height = height * canvasScaleFactor;
+
+      updateMinZoom();
+      checkInternalOffsetValues();
+      invalidate();
+    }
+  }
+})
+
 
 // Animation
-let renderData
 let needsRedraw = false;
 let rafId = 0;
 
@@ -59,6 +86,7 @@ function onCanvasWheel(e){
     canvasOffsets.internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
     canvasOffsets.internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
 
+    updateMinZoom();
     checkInternalOffsetValues();
     invalidate();
     return;
@@ -103,7 +131,7 @@ function onCanvasPointerDown(e) {
     pinchStartZoom = zoom;
     pinchStartCenterCanvas = getMidpoint(p1, p2);
 
-    const internalValuesPerPixel = (1 / pinchStartZoom)
+    const internalValuesPerPixel = (1 / pinchStartZoom) * canvasScaleFactor;
 
     // for stable panning and zooming
     pinchStartCenterInternal = {
@@ -119,7 +147,7 @@ function onCanvasPointerMove(e) {
   const point = {x: e.clientX,y: e.clientY};
   pointers.set(e.pointerId, point);
 
-  const step = 1 / zoom;
+  const step = 1 * canvasScaleFactor / zoom;
  
   if (pointers.size === 1) {
     // pan: screen px -> source px via step
@@ -144,11 +172,12 @@ function onCanvasPointerMove(e) {
       const newZoom = pinchStartZoom * (pinchCurrentDist / pinchStartDist);
       zoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
 
-      const internalValuesPerPixel = (1 / zoom)
+      const internalValuesPerPixel = (1 / zoom) * canvasScaleFactor;
 
       canvasOffsets.internalWidthOffset  = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
       canvasOffsets.internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
 
+      updateMinZoom();
       checkInternalOffsetValues();
       invalidate();
     }
@@ -188,8 +217,8 @@ function checkInternalOffsetValues() {
   const internalValuesPerPixel = 1 / zoom;
   
 
-  const internalWidth = canvasRef.value.width * internalValuesPerPixel;
-  const internalHeight = canvasRef.value.height * internalValuesPerPixel;
+  const internalWidth = canvasDimensions.width * internalValuesPerPixel;
+  const internalHeight = canvasDimensions.height * internalValuesPerPixel;
 
   canvasOffsets.maxInternalWidthOffset = Math.max(0, spectrogramStore.renderData.width  - internalWidth);
   canvasOffsets.maxInternalHeightOffset = Math.max(0, spectrogramStore.renderData.height - internalHeight);
@@ -204,10 +233,11 @@ function checkInternalOffsetValues() {
  * Updates `minZoom` to the smallest zoom that still is inside of dimension of the render data.
  */
 function updateMinZoom(){
-  
+
+  const renderData = spectrogramStore.renderData;
   if (!renderData) return;
-  const minZoomW = canvasRef.value.width  / renderData.width;
-  const minZoomH = canvasRef.value.height / renderData.height;
+  const minZoomW = canvasDimensions.width  / renderData.width;
+  const minZoomH = canvasDimensions.height / renderData.height;
   minZoom = Math.max(minZoomW, minZoomH);
   if (zoom<minZoom){
     zoom=minZoom
@@ -258,10 +288,16 @@ function invalidate() {
   });
 }
 
+// set resize observer when canvas ref is available using nextTick
+nextTick(() => {
+  if (canvasRef.value) {
+    canvasResizeObserver.observe(canvasRef.value);
+    updateMinZoom();
+    checkInternalOffsetValues();
+    invalidate();
+  }
+})
 
-updateMinZoom()
-checkInternalOffsetValues()
-invalidate();
 </script>
 
 <template>
@@ -277,7 +313,7 @@ invalidate();
 <div id="wrapper">
   <canvas ref="spectrogramCanvas" id="spectrogramCanvas"
     @wheel="onCanvasWheel" @pointerdown="onCanvasPointerDown" @pointermove="onCanvasPointerMove"
-    @pointerup="endPointer" @pointercancel="endPointer" @pointerleave="endPointer"></canvas>
+    @pointerup="endPointer" @pointercancel="endPointer" @pointerleave="endPointer" v-bind="canvasDimensions"></canvas>
   <input ref="vScrollbar" @input="onVSliderInput" type="range" id="vScrollbar"  orient="vertical" min="0" :max="canvasOffsets.maxInternalHeightOffset" :value="canvasOffsets.internalHeightOffset"/>
   <input ref="hScrollbar" @input="onHSliderInput" type="range" id="hScrollbar" min="0" :max="canvasOffsets.maxInternalWidthOffset" :value="canvasOffsets.internalWidthOffset" />
 </div>

@@ -1,5 +1,7 @@
 <script setup>
 
+import { ref } from 'vue';
+
 function goNext(navigate) {
     navigate()
 }
@@ -9,6 +11,9 @@ import texticon from '@/assets/img/text.png'
 import erasericon from '@/assets/img/eraser.png'
 import deleteicon from '@/assets/img/delete.png'
 import SpektrogramCanvas from '@/components/ui/SpektrogramCanvas.vue'
+
+const activeTool = ref(1) // 1: Scroll, 2: Brush, 3: Text, 4: Eraser
+
 
 </script>
 
@@ -24,22 +29,22 @@ import SpektrogramCanvas from '@/components/ui/SpektrogramCanvas.vue'
             <div class="w-full flex justify-center gap-3 py-4 px-2">
                 <div
                     class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
-                    <button
+                    <button @click="activeTool = 1"
                         class="w-14 h-14 bg-saft-main-500 hover:bg-saft-main-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
                         <img :src="scrollicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Scroll">
                     </button>
-                    <button
+                    <button @click="activeTool = 2"
                         class="w-14 h-14 bg-saft-blue-500 hover:bg-saft-blue-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
                         <img :src="brushicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Brush">
                     </button>
-                    <button
+                    <button @click="activeTool = 3"
                         class="w-14 h-14 bg-saft-brown-500 hover:bg-saft-brown-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="3">
                         <img :src="texticon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Text">
                     </button>
-                    <button
+                    <button @click="activeTool = 4"
                         class="w-14 h-14 bg-saft-mint-500 hover:bg-saft-mint-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="4">
                         <img :src="erasericon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Eraser">
