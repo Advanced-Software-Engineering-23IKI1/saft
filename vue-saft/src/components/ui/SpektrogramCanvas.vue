@@ -6,6 +6,13 @@ import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
 import { nextTick } from 'vue';
 
+// export prop for activeTool
+const props = defineProps({
+  activeTool: {
+    type: Number,
+    required: true
+  }
+})  
 
 // subject to fine-tuning
 const maxPixelCount = 200*200;
@@ -62,44 +69,168 @@ let pinchStartZoom = 1;
 let pinchStartCenterCanvas = null;
 let pinchStartCenterInternal = null; 
 
-function onCanvasWheel(e){
-  e.preventDefault(); 
+const tools = []
 
-  // Ctrl+wheel => zoom
-  if (e.ctrlKey) {
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+tools.push({ // movement tool
 
-    const zoomFactor = Math.exp(-e.deltaY * 0.001);
+  onCanvasWheel(e) {
+    e.preventDefault(); 
 
-    const oldZoom = zoom;
-    const newZoom = Math.max(minZoom, Math.min(maxZoom, oldZoom * zoomFactor));
+    // Ctrl+wheel => zoom
+    if (e.ctrlKey) {
+      const mouseX = e.offsetX;
+      const mouseY = e.offsetY;
 
-    // for stable zooming
-    const internalX = canvasOffsets.internalWidthOffset  + mouseX * (1 / oldZoom);
-    const internalY = canvasOffsets.internalHeightOffset + mouseY * (1 / oldZoom);
+      const zoomFactor = Math.exp(-e.deltaY * 0.001);
 
-    zoom = newZoom;
+      const oldZoom = zoom;
+      const newZoom = Math.max(minZoom, Math.min(maxZoom, oldZoom * zoomFactor));
 
-    const internalValuesPerPixel = (1 / zoom)
+      // for stable zooming
+      const internalX = canvasOffsets.internalWidthOffset  + mouseX * (1 / oldZoom);
+      const internalY = canvasOffsets.internalHeightOffset + mouseY * (1 / oldZoom);
 
-    canvasOffsets.internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
-    canvasOffsets.internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
+      zoom = newZoom;
 
-    updateMinZoom();
+      const internalValuesPerPixel = (1 / zoom)
+
+      canvasOffsets.internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
+      canvasOffsets.internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
+
+      updateMinZoom();
+      checkInternalOffsetValues();
+      invalidate();
+      return;
+    }
+
+    const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
+    const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
+
+    canvasOffsets.internalWidthOffset  += Math.floor(dx / 2)*(1/zoom);
+    canvasOffsets.internalHeightOffset += Math.floor(dy / 2)*(1/zoom);
+
     checkInternalOffsetValues();
     invalidate();
-    return;
+  },
+  
+  
+  onCanvasPointerDown(e) {
+
+    canvasRef.value.setPointerCapture(e.pointerId);
+    const point = {x: e.clientX,y: e.clientY};
+    pointers.set(e.pointerId, point);
+
+    if (pointers.size === 1) {
+      lastX = point.x;
+      lastY = point.y;
+
+    } if (pointers.size === 2) {
+      const [p1, p2] = [...pointers.values()];
+
+      pinchStartDist = distance(p1, p2);
+      pinchStartZoom = zoom;
+      pinchStartCenterCanvas = getMidpoint(p1, p2);
+
+      const internalValuesPerPixel = (1 / pinchStartZoom) * canvasScaleFactor;
+
+      // for stable panning and zooming
+      pinchStartCenterInternal = {
+        x: canvasOffsets.internalWidthOffset + pinchStartCenterCanvas.x * internalValuesPerPixel,
+        y: canvasOffsets.internalHeightOffset + pinchStartCenterCanvas.y * internalValuesPerPixel,
+      };
+    }
+  },
+  onCanvasPointerMove(e) {
+    if (!pointers.has(e.pointerId)) return;
+    const point = {x: e.clientX,y: e.clientY};
+    pointers.set(e.pointerId, point);
+
+    const step = 1 * canvasScaleFactor / zoom;
+   
+    if (pointers.size === 1) {
+      // pan: screen px -> source px via step
+      const dx = point.x - lastX;
+      const dy = point.y - lastY;
+      lastX = point.x;
+      lastY = point.y;
+
+      canvasOffsets.internalWidthOffset  -= dx * step;
+      canvasOffsets.internalHeightOffset -= dy * step; 
+
+      checkInternalOffsetValues();     
+      invalidate();
+      return;
+    }
+
+     if (pointers.size === 2) {
+      const [p1, p2] = [...pointers.values()];
+      const pinchCurrentDist = distance(p1, p2);
+
+      if (pinchStartDist > 0) {
+        const newZoom = pinchStartZoom * (pinchCurrentDist / pinchStartDist);
+        zoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+
+        const internalValuesPerPixel = (1 / zoom) * canvasScaleFactor;
+
+        canvasOffsets.internalWidthOffset  = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
+        canvasOffsets.internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
+
+        updateMinZoom();
+        checkInternalOffsetValues();
+        invalidate();
+      }
+    }
+
+  },
+
+  endPointer(e) {
+    pointers.delete(e.pointerId);
+
+
+    // new pan origin
+    if (pointers.size === 1) {
+      const [p] = pointers.values();
+      lastX = p.x;
+      lastY = p.y;
+    }
+
+     if (pointers.size < 2) {
+      pinchStartDist = 0;
+    }
+
+    try { canvasRef.value.releasePointerCapture(e.pointerId); } catch {}
+  },
+  onCanvasPointerUp(e) {
+    this.endPointer(e);
+  },
+  onCanvasPointerCancel(e) {
+    this.endPointer(e);
+  },
+  onCanvasPointerLeave(e) {
+    this.endPointer(e);
   }
 
-  const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
-  const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
+})
 
-  canvasOffsets.internalWidthOffset  += Math.floor(dx / 2)*(1/zoom);
-  canvasOffsets.internalHeightOffset += Math.floor(dy / 2)*(1/zoom);
 
-  checkInternalOffsetValues();
-  invalidate();
+
+function onCanvasWheel(e){
+  tools[props.activeTool-1]?.onCanvasWheel?.(e)
+}
+function onCanvasPointerDown(e) {
+  tools[props.activeTool-1]?.onCanvasPointerDown?.(e)
+}
+function onCanvasPointerMove(e) {
+  tools[props.activeTool-1]?.onCanvasPointerMove?.(e)
+}
+function onCanvasPointerUp(e) {
+  tools[props.activeTool-1]?.onCanvasPointerUp?.(e)
+}
+function onCanvasPointerCancel(e) {
+  tools[props.activeTool-1]?.onCanvasPointerCancel?.(e)
+}
+function onCanvasPointerLeave(e) {
+  tools[props.activeTool-1]?.onCanvasPointerLeave?.(e)
 }
 
 
@@ -114,94 +245,6 @@ function onVSliderInput(e) {
     canvasOffsets.internalHeightOffset = value
     invalidate()
 }
-
-function onCanvasPointerDown(e) {
-  canvasRef.value.setPointerCapture(e.pointerId);
-  const point = {x: e.clientX,y: e.clientY};
-  pointers.set(e.pointerId, point);
-
-  if (pointers.size === 1) {
-    lastX = point.x;
-    lastY = point.y;
-
-  } if (pointers.size === 2) {
-    const [p1, p2] = [...pointers.values()];
-
-    pinchStartDist = distance(p1, p2);
-    pinchStartZoom = zoom;
-    pinchStartCenterCanvas = getMidpoint(p1, p2);
-
-    const internalValuesPerPixel = (1 / pinchStartZoom) * canvasScaleFactor;
-
-    // for stable panning and zooming
-    pinchStartCenterInternal = {
-      x: canvasOffsets.internalWidthOffset + pinchStartCenterCanvas.x * internalValuesPerPixel,
-      y: canvasOffsets.internalHeightOffset + pinchStartCenterCanvas.y * internalValuesPerPixel,
-    };
-  }
-}
-
-
-function onCanvasPointerMove(e) {
-  if (!pointers.has(e.pointerId)) return;
-  const point = {x: e.clientX,y: e.clientY};
-  pointers.set(e.pointerId, point);
-
-  const step = 1 * canvasScaleFactor / zoom;
- 
-  if (pointers.size === 1) {
-    // pan: screen px -> source px via step
-    const dx = point.x - lastX;
-    const dy = point.y - lastY;
-    lastX = point.x;
-    lastY = point.y;
-
-    canvasOffsets.internalWidthOffset  -= dx * step;
-    canvasOffsets.internalHeightOffset -= dy * step; 
-
-    checkInternalOffsetValues();     
-    invalidate();
-    return;
-  }
-
-   if (pointers.size === 2) {
-    const [p1, p2] = [...pointers.values()];
-    const pinchCurrentDist = distance(p1, p2);
-
-    if (pinchStartDist > 0) {
-      const newZoom = pinchStartZoom * (pinchCurrentDist / pinchStartDist);
-      zoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
-
-      const internalValuesPerPixel = (1 / zoom) * canvasScaleFactor;
-
-      canvasOffsets.internalWidthOffset  = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
-      canvasOffsets.internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
-
-      updateMinZoom();
-      checkInternalOffsetValues();
-      invalidate();
-    }
-  }
-}
-
-function endPointer(e) {
-  pointers.delete(e.pointerId);
-
-
-  // new pan origin
-  if (pointers.size === 1) {
-    const [p] = pointers.values();
-    lastX = p.x;
-    lastY = p.y;
-  }
-
-   if (pointers.size < 2) {
-    pinchStartDist = 0;
-  }
-
-  try { canvasRef.value.releasePointerCapture(e.pointerId); } catch {}
-}
-
 
 
 /**
@@ -313,7 +356,7 @@ nextTick(() => {
 <div id="wrapper">
   <canvas ref="spectrogramCanvas" id="spectrogramCanvas"
     @wheel="onCanvasWheel" @pointerdown="onCanvasPointerDown" @pointermove="onCanvasPointerMove"
-    @pointerup="endPointer" @pointercancel="endPointer" @pointerleave="endPointer" v-bind="canvasDimensions"></canvas>
+    @pointerup="onCanvasPointerUp" @pointercancel="onCanvasPointerCancel" @pointerleave="onCanvasPointerLeave" v-bind="canvasDimensions"></canvas>
   <input ref="vScrollbar" @input="onVSliderInput" type="range" id="vScrollbar"  orient="vertical" min="0" :max="canvasOffsets.maxInternalHeightOffset" :value="canvasOffsets.internalHeightOffset"/>
   <input ref="hScrollbar" @input="onHSliderInput" type="range" id="hScrollbar" min="0" :max="canvasOffsets.maxInternalWidthOffset" :value="canvasOffsets.internalWidthOffset" />
 </div>

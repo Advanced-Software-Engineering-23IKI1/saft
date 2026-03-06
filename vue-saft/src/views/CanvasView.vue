@@ -23,29 +23,33 @@ const activeTool = ref(1) // 1: Scroll, 2: Brush, 3: Text, 4: Eraser
         <div class="w-full h-[60vh] flex flex-col p-1">
             <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
       rounded-3xl shadow-2xl relative overflow-hidden">
-                <SpektrogramCanvas />
+                <SpektrogramCanvas :active-tool="activeTool" />
             </div>
             <!-- Toolbar -->
             <div class="w-full flex justify-center gap-3 py-4 px-2">
                 <div
                     class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
                     <button @click="activeTool = 1"
-                        class="w-14 h-14 bg-saft-main-500 hover:bg-saft-main-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                        :class="[activeTool === 1 ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
                         <img :src="scrollicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Scroll">
                     </button>
                     <button @click="activeTool = 2"
-                        class="w-14 h-14 bg-saft-blue-500 hover:bg-saft-blue-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                        :class="[activeTool === 2 ? 'bg-saft-blue-500 hover:bg-saft-blue-600' : 'bg-saft-blue-200 hover:bg-saft-blue-300']"
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
                         <img :src="brushicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Brush">
                     </button>
                     <button @click="activeTool = 3"
-                        class="w-14 h-14 bg-saft-brown-500 hover:bg-saft-brown-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                        :class="[activeTool === 3 ? 'bg-saft-brown-500 hover:bg-saft-brown-600' : 'bg-saft-brown-200 hover:bg-saft-brown-300']"
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="3">
                         <img :src="texticon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Text">
                     </button>
                     <button @click="activeTool = 4"
-                        class="w-14 h-14 bg-saft-mint-500 hover:bg-saft-mint-600 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                        :class="[activeTool === 4 ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="4">
                         <img :src="erasericon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Eraser">
                     </button>
