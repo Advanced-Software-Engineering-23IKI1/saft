@@ -1,6 +1,6 @@
 <script setup>
 import { spectrogramStore } from '@/store/store';
-import { useTemplateRef } from 'vue'
+import { reactive, useTemplateRef } from 'vue'
 import { computeSpectrogram, computeSpectrogramRenderingData, renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
@@ -8,8 +8,13 @@ import { distance, getMidpoint } from '@/utils/utils.js';
     
 
 const canvasRef = useTemplateRef('spectrogramCanvas');
-const horizontalSlider = useTemplateRef('hScrollbar');
-const verticalSlider = useTemplateRef('vScrollbar');
+const canvasOffsets = reactive({
+  internalWidthOffset: 0,
+  internalHeightOffset: 0,
+  maxInternalHeightOffset: 1,
+  maxInternalWidthOffset: 1,
+})
+
 
 // Animation
 let renderData
@@ -18,8 +23,6 @@ let rafId = 0;
 
 
 // panning and pinching 
-let internalHeightOffset = 0
-let internalWidthOffset = 0
 let zoom = 1;
 let minZoom = 0.2, maxZoom = 25;
 
@@ -46,15 +49,15 @@ function onCanvasWheel(e){
     const newZoom = Math.max(minZoom, Math.min(maxZoom, oldZoom * zoomFactor));
 
     // for stable zooming
-    const internalX = internalWidthOffset  + mouseX * (1 / oldZoom);
-    const internalY = internalHeightOffset + mouseY * (1 / oldZoom);
+    const internalX = canvasOffsets.internalWidthOffset  + mouseX * (1 / oldZoom);
+    const internalY = canvasOffsets.internalHeightOffset + mouseY * (1 / oldZoom);
 
     zoom = newZoom;
 
     const internalValuesPerPixel = (1 / zoom)
 
-    internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
-    internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
+    canvasOffsets.internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
+    canvasOffsets.internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
 
     checkInternalOffsetValues();
     invalidate();
@@ -64,8 +67,8 @@ function onCanvasWheel(e){
   const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
   const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
 
-  internalWidthOffset  += Math.floor(dx / 2)*(1/zoom);
-  internalHeightOffset += Math.floor(dy / 2)*(1/zoom);
+  canvasOffsets.internalWidthOffset  += Math.floor(dx / 2)*(1/zoom);
+  canvasOffsets.internalHeightOffset += Math.floor(dy / 2)*(1/zoom);
 
   checkInternalOffsetValues();
   invalidate();
@@ -74,13 +77,13 @@ function onCanvasWheel(e){
 
 function onHSliderInput(e) {
     const value = Number(e.target.value);
-    internalWidthOffset = value
+    canvasOffsets.internalWidthOffset = value
     invalidate()
 }
 
 function onVSliderInput(e) {
     const value = Number(e.target.value);
-    internalHeightOffset = value
+    canvasOffsets.internalHeightOffset = value
     invalidate()
 }
 
@@ -104,8 +107,8 @@ function onCanvasPointerDown(e) {
 
     // for stable panning and zooming
     pinchStartCenterInternal = {
-      x: internalWidthOffset + pinchStartCenterCanvas.x * internalValuesPerPixel,
-      y: internalHeightOffset + pinchStartCenterCanvas.y * internalValuesPerPixel,
+      x: canvasOffsets.internalWidthOffset + pinchStartCenterCanvas.x * internalValuesPerPixel,
+      y: canvasOffsets.internalHeightOffset + pinchStartCenterCanvas.y * internalValuesPerPixel,
     };
   }
 }
@@ -125,8 +128,8 @@ function onCanvasPointerMove(e) {
     lastX = point.x;
     lastY = point.y;
 
-    internalWidthOffset  -= dx * step;
-    internalHeightOffset -= dy * step; 
+    canvasOffsets.internalWidthOffset  -= dx * step;
+    canvasOffsets.internalHeightOffset -= dy * step; 
 
     checkInternalOffsetValues();     
     invalidate();
@@ -143,8 +146,8 @@ function onCanvasPointerMove(e) {
 
       const internalValuesPerPixel = (1 / zoom)
 
-      internalWidthOffset  = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
-      internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
+      canvasOffsets.internalWidthOffset  = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
+      canvasOffsets.internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
 
       checkInternalOffsetValues();
       invalidate();
@@ -179,29 +182,20 @@ function endPointer(e) {
  * @returns {void} Does not return a value.
  */
 function checkInternalOffsetValues() {
-  if (!renderData) return;
+  if (!spectrogramStore.renderData) return;
+  if (!canvasRef.value) return;
 
   const internalValuesPerPixel = 1 / zoom;
+  
 
   const internalWidth = canvasRef.value.width * internalValuesPerPixel;
   const internalHeight = canvasRef.value.height * internalValuesPerPixel;
 
-  const maxInternalWidthOffset = Math.max(0, renderData.width  - internalWidth);
-  const maxInternalHeightOffset = Math.max(0, renderData.height - internalHeight);
+  canvasOffsets.maxInternalWidthOffset = Math.max(0, spectrogramStore.renderData.width  - internalWidth);
+  canvasOffsets.maxInternalHeightOffset = Math.max(0, spectrogramStore.renderData.height - internalHeight);
 
-  internalWidthOffset  = Math.min(Math.max(internalWidthOffset,  0), maxInternalWidthOffset);
-  internalHeightOffset = Math.min(Math.max(internalHeightOffset, 0), maxInternalHeightOffset);
-
-  if (horizontalSlider) {
-    horizontalSlider.value.min = 0;
-    horizontalSlider.value.max = maxInternalWidthOffset;
-    horizontalSlider.value.value = internalWidthOffset;
-  }
-  if (verticalSlider) {
-    verticalSlider.value.min = 0;
-    verticalSlider.value.max = maxInternalHeightOffset;
-    verticalSlider.value.value = internalHeightOffset;
-  }
+  canvasOffsets.internalWidthOffset  = Math.min(Math.max(canvasOffsets.internalWidthOffset,  0), canvasOffsets.maxInternalWidthOffset);
+  canvasOffsets.internalHeightOffset = Math.min(Math.max(canvasOffsets.internalHeightOffset, 0), canvasOffsets.maxInternalHeightOffset);
 }
 
 
@@ -239,7 +233,7 @@ function renderSpectrogram() {
   if (!spectrogramStore.renderData){
     return
   }
-  renderPixels(spectrogramStore.renderData, internalHeightOffset, internalWidthOffset, colormapInferno, zoom, canvasRef.value);
+  renderPixels(spectrogramStore.renderData, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset, colormapInferno, zoom, canvasRef.value);
   // generatePNG(pixels, boxwidth, boxheight, imgId, downloadBtnId);
 }
 
@@ -281,14 +275,123 @@ invalidate();
 </div-->
 
 <div id="wrapper">
-  <div id="canvasRow">
-    
-    <canvas ref="spectrogramCanvas" id="spectrogramCanvas" width="300" height="600"
-      @wheel="onCanvasWheel" @pointerdown="onCanvasPointerDown" @pointermove="onCanvasPointerMove"
-      @pointerup="endPointer" @pointercancel="endPointer" @pointerleave="endPointer"></canvas>
-    <input ref="vScrollbar" @input="onVSliderInput" type="range" id="vScrollbar" min="0" max="100" value="0" orient="vertical"/>
-  </div>
-
-  <input ref="hScrollbar" @input="onHSliderInput" type="range" id="hScrollbar" min="0" max="100" value="0"/>
+  <canvas ref="spectrogramCanvas" id="spectrogramCanvas"
+    @wheel="onCanvasWheel" @pointerdown="onCanvasPointerDown" @pointermove="onCanvasPointerMove"
+    @pointerup="endPointer" @pointercancel="endPointer" @pointerleave="endPointer"></canvas>
+  <input ref="vScrollbar" @input="onVSliderInput" type="range" id="vScrollbar"  orient="vertical" min="0" :max="canvasOffsets.maxInternalHeightOffset" :value="canvasOffsets.internalHeightOffset"/>
+  <input ref="hScrollbar" @input="onHSliderInput" type="range" id="hScrollbar" min="0" :max="canvasOffsets.maxInternalWidthOffset" :value="canvasOffsets.internalWidthOffset" />
 </div>
 </template>
+
+<style scoped>
+#spectrogramCanvas {
+  touch-action: none; /* prevents browser pan/zoom gestures on this element */
+  background-color: black;
+  padding:0;
+  width: 100%;
+  height: 100%;
+}
+
+#wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+
+/* Reset default styling */
+#vScrollbar,
+#hScrollbar {
+
+  margin: 1;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  touch-action: none;
+}
+
+/* -------------------- */
+/* VERTICAL SCROLLBAR   */
+/* -------------------- */
+
+#vScrollbar {
+  position:absolute;
+  right: 0;
+  top: 0;
+  writing-mode: vertical-rl;
+  direction: ltr;
+  width: 8px;      /* thickness */
+  height: 100%;
+}
+
+/* Transparent track */
+#vScrollbar::-webkit-slider-runnable-track {
+background: gray;
+}
+
+/* Black thumb */
+#vScrollbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: black;
+  width: 12px;
+  height: 12px;
+border-radius: 3px;   cursor: pointer;
+  margin-top: -2px;
+}
+
+/* Firefox */
+#vScrollbar::-moz-range-track {
+background: gray;}
+
+#vScrollbar::-moz-range-thumb {
+  background: black;
+  border: none;
+  width: 12px;
+  height: 12px;
+border-radius: 3px; }
+
+
+/* -------------------- */
+/* HORIZONTAL SCROLLBAR */
+/* -------------------- */
+
+#hScrollbar {
+  height: 8px;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+}
+
+/* Transparent track */
+#hScrollbar::-webkit-slider-runnable-track {
+  background: gray;
+}
+
+/* Black thumb */
+#hScrollbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: black;
+  width: 12px;
+  height: 12px;
+border-radius: 3px;   cursor: pointer;
+}
+
+/* Firefox */
+#hScrollbar::-moz-range-track {
+  background: gray;
+}
+
+#hScrollbar::-moz-range-thumb {
+  background: black;
+  border: none;
+  width: 12px;
+  height: 12px;
+border-radius: 3px; }
+
+
+</style>

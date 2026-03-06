@@ -19,15 +19,6 @@ import SpektrogramCanvas from '@/components/ui/SpektrogramCanvas.vue'
             <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
       rounded-3xl shadow-2xl relative overflow-hidden">
                 <SpektrogramCanvas />
-                <!-- Scrollable Image Area 
-                <div class="absolute inset-0 overflow-x-auto overflow-y-hidden bg-gradient-to-br from-saft-brown-100/60 to-saft-blue-50/60
-  [&::-webkit-scrollbar]:h-4 sm:[&::-webkit-scrollbar]:h-5
-  [&::-webkit-scrollbar-track]:bg-saft-blue-100/80 [&::-webkit-scrollbar-track]:rounded-full
-  [&::-webkit-scrollbar-thumb]:bg-saft-blue-500 hover:[&::-webkit-scrollbar-thumb]:bg-saft-blue-600
-  [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:shadow-lg">
-                    <img :src="canvasimage" class="h-full w-[160%] min-w-[200%] block !object-none flex-shrink-0"
-                        alt="Spectrogramm" id="dynamic-image" />
-                </div>-->
             </div>
             <!-- Toolbar -->
             <div class="w-full flex justify-center gap-3 py-4 px-2">
