@@ -63,13 +63,13 @@ jobs:
         run: npm run build
 
       - name: Upload pages artifact
-        if: github.event_name != 'pull_request'
+        # if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist
 
   deploy:
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     needs: build
     permissions:
       pages: write
