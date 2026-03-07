@@ -14,8 +14,8 @@ const props = defineProps({
   }
 })  
 
-// subject to fine-tuning
-const maxPixelCount = 500*500;
+// subject to fine-tuning (based on device)
+const maxPixelCount = 300*300;
 let canvasScaleFactor = 1;
 
 const canvasRef = useTemplateRef('spectrogramCanvas');
@@ -117,7 +117,7 @@ tools.push({ // movement tool
   onCanvasPointerDown(e) {
 
     canvasRef.value.setPointerCapture(e.pointerId);
-    const point = {x: e.clientX,y: e.clientY};
+    const point = this.getCanvasPoint(e);
     pointers.set(e.pointerId, point);
 
     if (pointers.size === 1) {
@@ -140,9 +140,20 @@ tools.push({ // movement tool
       };
     }
   },
+
+  getCanvasPoint(e) {
+  const rect = canvasRef.value.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+    };
+  },
+
+  
+
   onCanvasPointerMove(e) {
     if (!pointers.has(e.pointerId)) return;
-    const point = {x: e.clientX,y: e.clientY};
+    const point = this.getCanvasPoint(e);
     pointers.set(e.pointerId, point);
 
     const step = 1 * canvasScaleFactor / zoom;
