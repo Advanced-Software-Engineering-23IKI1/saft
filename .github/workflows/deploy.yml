@@ -17,6 +17,9 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vue-saft
 
     steps:
       - name: Checkout
@@ -37,6 +40,9 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vue-saft
 
     steps:
       - name: Checkout
