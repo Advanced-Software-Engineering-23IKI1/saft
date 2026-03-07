@@ -5,6 +5,7 @@ import { computeSpectrogram, computeSpectrogramRenderingData, renderPixels } fro
 import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
 import { nextTick } from 'vue';
+import { getCanvasPoint } from '@/utils/utils.js';
 
 // export prop for activeTool
 const props = defineProps({
@@ -117,7 +118,7 @@ tools.push({ // movement tool
   onCanvasPointerDown(e) {
 
     canvasRef.value.setPointerCapture(e.pointerId);
-    const point = this.getCanvasPoint(e);
+    const point = getCanvasPoint(e, canvasRef);
     pointers.set(e.pointerId, point);
 
     if (pointers.size === 1) {
@@ -141,19 +142,13 @@ tools.push({ // movement tool
     }
   },
 
-  getCanvasPoint(e) {
-  const rect = canvasRef.value.getBoundingClientRect();
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
-    };
-  },
+  
 
   
 
   onCanvasPointerMove(e) {
     if (!pointers.has(e.pointerId)) return;
-    const point = this.getCanvasPoint(e);
+    const point = getCanvasPoint(e, canvasRef);
     pointers.set(e.pointerId, point);
 
     const step = 1 * canvasScaleFactor / zoom;
