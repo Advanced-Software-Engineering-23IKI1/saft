@@ -63,17 +63,17 @@ jobs:
         run: npm run build
 
       - name: Setup Pages
-        if: github.event_name != 'pull_request'
+        # if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Upload pages artifact
-        if: github.event_name != 'pull_request'
+        # if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: vue-saft/dist
 
   deploy:
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     needs: build
     permissions:
       pages: write
