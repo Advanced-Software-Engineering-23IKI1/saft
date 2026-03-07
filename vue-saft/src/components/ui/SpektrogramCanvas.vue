@@ -15,7 +15,7 @@ const props = defineProps({
 })  
 
 // subject to fine-tuning
-const maxPixelCount = 200*200;
+const maxPixelCount = 500*500;
 let canvasScaleFactor = 1;
 
 const canvasRef = useTemplateRef('spectrogramCanvas');
@@ -87,12 +87,12 @@ tools.push({ // movement tool
       const newZoom = Math.max(minZoom, Math.min(maxZoom, oldZoom * zoomFactor));
 
       // for stable zooming
-      const internalX = canvasOffsets.internalWidthOffset  + mouseX * (1 / oldZoom);
-      const internalY = canvasOffsets.internalHeightOffset + mouseY * (1 / oldZoom);
+      const internalX = canvasOffsets.internalWidthOffset  + mouseX * (1 / oldZoom) * canvasScaleFactor;
+      const internalY = canvasOffsets.internalHeightOffset + mouseY * (1 / oldZoom) * canvasScaleFactor;
 
       zoom = newZoom;
 
-      const internalValuesPerPixel = (1 / zoom)
+      const internalValuesPerPixel = (1 / zoom) * canvasScaleFactor
 
       canvasOffsets.internalWidthOffset  = internalX - mouseX * internalValuesPerPixel;
       canvasOffsets.internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
