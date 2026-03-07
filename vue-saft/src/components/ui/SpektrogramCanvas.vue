@@ -6,12 +6,14 @@ import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
 import { nextTick } from 'vue';
 import { getCanvasPoint } from '@/utils/utils.js';
+import { Tool } from '@/enums/ToolEnum.js';
 
 // export prop for activeTool
 const props = defineProps({
   activeTool: {
     type: Number,
-    required: true
+    required: true,
+    validator: (value) => Object.values(Tool).includes(value)
   }
 })  
 
@@ -70,9 +72,10 @@ let pinchStartZoom = 1;
 let pinchStartCenterCanvas = null;
 let pinchStartCenterInternal = null; 
 
-const tools = []
+const toolEvents = new Map(); // toolId -> { onCanvasWheel, onCanvasPointerDown, onCanvasPointerMove, onCanvasPointerUp, onCanvasPointerCancel, onCanvasPointerLeave }
 
-tools.push({ // movement tool
+toolEvents.set(Tool.Scroll, 
+{ // movement tool
 
   onCanvasWheel(e) {
     e.preventDefault(); 
@@ -142,9 +145,6 @@ tools.push({ // movement tool
     }
   },
 
-  
-
-  
 
   onCanvasPointerMove(e) {
     if (!pointers.has(e.pointerId)) return;
@@ -221,22 +221,22 @@ tools.push({ // movement tool
 
 
 function onCanvasWheel(e){
-  tools[props.activeTool-1]?.onCanvasWheel?.(e)
+  toolEvents.get(props.activeTool)?.onCanvasWheel?.(e)
 }
 function onCanvasPointerDown(e) {
-  tools[props.activeTool-1]?.onCanvasPointerDown?.(e)
+  toolEvents.get(props.activeTool)?.onCanvasPointerDown?.(e)
 }
 function onCanvasPointerMove(e) {
-  tools[props.activeTool-1]?.onCanvasPointerMove?.(e)
+  toolEvents.get(props.activeTool)?.onCanvasPointerMove?.(e)
 }
 function onCanvasPointerUp(e) {
-  tools[props.activeTool-1]?.onCanvasPointerUp?.(e)
+  toolEvents.get(props.activeTool)?.onCanvasPointerUp?.(e)
 }
 function onCanvasPointerCancel(e) {
-  tools[props.activeTool-1]?.onCanvasPointerCancel?.(e)
+  toolEvents.get(props.activeTool)?.onCanvasPointerCancel?.(e)
 }
 function onCanvasPointerLeave(e) {
-  tools[props.activeTool-1]?.onCanvasPointerLeave?.(e)
+  toolEvents.get(props.activeTool)?.onCanvasPointerLeave?.(e)
 }
 
 
