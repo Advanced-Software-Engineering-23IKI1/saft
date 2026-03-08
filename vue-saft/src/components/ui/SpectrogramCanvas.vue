@@ -1,7 +1,7 @@
 <script setup>
 import { spectrogramStore } from '@/store/store';
 import { reactive, useTemplateRef, computed } from 'vue'
-import { computeSpectrogram, computeSpectrogramRenderingData, renderPixels } from '@/utils/spectrogram.js';
+import { renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
 import { nextTick } from 'vue';
@@ -389,7 +389,7 @@ nextTick(() => {
 #vScrollbar,
 #hScrollbar {
 
-  margin: 1;
+  margin: 0;
   padding: 0;
   -webkit-appearance: none;
   appearance: none;

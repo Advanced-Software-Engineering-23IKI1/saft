@@ -10,7 +10,7 @@ import brushicon from '@/assets/img/brush.png'
 import texticon from '@/assets/img/text.png'
 import erasericon from '@/assets/img/eraser.png'
 import deleteicon from '@/assets/img/delete.png'
-import SpektrogramCanvas from '@/components/ui/SpektrogramCanvas.vue'
+import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
 
 
@@ -26,7 +26,7 @@ const activeTool = ref(Tool.Scroll)
         <div class="w-full h-[60vh] flex flex-col p-1">
             <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
       rounded-3xl shadow-2xl relative overflow-hidden">
-                <SpektrogramCanvas :active-tool="activeTool" />
+                <SpectrogramCanvas :active-tool="activeTool" />
             </div>
             <!-- Toolbar -->
             <div class="w-full flex justify-center gap-3 py-4 px-2">

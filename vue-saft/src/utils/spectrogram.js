@@ -9,7 +9,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  * @param {number} sampleRate Sample rate in Hz.
  * @param {number} [windowSize=2048] FFT window size (power of 2).
  * @param {number} [hopSize=512] Hop size between frames in samples.
- * @param {HTMLProgressElement} fttProgress Progress bar to update during FFT computation.
+ * @param {HTMLProgressElement} fftProgress Progress bar to update during FFT computation.
  * @returns {{
  *   data: number[][],
  *   freqBins: number,
@@ -18,7 +18,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  *   timeResolution: number
  * }}
  */
-export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fttProgress ) {
+export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress ) {
     console.log('DEBUG: samples.length:', samples.length);
 
     // FFT requires power-of-2 window size
@@ -35,7 +35,7 @@ export async function computeSpectrogram(samples, sampleRate, windowSize = 2048,
         throw new Error(`Input samples contain NaN/Infinity at index ${firstBad}: ${samples[firstBad]}`);
     }
 
-    const { spectrogram, half } = await computeFFTs(windowSize, samples, hopSize, fttProgress);
+    const { spectrogram, half } = await computeFFTs(windowSize, samples, hopSize, fftProgress);
 
     return {
         data: spectrogram,
@@ -54,16 +54,16 @@ export async function computeSpectrogram(samples, sampleRate, windowSize = 2048,
  * @param {number} windowSize Number of samples per FFT window.
  * @param {Float32Array|Array<number>} samples Input audio samples.
  * @param {number} hopSize Step size between successive windows.
- * @param {HTMLProgressElement} fttProgress Progress bar to update during FFT computation.
+ * @param {HTMLProgressElement} fftProgress Progress bar to update during FFT computation.
  * @returns {{ spectrogram: Array<Array<number>>, half: number }}
  *          - spectrogram: 2D array [time][frequency] of magnitudes.
  *          - half: Number of positive frequency bins per window.
  */
-async function computeFFTs(windowSize, samples, hopSize, fttProgress) {
+async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     const spectrogram = [];
     const half = Math.floor(windowSize / 2) + 1;
     const maxVal = samples.length;
-    fttProgress.value = 0;
+    fftProgress.value = 0;
 
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
         
@@ -99,11 +99,11 @@ async function computeFFTs(windowSize, samples, hopSize, fttProgress) {
         spectrogram.push(magnitude);
 
         if ((start & (Math.floor(maxVal/50)-1)) === 0) {
-            fttProgress.value = start/maxVal;
+            fftProgress.value = start/maxVal;
             await nextFrame(); 
         }
     }
-    fttProgress.value = 1;
+    fftProgress.value = 1;
     return { spectrogram, half };
 }
 

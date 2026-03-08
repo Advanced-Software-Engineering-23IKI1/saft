@@ -17,20 +17,23 @@ const channel = 0;
 
 async function retrieveSample() {
 
-  const sample = await getSample(fileInput.value, channel);
-  if (!sample) return;
+    spectrogramStore.spectrogram = null;
+    spectrogramStore.renderData = null;
 
-  spectrogramStore.spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, conversionProgress);
+    const sample = await getSample(fileInput.value, channel);
+    if (!sample) return;
 
-  closeAudio();
+    spectrogramStore.spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, conversionProgress);
 
-  spectrogramStore.renderData = await computeSpectrogramRenderingData(spectrogramStore.spectrogram, sample.sampleRate, minFreq, maxFreq, conversionProgress);
+    closeAudio();
 
-  conversionProgress.value = 0
+    spectrogramStore.renderData = await computeSpectrogramRenderingData(spectrogramStore.spectrogram, sample.sampleRate, minFreq, maxFreq, conversionProgress);
 
-  //updateMinZoom()
-  //checkInternalOffsetValues()
-  //invalidate();
+    conversionProgress.value = 0
+
+    //updateMinZoom()
+    //checkInternalOffsetValues()
+    //invalidate();
 }
 
 function handleFileSelect() {
@@ -38,13 +41,17 @@ function handleFileSelect() {
 }
 
 async function goNext(navigate) {
-    retrieveSample().then(() => {
+    try {
+        await retrieveSample()
         if (spectrogramStore.renderData) {
             navigate()
         } else {
             alert("Failed to process the audio file. Please try again with a different file.")
         }
-    })
+    } catch (error) {
+        console.error("Error processing the audio file:", error);
+        alert("An error occurred while processing the audio file. Please try again with a different file.")
+    }
 }
 import microfonicon from '@/assets/img/micIcon.png'
 import uploadicon from '@/assets/img/uploadIcon.png'
@@ -76,7 +83,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                           touch-manipulation" >
                 <img :src="uploadicon" class="w-11 h-11 brightness-0 invert" alt="Upload" />
             </label>
-            <input style="display: none" type="file" ref="fileInput" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" alt="" @change="handleFileSelect">
+            <input style="display: none" type="file" ref="fileInput" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
         </div>
         <div class="flex flex-col gap-1 mb-4">
             <label for="stride" class="text-lg font-semibold text-saft-brown-700">
@@ -135,10 +142,10 @@ import uploadicon from '@/assets/img/uploadIcon.png'
 
 <style scoped>
 #createSpectrogramButton:hover {
-    background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) calc(var(--progress-value) * 1%), var(--color-saft-blue-600) 100%);
+    background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) 100%);
 }
 #createSpectrogramButton {
     /*var(--color-saft-blue-500)*/
-    background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) calc(var(--progress-value) * 1%), var(--color-saft-blue-500) 100%);
+    background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) 100%);
 }
 </style>
