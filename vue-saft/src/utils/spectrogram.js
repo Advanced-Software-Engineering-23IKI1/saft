@@ -19,8 +19,6 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  * }}
  */
 export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress ) {
-    console.log('DEBUG: samples.length:', samples.length);
-
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
         throw new Error(`windowSize must be power of 2, got ${windowSize}`);
@@ -91,7 +89,6 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
         // Tripwire: detect NaNs early in FFT output
         for (let k = 0; k < Math.min(16, re.length); k++) {
             if (!Number.isFinite(re[k]) || !Number.isFinite(im[k])) {
-                console.log('BAD FFT BIN', k, { re: re[k], im: im[k] });
                 throw new Error(`FFT produced NaN/Infinity at bin ${k}`);
             }
         }

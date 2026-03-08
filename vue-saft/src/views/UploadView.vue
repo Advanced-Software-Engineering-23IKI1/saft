@@ -1,6 +1,6 @@
 <script setup>
 
-import { useTemplateRef, reactive, ref } from 'vue';
+import { useTemplateRef, ref } from 'vue';
 import { getSample, closeAudio } from '@/utils/input';
 import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram';
 import { spectrogramStore } from '@/store/store';
@@ -48,8 +48,6 @@ async function goNext(navigate) {
         await retrieveSample()
         if (spectrogramStore.renderData) {
             navigate()
-        } else {
-            alert("Failed to process the audio file. Please try again with a different file.")
         }
     } catch (error) {
         console.error("Error processing the audio file:", error);

@@ -4,7 +4,7 @@ import { reactive, useTemplateRef } from 'vue'
 import { renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
-import { nextTick } from 'vue';
+import { nextTick, onUnmounted } from 'vue';
 import { getCanvasPoint } from '@/utils/utils.js';
 import { Tool } from '@/enums/ToolEnum.js';
 
@@ -40,7 +40,7 @@ const canvasResizeObserver = new ResizeObserver(entries => {
       const { width, height } = entry.contentRect;
       canvasDimensions.width = width;
       canvasDimensions.height = height;
-      
+
       const currentPixelCount = width * height;
       canvasScaleFactor = Math.min(Math.sqrt(maxPixelCount / currentPixelCount), 1);
       canvasDimensions.width = width * canvasScaleFactor;
@@ -219,7 +219,6 @@ toolEvents.set(Tool.Scroll,
 })
 
 
-
 function onCanvasWheel(e){
   toolEvents.get(props.activeTool)?.onCanvasWheel?.(e)
 }
@@ -285,7 +284,7 @@ function updateMinZoom(){
 
   const renderData = spectrogramStore.renderData;
   if (!renderData) return;
-  const minZoomW = canvasDimensions.width  / renderData.width;
+  const minZoomW = canvasDimensions.width  / renderData.width* canvasScaleFactor;
   const minZoomH = canvasDimensions.height / renderData.height;
   minZoom = Math.max(minZoomW, minZoomH);
   if (zoom<minZoom){
@@ -343,7 +342,16 @@ nextTick(() => {
     canvasResizeObserver.observe(canvasRef.value);
     updateMinZoom();
     checkInternalOffsetValues();
-    invalidate();
+    invalidate()
+
+  }
+})
+
+// Cleanup on unmount to prevent memory leaks
+onUnmounted(() => {
+  canvasResizeObserver.disconnect();
+  if (rafId) {
+    cancelAnimationFrame(rafId);
   }
 })
 
