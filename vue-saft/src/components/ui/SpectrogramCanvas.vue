@@ -1,6 +1,6 @@
 <script setup>
 import { spectrogramStore } from '@/store/store';
-import { reactive, useTemplateRef, computed } from 'vue'
+import { reactive, useTemplateRef } from 'vue'
 import { renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
