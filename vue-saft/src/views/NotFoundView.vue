@@ -3,7 +3,7 @@ import { RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <section class="text-center max-w-md">
+  <section class="w-full flex flex-col items-center justify-center">
     <p class="text-2xl text-slate-500">404</p>
     <h1 class="mt-2 text-2xl font-semibold">Page not found</h1>
     <p class="mt-2 pb-5 text-sm text-slate-500">
