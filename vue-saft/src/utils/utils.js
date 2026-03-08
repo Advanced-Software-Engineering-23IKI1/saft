@@ -22,3 +22,18 @@ export function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+
+/**
+ * Returns the position of a pointer event relative to the canvas.
+ *
+ * @param {MouseEvent|TouchEvent} e Pointer event.
+ * @param {HTMLCanvasElement} canvasRef Reference to the canvas element.
+ * @returns {{x: number, y: number}} Position of the pointer relative to the canvas.
+ */
+export function getCanvasPoint(e, canvasRef) {
+  const rect = canvasRef.value.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+    };
+}

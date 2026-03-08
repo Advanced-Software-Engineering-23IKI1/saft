@@ -8,6 +8,7 @@ npm install
 
 ```sh
 npm run dev
+npm run dev -- --host
 ```
 
 ### Compile and Minify for Production
