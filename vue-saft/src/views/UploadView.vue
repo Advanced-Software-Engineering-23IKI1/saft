@@ -27,7 +27,7 @@ async function retrieveSample() {
     conversionName.value = "Running FFT"
     spectrogramStore.spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, conversionProgress);
 
-    closeAudio();
+    await closeAudio();
     conversionName.value = "Prerendering Spectrogram"
     spectrogramStore.renderData = await computeSpectrogramRenderingData(spectrogramStore.spectrogram, sample.sampleRate, minFreq, maxFreq, conversionProgress);
 
