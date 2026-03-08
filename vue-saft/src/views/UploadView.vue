@@ -7,6 +7,7 @@ import { spectrogramStore } from '@/store/store';
 
 const fileInput = useTemplateRef('fileInput');
 const conversionProgress = ref(0);
+const conversionName = ref("Create Spectrogram");
 const fileSelected = ref(false);
 
 const maxFreq = 20000
@@ -23,13 +24,15 @@ async function retrieveSample() {
     const sample = await getSample(fileInput.value, channel);
     if (!sample) return;
 
+    conversionName.value = "Running FFT"
     spectrogramStore.spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, conversionProgress);
 
     closeAudio();
-
+    conversionName.value = "Prerendering Spectrogram"
     spectrogramStore.renderData = await computeSpectrogramRenderingData(spectrogramStore.spectrogram, sample.sampleRate, minFreq, maxFreq, conversionProgress);
 
     conversionProgress.value = 0
+    conversionName.value = "Create Spectrogram"
 
     //updateMinZoom()
     //checkInternalOffsetValues()
@@ -134,7 +137,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                       transition-all duration-200
                       touch-manipulation" @click="goNext(navigate)"
                       :style="{'--progress-value': conversionProgress}">
-                Create Spectrogram
+                {{ conversionName }}
             </button>
         </RouterLink>
     </div>

@@ -65,6 +65,13 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     const maxVal = samples.length;
     fftProgress.value = 0;
 
+    // figure out how many FFT frames we will generate (window-hopping)
+    const numFrames = Math.floor((maxVal - windowSize) / hopSize) + 1;
+    // determine how frequently to update so we get ~50 progress steps
+    const fftUpdateInterval = Math.max(1, Math.floor(numFrames / 50));
+    // index for progress updates
+    let frameIndex = 0;
+
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
         
         // Frame (works for Float32Array too)
@@ -98,8 +105,10 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
 
         spectrogram.push(magnitude);
 
-        if ((start & (Math.floor(maxVal/50)-1)) === 0) {
-            fftProgress.value = start/maxVal;
+        // Update progress every N frames to avoid too many UI updates
+        frameIndex += 1;
+        if (frameIndex % fftUpdateInterval === 0) {
+            fftProgress.value = frameIndex / numFrames;
             await nextFrame(); 
         }
     }
@@ -255,6 +264,9 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
 
     renderDataProgress.value = 0;
 
+    // precompute update interval to give at most 50 edits
+    const renderUpdateInterval = Math.max(1, Math.floor(timeFrames / 50));
+
     for (let t = 0; t < timeFrames; t++) {
         const frame = data[t] || [];
         for (let f = minBin; f <= maxBin; f++) {
@@ -263,8 +275,8 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
             if (db < minDB) minDB = db;
             if (db > maxDB) maxDB = db;
         }
-        if ((t & (Math.floor(timeFrames/50) - 1)) === 0) {
-            renderDataProgress.value = t/timeFrames;
+        if (t % renderUpdateInterval === 0) {
+            renderDataProgress.value = t / timeFrames;
             await nextFrame();
         }
     }
