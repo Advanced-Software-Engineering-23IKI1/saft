@@ -284,7 +284,7 @@ function updateMinZoom(){
 
   const renderData = spectrogramStore.renderData;
   if (!renderData) return;
-  const minZoomW = canvasDimensions.width  / renderData.width* canvasScaleFactor;
+  const minZoomW = canvasDimensions.width  / renderData.width;
   const minZoomH = canvasDimensions.height / renderData.height;
   minZoom = Math.max(minZoomW, minZoomH);
   if (zoom<minZoom){
