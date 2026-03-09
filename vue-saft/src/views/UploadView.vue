@@ -12,18 +12,31 @@ const fileSelected = ref(false);
 
 let mediaRecorder;
 let recordChunks = reactive([]);
-const recordedFile = ref(false);
+const recordedFile = ref(null);
 const isRecording = ref(false);
-let peakIndicator = ref(0);
+const recordedFileSelected = ref(false);
+const peakIndicator = ref(0);
 const saveChunkToRecording = (event) => {
     recordChunks.push(event.data);
 };
 const saveRecording = async () => {
-  const nowStr = Date.now();
-  let fileName = 'test-video-recorder-' + nowStr + '.mp3';
+    if (!recordChunks.length) {
+    recordedFile.value = null;
+    return;
+  }
 
-  const blob = new Blob(recordChunks, { type: 'audio/mp3' });
-}
+  const nowStr = Date.now();
+  const fileName = `saft-recording-${nowStr}.wav`;
+
+  const blob = new Blob(recordChunks, { type: 'audio/wav' });
+  const file = new File([blob], fileName, { type: 'audio/wav' });
+
+  recordedFile.value = file;
+  recordedFileSelected.value = true;
+
+  recordChunks = reactive([]);
+};
+
 async function recordingLogic() {
     if (!isRecording.value) {
         recordChunks = [];
@@ -50,7 +63,7 @@ async function recordingLogic() {
                 function tick() {
                     if (isRecording.value) {
                         const peak = getPeakLevel();
-                        peakIndicator.value = `${peak * 100}%`;
+                        peakIndicator.value = peak * 100;
                         requestAnimationFrame(tick);
                     } else {
                         peakIndicator.value = 0
@@ -96,7 +109,8 @@ async function retrieveSample() {
     spectrogramStore.spectrogram = null;
     spectrogramStore.renderData = null;
 
-    const sample = await getSample(fileInput.value, channel);
+    const file = recordedFile.value ?? fileInput.value?.files?.[0];
+    const sample = await getSample(file, channel);
     if (!sample) return;
 
     conversionName.value = "Running FFT"
@@ -138,7 +152,8 @@ import uploadicon from '@/assets/img/uploadIcon.png'
         <!-- Zwei Buttons horizontal nebeneinander -->
         <div class="flex justify-center gap-6 mb-6">
             <button @click="recordingLogic"
-                :class="[isRecording ? 'bg-red-500 hover:bg-red-600' : (recordedFile ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600')]"
+                :class="[isRecording ? 'bg-red-500 hover:bg-red-600' : (recordedFileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600')]"
+
                 class=" w-24 h-24
                           active:scale-[0.95]
                           rounded-full flex items-center justify-center 
@@ -146,6 +161,9 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
+                <div v-if="isRecording"
+                    class="absolute bottom-0 left-0 w-full bg-red-700/60 transition-all duration-100"
+                    :style="{ height: `${Math.min(peakIndicator, 100)}%` }"></div>
                 <img :src="microfonicon" class="w-12 h-12 brightness-0 invert" alt="Mikrofon" />
             </button>
             <!-- Upload Button (identisch) -->
