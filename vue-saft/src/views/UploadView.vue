@@ -16,25 +16,29 @@ const recordedFile = ref(null);
 const isRecording = ref(false);
 const recordedFileSelected = ref(false);
 const peakIndicator = ref(0);
+
 const saveChunkToRecording = (event) => {
     recordChunks.push(event.data);
 };
 const saveRecording = async () => {
     if (!recordChunks.length) {
-    recordedFile.value = null;
-    return;
-  }
+        recordedFile.value = null;
+        return;
+    }
 
-  const nowStr = Date.now();
-  const fileName = `saft-recording-${nowStr}.wav`;
+    const nowStr = Date.now();
+    const fileName = `saft-recording-${nowStr}.wav`;
 
-  const blob = new Blob(recordChunks, { type: 'audio/wav' });
-  const file = new File([blob], fileName, { type: 'audio/wav' });
+    const blob = new Blob(recordChunks, { type: 'audio/wav' });
+    const file = new File([blob], fileName, { type: 'audio/wav' });
 
-  recordedFile.value = file;
-  recordedFileSelected.value = true;
-
-  recordChunks = reactive([]);
+    recordedFile.value = file;
+    recordedFileSelected.value = true;
+    fileSelected.value = false;
+    if (fileInput.value) {
+        fileInput.value.value = '';
+    }
+    recordChunks = reactive([]);
 };
 
 async function recordingLogic() {
@@ -78,12 +82,11 @@ async function recordingLogic() {
                 mediaRecorder.ondataavailable = saveChunkToRecording;
                 mediaRecorder.onstop = saveRecording;
                 mediaRecorder.start();
-
-                // TODO - use mediaRecorder.requestData in order to get chunks for sending them via web-socket
             });
 
         } catch (error) {
             console.error('Error starting the record: ', error);
+            alert(error?.message || 'Microphone access failed');
         }
     }
     else {
@@ -110,6 +113,7 @@ async function retrieveSample() {
     spectrogramStore.renderData = null;
 
     const file = recordedFile.value ?? fileInput.value?.files?.[0];
+
     const sample = await getSample(file, channel);
     if (!sample) return;
 
@@ -130,6 +134,10 @@ async function retrieveSample() {
 
 function handleFileSelect() {
     fileSelected.value = fileInput.value?.files?.length > 0;
+    recordedFileSelected.value = !fileSelected.value
+    if (fileSelected.value) {
+        recordedFile.value = null;
+    }
 }
 
 async function goNext(navigate) {
@@ -151,20 +159,22 @@ import uploadicon from '@/assets/img/uploadIcon.png'
     <div class="flex flex-col gap-3 mb-4">
         <!-- Zwei Buttons horizontal nebeneinander -->
         <div class="flex justify-center gap-6 mb-6">
-            <button @click="recordingLogic"
-                :class="[isRecording ? 'bg-red-500 hover:bg-red-600' : (recordedFileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600')]"
-
-                class=" w-24 h-24
-                          active:scale-[0.95]
-                          rounded-full flex items-center justify-center 
-                          shadow-xl
-                          border-2 border-white/50 
-                          transition-all duration-200
-                          touch-manipulation">
+            <button @click="recordingLogic" :class="[
+                isRecording
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : recordedFileSelected
+                        ? 'bg-green-500 hover:bg-green-600'
+                        : 'bg-saft-main-500 hover:bg-saft-main-600'
+            ]" class="relative overflow-hidden w-24 h-24
+         active:scale-[0.95]
+         rounded-full flex items-center justify-center
+         shadow-xl border-2 border-white/50
+         transition-all duration-200 touch-manipulation">
                 <div v-if="isRecording"
-                    class="absolute bottom-0 left-0 w-full bg-red-700/60 transition-all duration-100"
+                    class="absolute left-0 bottom-0 w-full bg-red-700/70 transition-all duration-100"
                     :style="{ height: `${Math.min(peakIndicator, 100)}%` }"></div>
-                <img :src="microfonicon" class="w-12 h-12 brightness-0 invert" alt="Mikrofon" />
+
+                <img :src="microfonicon" class="w-12 h-12 brightness-0 invert relative z-10" alt="Mikrofon" />
             </button>
             <!-- Upload Button (identisch) -->
             <label for="fileInput"
