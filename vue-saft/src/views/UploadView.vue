@@ -1,150 +1,87 @@
 <script setup>
-
-import { useTemplateRef, computed, ref, reactive } from 'vue';
-import { getSample, closeAudio } from '@/utils/input';
-import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram';
-import { spectrogramStore } from '@/store/store';
+import { useTemplateRef, computed, ref } from 'vue'
+import { getSample, closeAudio } from '@/utils/input'
+import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram'
+import { spectrogramStore } from '@/store/store'
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
+import { useAudioRecorder } from '@/utils/useAudioRecorder'
+import microfonicon from '@/assets/img/micIcon.png'
+import uploadicon from '@/assets/img/uploadIcon.png'
 
-// upload refs
-const fileInput = useTemplateRef('fileInput');
-const conversionProgress = ref(0);
-const conversionName = ref("Create Spectrogram");
-const fileSelected = ref(false);
-const uploadedFile = ref(null);
+const fileInput = useTemplateRef('fileInput')
+const conversionProgress = ref(0)
+const conversionName = ref('Create Spectrogram')
+const fileSelected = ref(false)
+const uploadedFile = ref(null)
 
-// recording refs
-let mediaRecorder;
-let recordChunks = reactive([]);
-const recordedFile = ref(null);
-const isRecording = ref(false);
-const recordedFileSelected = ref(false);
-const peakIndicator = ref(0);
-
-const saveChunkToRecording = (event) => {
-    recordChunks.push(event.data);
-};
-
-const saveRecording = async () => {
-    if (!recordChunks.length) {
-        recordedFile.value = null;
-        return;
-    }
-    const nowStr = Date.now();
-    const fileName = `saft-recording-${nowStr}.wav`;
-
-    const blob = new Blob(recordChunks, { type: 'audio/wav' });
-    const file = new File([blob], fileName, { type: 'audio/wav' });
-
-    recordedFile.value = file;
-    recordedFileSelected.value = true;
-    fileSelected.value = false;
-    uploadedFile.value = null;
-    if (fileInput.value) {
-        fileInput.value.value = '';
-    }
-    recordChunks = reactive([]);
-};
-
-async function recordingLogic() {
-    if (!isRecording.value) {
-        recordChunks = [];
-        try {
-            navigator.mediaDevices.getUserMedia({
-                audio: true // We are only interested in the audio
-            }).then(stream => {
-                isRecording.value = true;
-
-                // Create an audio context and connect the stream source to an analyser node
-                const context = new AudioContext();
-                const source = context.createMediaStreamSource(stream);
-                const analyser = context.createAnalyser();
-                source.connect(analyser);
-
-                // The array we will put sound wave data in
-                const array = new Uint8Array(analyser.fftSize);
-
-                function getPeakLevel() {
-                    analyser.getByteTimeDomainData(array);
-                    return array.reduce((max, current) => Math.max(max, Math.abs(current - 127)), 0) / 128;
-                }
-
-                function tick() {
-                    if (isRecording.value) {
-                        const peak = getPeakLevel();
-                        peakIndicator.value = peak * 100;
-                        requestAnimationFrame(tick);
-                    } else {
-                        peakIndicator.value = 0
-                    }
-                }
-                tick();
-
-                // Create a new MediaRecorder instance, and provide the audio-stream.
-                mediaRecorder = new MediaRecorder(stream);
-                
-                // Set the MediaRecorder's events handlers
-                mediaRecorder.ondataavailable = saveChunkToRecording;
-                mediaRecorder.onstop = saveRecording;
-                mediaRecorder.start();
-            });
-        } catch (error) {
-            console.error('Error starting the record: ', error);
-            alert(error?.message || 'Microphone access failed');
-        }
-    }
-    else {
-        if (mediaRecorder) {
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(track => {
-                track.stop();
-            });
-            isRecording.value = false;
-        }
-    }
-}
+const {
+    recordedFile,
+    isRecording,
+    recordedFileSelected,
+    peakIndicator,
+    toggleRecording,
+    clearRecording,
+} = useAudioRecorder()
 
 const maxFreq = 20000
 const minFreq = 0
 const windowSize = 2048
 const hopSize = 250
-const channel = 0;
+const channel = 0
 
 async function retrieveSample() {
+    spectrogramStore.spectrogram = null
+    spectrogramStore.renderData = null
 
-    spectrogramStore.spectrogram = null;
-    spectrogramStore.renderData = null;
+    const file = recordedFile.value ?? uploadedFile.value
+    const sample = await getSample(file, channel)
+    if (!sample) return
 
-    const file = recordedFile.value ?? uploadedFile.value;
+    conversionName.value = 'Running FFT'
+    spectrogramStore.spectrogram = await computeSpectrogram(
+        sample.samples,
+        sample.sampleRate,
+        windowSize,
+        hopSize,
+        conversionProgress
+    )
 
-    const sample = await getSample(file, channel);
-    if (!sample) return;
+    await closeAudio()
 
-    conversionName.value = "Running FFT"
-    spectrogramStore.spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, conversionProgress);
-
-    await closeAudio();
-    conversionName.value = "Prerendering Spectrogram"
-    spectrogramStore.renderData = await computeSpectrogramRenderingData(spectrogramStore.spectrogram, sample.sampleRate, minFreq, maxFreq, conversionProgress);
+    conversionName.value = 'Prerendering Spectrogram'
+    spectrogramStore.renderData = await computeSpectrogramRenderingData(
+        spectrogramStore.spectrogram,
+        sample.sampleRate,
+        minFreq,
+        maxFreq,
+        conversionProgress
+    )
 
     conversionProgress.value = 0
-    conversionName.value = "Create Spectrogram"
-
-    //updateMinZoom()
-    //checkInternalOffsetValues()
-    //invalidate();
+    conversionName.value = 'Create Spectrogram'
 }
 
 function handleFileSelect() {
-    uploadedFile.value = fileInput.value?.files?.[0] ?? null;
-    fileSelected.value = fileInput.value?.files?.length > 0;
-    recordedFileSelected.value = !fileSelected.value
+    uploadedFile.value = fileInput.value?.files?.[0] ?? null
+    fileSelected.value = !!uploadedFile.value
+
     if (fileSelected.value) {
-        recordedFile.value = null;
+        clearRecording()
     }
 }
+
+async function handleRecordingToggle() {
+    if (!isRecording.value && fileInput.value) {
+        fileInput.value.value = ''
+        uploadedFile.value = null
+        fileSelected.value = false
+    }
+
+    await toggleRecording()
+}
+
 const currentAudioFile = computed(() => {
-  return recordedFile.value ?? uploadedFile.value ?? null
+    return recordedFile.value ?? uploadedFile.value ?? null
 })
 
 async function goNext(navigate) {
@@ -154,19 +91,17 @@ async function goNext(navigate) {
             navigate()
         }
     } catch (error) {
-        console.error("Error processing the audio file:", error);
-        alert("An error occurred while processing the audio file. Please try again with a different file.")
+        console.error('Error processing the audio file:', error)
+        alert('An error occurred while processing the audio file. Please try again with a different file.')
     }
 }
-import microfonicon from '@/assets/img/micIcon.png'
-import uploadicon from '@/assets/img/uploadIcon.png'
 </script>
 
 <template>
     <div class="flex flex-col gap-3 mb-4">
         <!-- Zwei Buttons horizontal nebeneinander -->
         <div class="flex justify-center gap-6 mb-6">
-            <button @click="recordingLogic" :class="[
+            <button @click="handleRecordingToggle" :class="[
                 isRecording
                     ? 'bg-red-500 hover:bg-red-600'
                     : recordedFileSelected
@@ -179,10 +114,11 @@ import uploadicon from '@/assets/img/uploadIcon.png'
          transition-all duration-200 touch-manipulation">
                 <div v-if="isRecording"
                     class="absolute left-0 bottom-0 w-full bg-red-800/70 transition-all duration-100"
-                    :style="{ height: `${Math.min(peakIndicator*1.5, 100)}%` }"></div>
+                    :style="{ height: `${Math.min(peakIndicator * 1.5, 100)}%` }"></div>
 
                 <img :src="microfonicon" class="w-12 h-12 brightness-0 invert relative z-10" alt="Mikrofon" />
             </button>
+
             <!-- Upload Button (identisch) -->
             <label for="fileInput"
                 :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']"
@@ -198,7 +134,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
                 accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
         </div>
-            <MediaPlayer :file="currentAudioFile" />
+        <MediaPlayer :file="currentAudioFile" />
         <div class="flex flex-col gap-1 mb-4">
             <label for="stride" class="text-lg font-semibold text-saft-brown-700">
                 Stride
