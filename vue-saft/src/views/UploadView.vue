@@ -1,14 +1,16 @@
 <script setup>
 
-import { useTemplateRef, ref, reactive } from 'vue';
+import { useTemplateRef, computed, ref, reactive } from 'vue';
 import { getSample, closeAudio } from '@/utils/input';
 import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram';
 import { spectrogramStore } from '@/store/store';
+import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 
 const fileInput = useTemplateRef('fileInput');
 const conversionProgress = ref(0);
 const conversionName = ref("Create Spectrogram");
 const fileSelected = ref(false);
+const uploadedFile = ref(null);
 
 let mediaRecorder;
 let recordChunks = reactive([]);
@@ -35,6 +37,7 @@ const saveRecording = async () => {
     recordedFile.value = file;
     recordedFileSelected.value = true;
     fileSelected.value = false;
+    uploadedFile.value = null;
     if (fileInput.value) {
         fileInput.value.value = '';
     }
@@ -112,7 +115,7 @@ async function retrieveSample() {
     spectrogramStore.spectrogram = null;
     spectrogramStore.renderData = null;
 
-    const file = recordedFile.value ?? fileInput.value?.files?.[0];
+    const file = recordedFile.value ?? uploadedFile.value;
 
     const sample = await getSample(file, channel);
     if (!sample) return;
@@ -133,12 +136,16 @@ async function retrieveSample() {
 }
 
 function handleFileSelect() {
+    uploadedFile.value = fileInput.value?.files?.[0] ?? null;
     fileSelected.value = fileInput.value?.files?.length > 0;
     recordedFileSelected.value = !fileSelected.value
     if (fileSelected.value) {
         recordedFile.value = null;
     }
 }
+const currentAudioFile = computed(() => {
+  return recordedFile.value ?? uploadedFile.value ?? null
+})
 
 async function goNext(navigate) {
     try {
@@ -191,6 +198,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
                 accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
         </div>
+            <MediaPlayer :file="currentAudioFile" />
         <div class="flex flex-col gap-1 mb-4">
             <label for="stride" class="text-lg font-semibold text-saft-brown-700">
                 Stride
