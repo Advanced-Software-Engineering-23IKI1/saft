@@ -17,6 +17,9 @@ import logoUrl from '@/assets/img/saftLogoTransparent.png'
         <main class="mx-auto max-w-5xl px-4 py-8">
           <RouterView />
         </main>
+        <footer class="text-center text-sm text-gray-400 mt-4">
+          <a href="https://www.flaticon.com/free-icons/orange" title="orange icons">Orange icons created by Freepik - Flaticon</a>
+        </footer>
       </div>
     </div>
   </div>
