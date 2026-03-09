@@ -178,8 +178,8 @@ import uploadicon from '@/assets/img/uploadIcon.png'
          shadow-xl border-2 border-white/50
          transition-all duration-200 touch-manipulation">
                 <div v-if="isRecording"
-                    class="absolute left-0 bottom-0 w-full bg-red-700/70 transition-all duration-100"
-                    :style="{ height: `${Math.min(peakIndicator, 100)}%` }"></div>
+                    class="absolute left-0 bottom-0 w-full bg-red-800/70 transition-all duration-100"
+                    :style="{ height: `${Math.min(peakIndicator*1.5, 100)}%` }"></div>
 
                 <img :src="microfonicon" class="w-12 h-12 brightness-0 invert relative z-10" alt="Mikrofon" />
             </button>
