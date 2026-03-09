@@ -1,36 +1,36 @@
 // for memory reasons declared once and reused
-let audioCtx; 
-
+let audioCtx;
 
 
 /**
- * Load an audio file from an `<input type="file">`, decode it via the Web Audio API,
+ * Load an audio File object, decode it via the Web Audio API,
  * and return PCM samples for a chosen channel along with the sample rate.
  *
- * @param {HTMLInputElement} fileInput File input element whose first selected file will be read.
+ * @param {File} file Audio file object to decode.
  * @param {number} [channel=0] Zero-based channel index to extract (clamped to the available channels).
  * @returns {Promise<{ samples: Float32Array, sampleRate: number } | undefined>} Resolves to an object
- * containing the channel samples and sample rate, or `undefined` if no file was selected.
+ * containing the channel samples and sample rate, or `undefined` if no file was provided.
  */
-export async function getSample(fileInput, channel = 0) {
-  const file = fileInput.files?.[0];
+export async function getSample(file, channel = 0) {
+  
   if (!file) {
-    alert("Please select an audio file.");
-    return;
+    alert('Please select or record an audio file.');
+    return undefined;
   }
 
   audioCtx ??= new AudioContext();
 
-  const arrayBuffer = await file.arrayBuffer(); 
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer); 
+  const arrayBuffer = await file.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
   const ch = Math.min(channel, audioBuffer.numberOfChannels - 1);
 
-  const samples = audioBuffer.getChannelData(ch); 
-  const sampleRate = audioBuffer.sampleRate; 
+  const samples = audioBuffer.getChannelData(ch);
+  const sampleRate = audioBuffer.sampleRate;
 
   return { samples, sampleRate };
 }
+
 
 
 /**
@@ -43,4 +43,7 @@ export async function closeAudio() {
     await audioCtx.close();
     audioCtx = null;
   }
-  }
+}
+
+
+// Recording logic

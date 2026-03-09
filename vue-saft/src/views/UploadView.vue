@@ -1,47 +1,88 @@
 <script setup>
+import { useTemplateRef, computed, ref } from 'vue'
+import { getSample, closeAudio } from '@/utils/input'
+import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram'
+import { spectrogramStore } from '@/store/store'
+import MediaPlayer from '@/components/ui/Mediaplayer.vue'
+import { useAudioRecorder } from '@/utils/useAudioRecorder'
+import microfonicon from '@/assets/img/micIcon.png'
+import uploadicon from '@/assets/img/uploadIcon.png'
 
-import { useTemplateRef, ref } from 'vue';
-import { getSample, closeAudio } from '@/utils/input';
-import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram';
-import { spectrogramStore } from '@/store/store';
+const fileInput = useTemplateRef('fileInput')
+const conversionProgress = ref(0)
+const conversionName = ref('Create Spectrogram')
+const fileSelected = ref(false)
+const uploadedFile = ref(null)
 
-const fileInput = useTemplateRef('fileInput');
-const conversionProgress = ref(0);
-const conversionName = ref("Create Spectrogram");
-const fileSelected = ref(false);
+const {
+    recordedFile,
+    isRecording,
+    recordedFileSelected,
+    peakIndicator,
+    toggleRecording,
+    clearRecording,
+} = useAudioRecorder()
 
 const maxFreq = 20000
 const minFreq = 0
 const windowSize = 2048
 const hopSize = 250
-const channel = 0;
+const channel = 0
 
 async function retrieveSample() {
+    spectrogramStore.spectrogram = null
+    spectrogramStore.renderData = null
 
-    spectrogramStore.spectrogram = null;
-    spectrogramStore.renderData = null;
+    const file = recordedFile.value ?? uploadedFile.value
+    const sample = await getSample(file, channel)
+    if (!sample) return
 
-    const sample = await getSample(fileInput.value, channel);
-    if (!sample) return;
+    conversionName.value = 'Running FFT'
+    spectrogramStore.spectrogram = await computeSpectrogram(
+        sample.samples,
+        sample.sampleRate,
+        windowSize,
+        hopSize,
+        conversionProgress
+    )
 
-    conversionName.value = "Running FFT"
-    spectrogramStore.spectrogram = await computeSpectrogram(sample.samples, sample.sampleRate, windowSize, hopSize, conversionProgress);
+    await closeAudio()
 
-    await closeAudio();
-    conversionName.value = "Prerendering Spectrogram"
-    spectrogramStore.renderData = await computeSpectrogramRenderingData(spectrogramStore.spectrogram, sample.sampleRate, minFreq, maxFreq, conversionProgress);
+    conversionName.value = 'Prerendering Spectrogram'
+    spectrogramStore.renderData = await computeSpectrogramRenderingData(
+        spectrogramStore.spectrogram,
+        sample.sampleRate,
+        minFreq,
+        maxFreq,
+        conversionProgress
+    )
 
     conversionProgress.value = 0
-    conversionName.value = "Create Spectrogram"
-
-    //updateMinZoom()
-    //checkInternalOffsetValues()
-    //invalidate();
+    conversionName.value = 'Create Spectrogram'
 }
 
 function handleFileSelect() {
-    fileSelected.value = fileInput.value?.files?.length > 0;
+    uploadedFile.value = fileInput.value?.files?.[0] ?? null
+    fileSelected.value = !!uploadedFile.value
+
+    if (fileSelected.value) {
+        clearRecording()
+    }
 }
+
+async function handleRecordingToggle() {
+    if (!isRecording.value && fileInput.value) {
+        fileInput.value.value = ''
+        uploadedFile.value = null
+        fileSelected.value = false
+    }
+
+    await toggleRecording()
+}
+
+const currentAudioFile = computed(() => {
+    return recordedFile.value ?? uploadedFile.value ?? null
+})
 
 async function goNext(navigate) {
     try {
@@ -50,42 +91,50 @@ async function goNext(navigate) {
             navigate()
         }
     } catch (error) {
-        console.error("Error processing the audio file:", error);
-        alert("An error occurred while processing the audio file. Please try again with a different file.")
+        console.error('Error processing the audio file:', error)
+        alert('An error occurred while processing the audio file. Please try again with a different file.')
     }
 }
-import microfonicon from '@/assets/img/micIcon.png'
-import uploadicon from '@/assets/img/uploadIcon.png'
 </script>
 
 <template>
     <div class="flex flex-col gap-3 mb-4">
         <!-- Zwei Buttons horizontal nebeneinander -->
         <div class="flex justify-center gap-6 mb-6">
-            <!-- Mic Button -->
-            <button class=" w-24 h-24
-                          bg-saft-main-500
-                          hover:bg-saft-main-600 
+            <button @click="handleRecordingToggle" :class="[
+                isRecording
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : recordedFileSelected
+                        ? 'bg-green-500 hover:bg-green-600'
+                        : 'bg-saft-main-500 hover:bg-saft-main-600'
+            ]" class="relative overflow-hidden w-24 h-24
+         active:scale-[0.95]
+         rounded-full flex items-center justify-center
+         shadow-xl border-2 border-white/50
+         transition-all duration-200 touch-manipulation">
+                <div v-if="isRecording"
+                    class="absolute left-0 bottom-0 w-full bg-red-800/70 transition-all duration-100"
+                    :style="{ height: `${Math.min(peakIndicator * 1.5, 100)}%` }"></div>
+
+                <img :src="microfonicon" class="w-12 h-12 brightness-0 invert relative z-10" alt="Mikrofon" />
+            </button>
+
+            <!-- Upload Button (identisch) -->
+            <label for="fileInput"
+                :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']"
+                class=" w-24 h-24
                           active:scale-[0.95]
                           rounded-full flex items-center justify-center 
                           shadow-xl
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
-                <img :src="microfonicon" class="w-12 h-12 brightness-0 invert" alt="Mikrofon" />
-            </button>
-            <!-- Upload Button (identisch) -->
-            <label for="fileInput" :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']" class=" w-24 h-24
-                          active:scale-[0.95]
-                          rounded-full flex items-center justify-center 
-                          shadow-xl
-                          border-2 border-white/50 
-                          transition-all duration-200
-                          touch-manipulation" >
                 <img :src="uploadicon" class="w-11 h-11 brightness-0 invert" alt="Upload" />
             </label>
-            <input style="display: none" type="file" ref="fileInput" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
+            <input style="display: none" type="file" ref="fileInput" id="fileInput"
+                accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
         </div>
+        <MediaPlayer :file="currentAudioFile" />
         <div class="flex flex-col gap-1 mb-4">
             <label for="stride" class="text-lg font-semibold text-saft-brown-700">
                 Stride
@@ -134,7 +183,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                       border-2 border-white/50 
                       transition-all duration-200
                       touch-manipulation" @click="goNext(navigate)"
-                      :style="{'--progress-value': conversionProgress}">
+                :style="{ '--progress-value': conversionProgress }">
                 {{ conversionName }}
             </button>
         </RouterLink>
@@ -145,6 +194,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
 #createSpectrogramButton:hover {
     background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) 100%);
 }
+
 #createSpectrogramButton {
     /*var(--color-saft-blue-500)*/
     background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) 100%);
