@@ -6,12 +6,14 @@ import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spe
 import { spectrogramStore } from '@/store/store';
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 
+// upload refs
 const fileInput = useTemplateRef('fileInput');
 const conversionProgress = ref(0);
 const conversionName = ref("Create Spectrogram");
 const fileSelected = ref(false);
 const uploadedFile = ref(null);
 
+// recording refs
 let mediaRecorder;
 let recordChunks = reactive([]);
 const recordedFile = ref(null);
@@ -22,12 +24,12 @@ const peakIndicator = ref(0);
 const saveChunkToRecording = (event) => {
     recordChunks.push(event.data);
 };
+
 const saveRecording = async () => {
     if (!recordChunks.length) {
         recordedFile.value = null;
         return;
     }
-
     const nowStr = Date.now();
     const fileName = `saft-recording-${nowStr}.wav`;
 
@@ -80,13 +82,12 @@ async function recordingLogic() {
 
                 // Create a new MediaRecorder instance, and provide the audio-stream.
                 mediaRecorder = new MediaRecorder(stream);
-
+                
                 // Set the MediaRecorder's events handlers
                 mediaRecorder.ondataavailable = saveChunkToRecording;
                 mediaRecorder.onstop = saveRecording;
                 mediaRecorder.start();
             });
-
         } catch (error) {
             console.error('Error starting the record: ', error);
             alert(error?.message || 'Microphone access failed');
@@ -98,7 +99,6 @@ async function recordingLogic() {
             mediaRecorder.stream.getTracks().forEach(track => {
                 track.stop();
             });
-
             isRecording.value = false;
         }
     }
