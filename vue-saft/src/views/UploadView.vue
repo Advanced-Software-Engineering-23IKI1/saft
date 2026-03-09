@@ -1,6 +1,6 @@
 <script setup>
 
-import { useTemplateRef, ref } from 'vue';
+import { useTemplateRef, ref, reactive } from 'vue';
 import { getSample, closeAudio } from '@/utils/input';
 import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram';
 import { spectrogramStore } from '@/store/store';
@@ -9,6 +9,81 @@ const fileInput = useTemplateRef('fileInput');
 const conversionProgress = ref(0);
 const conversionName = ref("Create Spectrogram");
 const fileSelected = ref(false);
+
+let mediaRecorder;
+let recordChunks = reactive([]);
+const recordedFile = ref(false);
+const isRecording = ref(false);
+let peakIndicator = ref(0);
+const saveChunkToRecording = (event) => {
+    recordChunks.push(event.data);
+};
+const saveRecording = async () => {
+  const nowStr = Date.now();
+  let fileName = 'test-video-recorder-' + nowStr + '.mp3';
+
+  const blob = new Blob(recordChunks, { type: 'audio/mp3' });
+}
+async function recordingLogic() {
+    if (!isRecording.value) {
+        recordChunks = [];
+        try {
+            navigator.mediaDevices.getUserMedia({
+                audio: true // We are only interested in the audio
+            }).then(stream => {
+                isRecording.value = true;
+
+                // Create an audio context and connect the stream source to an analyser node
+                const context = new AudioContext();
+                const source = context.createMediaStreamSource(stream);
+                const analyser = context.createAnalyser();
+                source.connect(analyser);
+
+                // The array we will put sound wave data in
+                const array = new Uint8Array(analyser.fftSize);
+
+                function getPeakLevel() {
+                    analyser.getByteTimeDomainData(array);
+                    return array.reduce((max, current) => Math.max(max, Math.abs(current - 127)), 0) / 128;
+                }
+
+                function tick() {
+                    if (isRecording.value) {
+                        const peak = getPeakLevel();
+                        peakIndicator.value = `${peak * 100}%`;
+                        requestAnimationFrame(tick);
+                    } else {
+                        peakIndicator.value = 0
+                    }
+                }
+                tick();
+
+                // Create a new MediaRecorder instance, and provide the audio-stream.
+                mediaRecorder = new MediaRecorder(stream);
+
+                // Set the MediaRecorder's events handlers
+                mediaRecorder.ondataavailable = saveChunkToRecording;
+                mediaRecorder.onstop = saveRecording;
+                mediaRecorder.start();
+
+                // TODO - use mediaRecorder.requestData in order to get chunks for sending them via web-socket
+            });
+
+        } catch (error) {
+            console.error('Error starting the record: ', error);
+        }
+    }
+    else {
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => {
+                track.stop();
+            });
+
+            isRecording.value = false;
+        }
+    }
+}
 
 const maxFreq = 20000
 const minFreq = 0
@@ -62,10 +137,9 @@ import uploadicon from '@/assets/img/uploadIcon.png'
     <div class="flex flex-col gap-3 mb-4">
         <!-- Zwei Buttons horizontal nebeneinander -->
         <div class="flex justify-center gap-6 mb-6">
-            <!-- Mic Button -->
-            <button class=" w-24 h-24
-                          bg-saft-main-500
-                          hover:bg-saft-main-600 
+            <button @click="recordingLogic"
+                :class="[isRecording ? 'bg-red-500 hover:bg-red-600' : (recordedFile ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600')]"
+                class=" w-24 h-24
                           active:scale-[0.95]
                           rounded-full flex items-center justify-center 
                           shadow-xl
@@ -75,16 +149,19 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                 <img :src="microfonicon" class="w-12 h-12 brightness-0 invert" alt="Mikrofon" />
             </button>
             <!-- Upload Button (identisch) -->
-            <label for="fileInput" :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']" class=" w-24 h-24
+            <label for="fileInput"
+                :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']"
+                class=" w-24 h-24
                           active:scale-[0.95]
                           rounded-full flex items-center justify-center 
                           shadow-xl
                           border-2 border-white/50 
                           transition-all duration-200
-                          touch-manipulation" >
+                          touch-manipulation">
                 <img :src="uploadicon" class="w-11 h-11 brightness-0 invert" alt="Upload" />
             </label>
-            <input style="display: none" type="file" ref="fileInput" id="fileInput" accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
+            <input style="display: none" type="file" ref="fileInput" id="fileInput"
+                accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
         </div>
         <div class="flex flex-col gap-1 mb-4">
             <label for="stride" class="text-lg font-semibold text-saft-brown-700">
@@ -134,7 +211,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
                       border-2 border-white/50 
                       transition-all duration-200
                       touch-manipulation" @click="goNext(navigate)"
-                      :style="{'--progress-value': conversionProgress}">
+                :style="{ '--progress-value': conversionProgress }">
                 {{ conversionName }}
             </button>
         </RouterLink>
@@ -145,6 +222,7 @@ import uploadicon from '@/assets/img/uploadIcon.png'
 #createSpectrogramButton:hover {
     background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) calc(var(--progress-value) * 100%), var(--color-saft-blue-600) 100%);
 }
+
 #createSpectrogramButton {
     /*var(--color-saft-blue-500)*/
     background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) 100%);
