@@ -8,7 +8,7 @@ function isPowerOfTwo(n) {
  * @param {ArrayLike<number>} input real-valued samples, length must be power of 2
  * @returns {{re: Float64Array, im: Float64Array}} complex spectrum
  */
-function fft(input) {
+export function fft(input) {
     const N = input.length;
     if (!isPowerOfTwo(N)) throw new Error(`fft(): length must be power of 2, got ${N}`);
 
@@ -65,4 +65,3 @@ function fft(input) {
     return { re, im };
 }
 
-module.exports = { fft };
