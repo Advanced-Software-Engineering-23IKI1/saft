@@ -138,45 +138,47 @@ async function goNext(navigate) {
 
         <MediaPlayer :file="currentAudioFile" />
 
-        <div class="grid grid-cols-[1fr_2fr] gap-x-4 gap-y-3 mb-4">
-            <!-- Stride Input -->
-                <label for="stride" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                    Stride
-                </label>
-                <div class="relative">
-                    <input type="number" id="stride" min="0" step="0.1" placeholder="0.0" class="w-full py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-            bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
-            focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
-            shadow-lg hover:shadow-xl transition-all duration-200
-            invalid:text-red-500 invalid:border-red-300"
-                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                </div>
+        <div class="flex justify-center gap-6">
+            <div class="grid grid-cols-[1fr_2fr] gap-x-2 gap-y-2 justify-items-center max-w-md">
+                <!-- Stride Input -->
+                    <label for="stride" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
+                        Stride
+                    </label>
+                    <div class="relative">
+                        <input type="number" id="stride" min="0" step="0.1" placeholder="0.0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
+                bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
+                focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
+                shadow-lg hover:shadow-xl transition-all duration-200
+                invalid:text-red-500 invalid:border-red-300"
+                            oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
+                    </div>
 
-            <!-- Window Size Input -->
-                <label for="windowSize" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                    Win Size
-                </label>
-                <div class="relative">
-                    <input type="number" id="windowSize" min="0" step="1" placeholder="0" class="w-full py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-            bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
-            focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
-            shadow-lg hover:shadow-xl transition-all duration-200
-            invalid:text-red-500 invalid:border-red-300"
-                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                </div>
+                <!-- Window Size Input -->
+                    <label for="windowSize" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
+                        Win Size
+                    </label>
+                    <div class="relative">
+                        <input type="number" id="windowSize" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
+                bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
+                focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
+                shadow-lg hover:shadow-xl transition-all duration-200
+                invalid:text-red-500 invalid:border-red-300"
+                            oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
+                    </div>
 
-            <!-- N Bins Input -->
-                <label for="nbins" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                    n bins
-                </label>
-                <div class="relative">
-                    <input type="number" id="nbins" min="0" step="1" placeholder="0" class="w-full py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-            bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
-            focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
-            shadow-lg hover:shadow-xl transition-all duration-200
-            invalid:text-red-500 invalid:border-red-300"
-                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                </div>
+                <!-- N Bins Input -->
+                    <label for="nbins" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
+                        n bins
+                    </label>
+                    <div class="relative">
+                        <input type="number" id="nbins" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
+                bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
+                focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
+                shadow-lg hover:shadow-xl transition-all duration-200
+                invalid:text-red-500 invalid:border-red-300"
+                            oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
+                    </div>
+            </div>
         </div>    
 
         <RouterLink :to="{ name: 'canvas' }" custom v-slot="{ navigate }">
@@ -195,7 +197,7 @@ async function goNext(navigate) {
                 </button>
             </div>    
         </RouterLink>
-    </div>
+    </div>    
 </template>
 
 <style scoped>

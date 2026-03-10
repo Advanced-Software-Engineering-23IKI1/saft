@@ -18,17 +18,24 @@ const steps = computed(() => ([
 function stepClass(enabled, active) {
   // same logic/order as your original:
   // 1) disabled
-  // 2) active
-  // 3) default (enabled but inactive)
+  // 2) enabled + inactive
+  // 3) active
+  // 4) default (enabled but inactive)
   if (!enabled) {
     return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
       'text-saft-brown-500 bg-transparent cursor-not-allowed opacity-60'
   }
 
+  if (enabled && !active) {
+    return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
+      'bg-white/30 text-saft-brown-900 border-transparent ' +
+      'hover:bg-white/50 transition-all duration-200 active:scale-[0.98]'
+  }
+
   if (active) {
     return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
-      'bg-white/30 text-saft-brown-900 border-saft-main-500 ' +
-      'hover:bg-white/50 transition-all duration-200 active:scale-[0.98]'
+      'bg-white/70 text-saft-brown-900 border-saft-main-500 ' +
+      'hover:bg-white/80 transition-all duration-200 active:scale-[0.98]'
   }
 
   return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +

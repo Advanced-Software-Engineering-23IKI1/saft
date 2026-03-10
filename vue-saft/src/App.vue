@@ -3,13 +3,14 @@ import { RouterView } from 'vue-router'
 import Navbar from './components/ui/Navbar.vue'
 
 import bgUrl from '@/assets/img/background.png'
+import bgDarkUrl from '@/assets/img/background-dark.png'
 import logoUrl from '@/assets/img/saftLogoTransparent.png'
 </script>
 
 <template>
-  <div class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed" :style="{ backgroundImage: `url(${bgUrl})` }">
-    <div class="min-h-screen flex items-start justify-center p-6">
-      <div class="w-full max-w-4xl backdrop-blur-sm bg-saft-brown-50/80
+  <div id="background-wrapper" class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed" :style="{ '--bg-url-light': `url(${bgUrl})`, '--bg-url-dark': `url(${bgDarkUrl})` }">
+    <div class="min-h-screen flex items-start justify-center py-6 px-2">
+      <div class="w-full max-w-3xl backdrop-blur-sm bg-saft-brown-50/80
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                px-2 py-4 max-h-[90vh] overflow-auto">
         <img :src="logoUrl" class="w-60 h-auto mx-auto mb-6" alt="SAFT Logo" />
@@ -24,3 +25,15 @@ import logoUrl from '@/assets/img/saftLogoTransparent.png'
     </div>
   </div>
 </template>
+
+<style scoped>
+div#background-wrapper {
+  /* background image is set via inline style in the template */
+  background-image: var(--bg-url-light);
+}
+
+.dark-mode div#background-wrapper {
+  background-image: var(--bg-url-dark);
+  /* filter: invert(); */
+}
+</style>
