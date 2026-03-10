@@ -180,19 +180,20 @@ async function goNext(navigate) {
         </div>    
 
         <RouterLink :to="{ name: 'canvas' }" custom v-slot="{ navigate }">
-
-            <!-- Create Spectrogram Button -->
-            <button id="createSpectrogramButton" class="w-full py-4
-                      text-lg text-white font-semibold
-                      active:scale-[0.95]
-                      rounded-full flex items-center justify-center 
-                      shadow-xl
-                      border-2 border-white/50 
-                      transition-all duration-200
-                      touch-manipulation" @click="goNext(navigate)"
-                :style="{ '--progress-value': conversionProgress }">
-                {{ conversionName }}
-            </button>
+            <div class="flex justify-center">
+                <!-- Create Spectrogram Button -->
+                <button id="createSpectrogramButton" class="w-full max-w-sm py-4
+                        text-lg text-white font-semibold
+                        active:scale-[0.95]
+                        rounded-full flex items-center justify-center 
+                        shadow-xl
+                        border-2 border-white/50 
+                        transition-all duration-200
+                        touch-manipulation" @click="goNext(navigate)"
+                    :style="{ '--progress-value': conversionProgress }">
+                    {{ conversionName }}
+                </button>
+            </div>    
         </RouterLink>
     </div>
 </template>

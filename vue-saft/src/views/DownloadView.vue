@@ -21,17 +21,19 @@ import speakericon from '@/assets/img/speaker.png'
         <img :src="speakericon" class="w-11 h-11 brightness-0 invert" alt="Mikrofon" />
       </button>
     </div>
-    <button class=" w-full py-4
-                                text-lg text-white font-semibold
-                                bg-saft-blue-500
-                                hover:bg-saft-blue-600 
-                                active:scale-[0.95]
-                                rounded-full flex items-center justify-center 
-                                shadow-xl
-                                border-2 border-white/50 
-                                transition-all duration-200
-                                touch-manipulation">
-      Export to MP3
-    </button>
+    <div class="flex justify-center">
+      <button class=" w-full max-w-sm py-4
+                                  text-lg text-white font-semibold
+                                  bg-saft-blue-500
+                                  hover:bg-saft-blue-600 
+                                  active:scale-[0.95]
+                                  rounded-full flex items-center justify-center 
+                                  shadow-xl
+                                  border-2 border-white/50 
+                                  transition-all duration-200
+                                  touch-manipulation">
+        Export to MP3
+      </button>
+    </div>
   </div>
 </template>
