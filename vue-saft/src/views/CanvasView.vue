@@ -22,10 +22,10 @@ const activeTool = ref(Tool.Scroll)
 
 <template>
     <div class="flex flex-col gap-3 mb-4">
-        <!-- Image Container – Responsive + Horizontal Scroll -->
-        <div class="w-full h-[60vh] flex flex-col p-1">
-            <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
-      rounded-3xl shadow-2xl relative overflow-hidden">
+        <!-- Image Container -->
+        <div class="w-full h-[45vh] flex flex-col p-1">
+            <div class="h-full flex bg-saft-brown-50/90 backdrop-blur-md
+      rounded-2xl shadow-2xl relative overflow-hidden">
                 <SpectrogramCanvas :active-tool="activeTool" />
             </div>
             <!-- Toolbar -->
