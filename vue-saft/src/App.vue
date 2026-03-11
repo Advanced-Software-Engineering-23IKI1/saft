@@ -3,7 +3,7 @@ import { RouterView } from 'vue-router'
 import Navbar from './components/ui/Navbar.vue'
 
 import bgUrl from '@/assets/img/background.png'
-import bgDarkUrl from '@/assets/img/background-dark.png'
+import bgDarkUrl from '@/assets/img/background.png'
 import logoUrl from '@/assets/img/saftLogoTransparent.png'
 </script>
 
