@@ -14,6 +14,17 @@ import logoUrl from '@/assets/img/saftLogoTransparent.png'
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                px-2 py-4 max-h-[90vh] overflow-auto">
         <img :src="logoUrl" class="w-60 h-auto mx-auto mb-6" alt="SAFT Logo" />
+
+        <!-- Dark Mode Toggle -->
+          <label class="inline-flex items-center cursor-pointer">
+            <img src="./assets/img/moon.png" alt="Dark Mode" class="w-5 h-5">
+            <input type="checkbox" value="" class="sr-only peer" @change="toggleDarkMode">
+            <div
+              class="relative mx-3 w-9 h-5 bg-gray-800 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-saft-main-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-gray-200 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-saft-main-500">
+            </div>
+            <img src="./assets/img/sun.png" alt="Light Mode" class="w-5 h-5">
+          </label>
+
         <Navbar />
         <main class="mx-auto max-w-5xl px-0 py-0">
           <RouterView />
