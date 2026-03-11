@@ -1,24 +1,12 @@
 import { Tool } from '@/enums/ToolEnum.js';
 import { distance, getMidpoint } from '@/utils/utils.js';
 import { getCanvasPoint } from '@/utils/utils.js';
-import { reactive, ref } from 'vue';
 
 
-
-export function useCanvasTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount) {
-
-
-    const canvasOffsets = reactive({
-        internalWidthOffset: 0,
-        internalHeightOffset: 0,
-        maxInternalHeightOffset: 1,
-        maxInternalWidthOffset: 1,
-    })
-    const canvasScaleFactor = ref(1);
+export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
 
 
-    // panning and pinching 
-    const zoom = ref(1);
+    
     let minZoom = 0.2, maxZoom = 25;
 
     let pointers = new Map(); // pointerId -> {x,y}
@@ -30,7 +18,6 @@ export function useCanvasTool(canvasDimensions, canvasRef, spectrogramStore, inv
     let pinchStartCenterCanvas = null;
     let pinchStartCenterInternal = null;
 
-    const toolEvents = new Map(); // toolId -> { onCanvasWheel, onCanvasPointerDown, onCanvasPointerMove, onCanvasPointerUp, onCanvasPointerCancel, onCanvasPointerLeave }
 
     toolEvents.set(Tool.Scroll,
         { // movement tool
@@ -238,13 +225,11 @@ export function useCanvasTool(canvasDimensions, canvasRef, spectrogramStore, inv
                 invalidate();
             }
         }
+    
     })
 
-
     return {
-        zoom,
-        canvasOffsets,
-        canvasResizeObserver,
-        toolEvents
+        canvasResizeObserver
     }
+
 }

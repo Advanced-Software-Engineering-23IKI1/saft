@@ -1,0 +1,35 @@
+
+import { reactive, ref } from 'vue';
+import { useMovementTool } from './tools/useMovementTool';
+
+
+
+export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount) {
+
+    const toolEvents = new Map(); // toolId -> { onCanvasWheel, onCanvasPointerDown, onCanvasPointerMove, onCanvasPointerUp, onCanvasPointerCancel, onCanvasPointerLeave }
+
+
+    const canvasOffsets = reactive({
+        internalWidthOffset: 0,
+        internalHeightOffset: 0,
+        maxInternalHeightOffset: 1,
+        maxInternalWidthOffset: 1,
+    })
+    const canvasScaleFactor = ref(1);
+    const zoom = ref(1);
+
+
+
+    const {canvasResizeObserver} = useMovementTool(
+        canvasDimensions, canvasRef, spectrogramStore, 
+        invalidate, maxPixelCount, 
+        toolEvents, canvasOffsets, canvasScaleFactor, zoom);
+
+
+    return {
+        zoom,
+        canvasOffsets,
+        canvasResizeObserver,
+        toolEvents
+    }
+}

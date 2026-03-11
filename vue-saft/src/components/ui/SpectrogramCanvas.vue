@@ -5,7 +5,7 @@ import { renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
 import { nextTick, onUnmounted } from 'vue';
 import { Tool } from '@/enums/ToolEnum.js';
-import { useCanvasTool } from '@/utils/useCanvasTool.js';
+import { useCanvasTools } from '@/utils/useCanvasTools.js';
 
 
 // export prop for activeTool
@@ -35,7 +35,7 @@ zoom,
 canvasOffsets,
 canvasResizeObserver,
 toolEvents,
-} = useCanvasTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount);
+} = useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount);
 
 
 
@@ -57,7 +57,6 @@ function onCanvasPointerCancel(e) {
 function onCanvasPointerLeave(e) {
     toolEvents.get(props.activeTool)?.onCanvasPointerLeave?.(e)
 }
-
 
 function onHSliderInput(e) {
     const value = Number(e.target.value);
