@@ -1,7 +1,7 @@
 
 import { reactive, ref } from 'vue';
 import { useMovementTool } from './tools/useMovementTool';
-import {useDrawingTool} from './tools/useDrawingTool';
+import { useDrawingTool } from './tools/useDrawingTool';
 
 
 
@@ -21,13 +21,16 @@ export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, in
 
 
 
-    const {canvasResizeObserver} = useMovementTool(
-        canvasDimensions, canvasRef, spectrogramStore, 
-        invalidate, maxPixelCount, 
+    const { canvasResizeObserver } = useMovementTool(
+        canvasDimensions, canvasRef, spectrogramStore,
+        invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
 
 
-    
+    useDrawingTool(
+        canvasDimensions, canvasRef, spectrogramStore,
+        invalidate, maxPixelCount,
+        toolEvents, canvasOffsets, canvasScaleFactor, zoom);
 
 
     return {

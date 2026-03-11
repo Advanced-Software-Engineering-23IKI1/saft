@@ -35,7 +35,7 @@ export function getCanvasPoint(e, canvasRef) {
   return {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
-    };
+  };
 }
 
 
@@ -51,9 +51,9 @@ export function getCanvasPoint(e, canvasRef) {
  * @returns {{x: number, y: number}} The transformed point in the internal
  *   coordinate system.
  */
-export  function computeInternalPos(pos, zoom, scaleFactor, internalHeightOffset, internalWidthOffset) {
-      return {
-          x: internalWidthOffset + pos.x * (1 / zoom) * scaleFactor,
-          y: internalHeightOffset + pos.y * (1 / zoom) * scaleFactor,
-      }
+export function computeInternalPos(pos, zoom, scaleFactor, internalHeightOffset, internalWidthOffset) {
+  return {
+    x: internalWidthOffset + pos.x * (1 / zoom) * scaleFactor,
+    y: internalHeightOffset + pos.y * (1 / zoom) * scaleFactor,
   }
+}
