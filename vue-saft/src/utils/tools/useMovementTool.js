@@ -1,6 +1,7 @@
 import { Tool } from '@/enums/ToolEnum.js';
-import { distance, getMidpoint } from '@/utils/utils.js';
-import { getCanvasPoint } from '@/utils/utils.js';
+import { distance, getMidpoint } from '@/utils/canvasUtils.js';
+import { getCanvasPoint } from '@/utils/canvasUtils.js';
+import { computeInternalPos } from '@/utils/canvasUtils.js';
 
 
 export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
@@ -19,8 +20,8 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
     let pinchStartCenterInternal = null;
 
 
-    toolEvents.set(Tool.Scroll,
-        { // movement tool
+    toolEvents.set(Tool.Movement,
+        { 
 
             onCanvasWheel(e) {
                 e.preventDefault();
@@ -35,16 +36,12 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                     const oldZoom = zoom.value;
                     const newZoom = Math.max(minZoom, Math.min(maxZoom, oldZoom * zoomFactor));
 
-                    // for stable zooming
-                    const internalX = canvasOffsets.internalWidthOffset + mouseX * (1 / oldZoom) * canvasScaleFactor.value;
-                    const internalY = canvasOffsets.internalHeightOffset + mouseY * (1 / oldZoom) * canvasScaleFactor.value;
+                    const oldZoomInternalPos = computeInternalPos({x: mouseX, y: mouseY}, oldZoom, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset);
+                    const newZoomInternalPosRelative = computeInternalPos({x: mouseX, y: mouseY}, newZoom, canvasScaleFactor.value, 0, 0);
+                    canvasOffsets.internalWidthOffset = oldZoomInternalPos.x - newZoomInternalPosRelative.x;
+                    canvasOffsets.internalHeightOffset = oldZoomInternalPos.y - newZoomInternalPosRelative.y;
 
                     zoom.value = newZoom;
-
-                    const internalValuesPerPixel = (1 / zoom.value) * canvasScaleFactor.value;
-
-                    canvasOffsets.internalWidthOffset = internalX - mouseX * internalValuesPerPixel;
-                    canvasOffsets.internalHeightOffset = internalY - mouseY * internalValuesPerPixel;
 
                     updateMinZoom();
                     checkInternalOffsetValues();
@@ -64,7 +61,6 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
 
 
             onCanvasPointerDown(e) {
-
                 canvasRef.value.setPointerCapture(e.pointerId);
                 const point = getCanvasPoint(e, canvasRef);
                 pointers.set(e.pointerId, point);
@@ -79,14 +75,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                     pinchStartDist = distance(p1, p2);
                     pinchStartZoom = zoom.value;
                     pinchStartCenterCanvas = getMidpoint(p1, p2);
-
-                    const internalValuesPerPixel = (1 / pinchStartZoom) * canvasScaleFactor.value;
-
-                    // for stable panning and zooming
-                    pinchStartCenterInternal = {
-                        x: canvasOffsets.internalWidthOffset + pinchStartCenterCanvas.x * internalValuesPerPixel,
-                        y: canvasOffsets.internalHeightOffset + pinchStartCenterCanvas.y * internalValuesPerPixel,
-                    };
+                    pinchStartCenterInternal = computeInternalPos(pinchStartCenterCanvas, pinchStartZoom, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset);
                 }
             },
 
@@ -96,7 +85,6 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                 const point = getCanvasPoint(e, canvasRef);
                 pointers.set(e.pointerId, point);
 
-                const step = 1 * canvasScaleFactor.value / zoom.value;
 
                 if (pointers.size === 1) {
                     // pan: screen px -> source px via step
@@ -105,8 +93,10 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                     lastX = point.x;
                     lastY = point.y;
 
-                    canvasOffsets.internalWidthOffset -= dx * step;
-                    canvasOffsets.internalHeightOffset -= dy * step;
+                    const internalRelativePos = computeInternalPos({x: dx, y: dy}, zoom.value, canvasScaleFactor.value, 0, 0);
+
+                    canvasOffsets.internalWidthOffset -= internalRelativePos.x;
+                    canvasOffsets.internalHeightOffset -= internalRelativePos.y;
 
                     checkInternalOffsetValues();
                     invalidate();
@@ -121,10 +111,10 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                         const newZoom = pinchStartZoom * (pinchCurrentDist / pinchStartDist);
                         zoom.value = Math.max(minZoom, Math.min(maxZoom, newZoom));
 
-                        const internalValuesPerPixel = (1 / zoom.value) * canvasScaleFactor.value;
+                        const internalRelativePos = computeInternalPos(pinchStartCenterCanvas, zoom.value, canvasScaleFactor.value, 0, 0);
 
-                        canvasOffsets.internalWidthOffset = pinchStartCenterInternal.x - pinchStartCenterCanvas.x * internalValuesPerPixel;
-                        canvasOffsets.internalHeightOffset = pinchStartCenterInternal.y - pinchStartCenterCanvas.y * internalValuesPerPixel;
+                        canvasOffsets.internalWidthOffset = pinchStartCenterInternal.x - internalRelativePos.x;
+                        canvasOffsets.internalHeightOffset = pinchStartCenterInternal.y - internalRelativePos.y;
 
                         updateMinZoom();
                         checkInternalOffsetValues();
@@ -175,11 +165,8 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
         if (!spectrogramStore.renderData) return;
         if (!canvasRef.value) return;
 
-        const internalValuesPerPixel = 1 / zoom.value;
-
-
-        const internalWidth = canvasDimensions.width * internalValuesPerPixel;
-        const internalHeight = canvasDimensions.height * internalValuesPerPixel;
+        const internalWidth = canvasDimensions.width * (1 / zoom.value);
+        const internalHeight = canvasDimensions.height * (1 / zoom.value);
 
         canvasOffsets.maxInternalWidthOffset = Math.max(0, spectrogramStore.renderData.width - internalWidth);
         canvasOffsets.maxInternalHeightOffset = Math.max(0, spectrogramStore.renderData.height - internalHeight);

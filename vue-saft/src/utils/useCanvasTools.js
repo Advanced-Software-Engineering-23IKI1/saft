@@ -1,6 +1,7 @@
 
 import { reactive, ref } from 'vue';
 import { useMovementTool } from './tools/useMovementTool';
+import {useDrawingTool} from './tools/useDrawingTool';
 
 
 
@@ -24,6 +25,9 @@ export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, in
         canvasDimensions, canvasRef, spectrogramStore, 
         invalidate, maxPixelCount, 
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
+
+
+    
 
 
     return {

@@ -15,7 +15,7 @@ import { Tool } from '@/enums/ToolEnum.js';
 
 
 
-const activeTool = ref(Tool.Scroll)
+const activeTool = ref(Tool.Movement)
 
 
 </script>
@@ -32,8 +32,8 @@ const activeTool = ref(Tool.Scroll)
             <div class="w-full flex justify-center gap-3 py-4 px-2">
                 <div
                     class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
-                    <button @click="activeTool = Tool.Scroll"
-                        :class="[activeTool === Tool.Scroll ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                    <button @click="activeTool = Tool.Movement"
+                        :class="[activeTool === Tool.Movement ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
                         <img :src="scrollicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Scroll">
