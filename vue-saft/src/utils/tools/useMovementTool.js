@@ -13,7 +13,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
     let pointers = new Map(); // pointerId -> {x,y}
     let lastX = 0, lastY = 0;
 
-    let scroll_whell_speed = 0.2;
+    let scrollWheelSpeed = 0.2;
 
     // Pinch state
     let pinchStartDist = 0;
@@ -54,7 +54,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                 const dx = (e.shiftKey && e.deltaX === 0) ? e.deltaY : e.deltaX;
                 const dy = (e.shiftKey && e.deltaX === 0) ? 0 : e.deltaY;
 
-                let internalRelativePos = computeInternalPos({ x: Math.round(dx * scroll_whell_speed), y: Math.round(dy * scroll_whell_speed) }, zoom.value, canvasScaleFactor.value, 0, 0);
+                let internalRelativePos = computeInternalPos({ x: Math.round(dx * scrollWheelSpeed), y: Math.round(dy * scrollWheelSpeed) }, zoom.value, canvasScaleFactor.value, 0, 0);
 
                 canvasOffsets.internalWidthOffset += internalRelativePos.x;
                 canvasOffsets.internalHeightOffset += internalRelativePos.y;
@@ -169,7 +169,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
         if (!spectrogramStore.renderData) return;
         if (!canvasRef.value) return;
 
-        // no clue why it has to be 1 at scalefactor to perfectly fit the image, but it just does ¯\_(ツ)_/¯
+        // canvasDimensions are already scaled by canvasScaleFactor, so we can use them directly here to compute the internal dimensions of the visible box.
         const internalDimension = computeInternalPos({ x: canvasDimensions.width, y: canvasDimensions.height }, zoom.value, 1, 0, 0);
 
         canvasOffsets.maxInternalWidthOffset = Math.max(0, spectrogramStore.renderData.width - internalDimension.x);

@@ -14,20 +14,21 @@ export function useDrawingTool(canvasDimensions, canvasRef, spectrogramStore, in
 
         onCanvasWheel(e) {
             // do nothing, prevent default zooming
+            // or resize brush
             e.preventDefault();
         },
 
         onCanvasPointerDown(e) {
             e.preventDefault();
-            const point = getCanvasPoint(e, canvasRef);
-            console.log(computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset));
-            // start drawing
+            // const point = getCanvasPoint(e, canvasRef);
+            // console.log(computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset));
+            // start drawing left click add amplitude, right click remove amplitude
         },
 
         onCanvasPointerMove(e) {
             e.preventDefault();
-            const point = getCanvasPoint(e, canvasRef);
-            console.log(computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset));            // continue drawing
+            // const point = getCanvasPoint(e, canvasRef);
+            // console.log(computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset));            // continue drawing
         },
 
         endPointer(e){
