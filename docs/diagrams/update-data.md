@@ -3,19 +3,14 @@
 ```mermaid
 classDiagram
     class UpdateBase {
-        +updates: Update[]
-        +maxUpdateLength: number
-        +addUpdate(update: Update): void
-        +getUpdates(): Update[]
-        +clearUpdates(): void
+        activeUpdates: Update[]
+        inactiveUpdates: Update[]
+        maxUpdateLength: number
     }
 
     class Update {
         +pixelMap: Map~InternalPixel, NewValue~
         +timestamp: Date
-        +addPixelValue(pixel: InternalPixel, value: NewValue): void
-        +getPixelValue(pixel: InternalPixel): NewValue
-        +getAllPixels(): InternalPixel[]
     }
 
     class InternalPixel {

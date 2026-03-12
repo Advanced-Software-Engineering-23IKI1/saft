@@ -1,6 +1,6 @@
+import { updateStore } from "@/store/store";
 import { fft } from "./fft";
-import { combinedValidUpdate, getPixelDelta, indexToPixel } from "./updateUtils";
-import { clampValue } from "./utils";
+import {getPixelDelta} from "./updateUtils";
 
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
@@ -200,8 +200,10 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     const boxwidth = canvas.width
     const boxheight = canvas.height
 
-
-    const update = combinedValidUpdate();
+    let update = null
+    if (updateStore){
+        update = updateStore.combinedUpdate
+    }
 
     // How many source pixels (frames/bins) you advance per 1 screen pixel.
     // zoom = 1 => 1:1, zoom = 2 => 0.5 source px per screen px (zoomed in),
@@ -222,13 +224,14 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
             const binFloat = maxBin - yFloat;
             const bin = Math.floor(binFloat);
 
-            const binFloatFlipped = minBin + yFloat;
-            const binFlipped = Math.floor(binFloatFlipped);
-
             let bin_val = frame[bin] || 0;
 
-            let updateVal = getPixelDelta(update, {x: t, y: binFlipped});
-            bin_val += updateVal;
+            if (update) {
+                const binFloatFlipped = minBin + yFloat;
+                const binFlipped = Math.floor(binFloatFlipped);
+                const updateVal = getPixelDelta(update, {x: t, y: binFlipped});
+                bin_val += updateVal;
+            }
 
             const val = Math.max(bin_val, 1e-12);
             const db = 20 * Math.log10(val);

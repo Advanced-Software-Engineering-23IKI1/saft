@@ -6,6 +6,7 @@ export const spectrogramStore = reactive({
 });
 
 export const updateStore = reactive({
-  updates: [],
-  maxUpdateLength: 4
+  activeUpdates: [],
+  inactiveUpdates: [], 
+  combinedUpdate: null,
 })

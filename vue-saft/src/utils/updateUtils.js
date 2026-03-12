@@ -13,11 +13,14 @@ export function indexToPixel(index) {
 }
 
 
-function applyUpdateToSpectrogram(update) {
+function applyCombinedUpdateToSpectrogram() {
     if (!spectrogramStore.renderData) return
-    console.log("Applying update to spectrogram:", update)
+
 
     const { data, minDB, maxDB, maxBin } = spectrogramStore.renderData
+    const update = updateStore.combinedUpdate
+
+    if (!update) return
 
     for (const [index, delta] of update.pixelMap.entries()) {
 
@@ -32,49 +35,57 @@ function applyUpdateToSpectrogram(update) {
         const newValue = clampValue(value, dbToLinear(minDB), dbToLinear(maxDB))
         data[pixel.x][yFlipped] = newValue
     }
+
+    clearUpdates()
 }
 
 
-export function combinedValidUpdate() {
+export function computeCombinedUpdate() {
     const combined = createUpdate()
 
-    for (const update of updateStore.updates) {
-        if (!update.undone) {
-            for (const [index, delta] of update.pixelMap.entries()) {
-                addIndexDelta(combined, index, delta)
-            }
+    for (const update of updateStore.activeUpdates) {
+        for (const [index, delta] of update.pixelMap.entries()) {
+            addIndexDelta(combined, index, delta)
         }
     }
-
-    return combined
+    updateStore.combinedUpdate = combined
 }
 
 export function addUpdate(update) {
-    updateStore.updates.push(update)
-
-    if (updateStore.updates.length > updateStore.maxUpdateLength) {
-        const earliestUpdate = updateStore.updates.shift()
-        if (earliestUpdate && !earliestUpdate.undone) {
-            applyUpdateToSpectrogram(earliestUpdate)
-        }
-    }
-
-    // TODO: discard earlier undon updates that are now out of range
+    updateStore.activeUpdates.push(update)
+    updateStore.inactiveUpdates.length = 0 // clear redo stack
+    computeCombinedUpdate()
 }
 
+
+
+
 export function undoUpdate() {
-    const last = [...updateStore.updates].reverse().find(u => !u.undone)
-    if (last) last.undone = true
+    const lastUpdate = updateStore.activeUpdates.pop()
+    if (lastUpdate) {
+    updateStore.inactiveUpdates.push(lastUpdate)
+        computeCombinedUpdate()
+
+    }
 }
 
 export function redoUpdate() {
-    const firstUndone = updateStore.updates.find(u => u.undone)
+    const lastUndone = updateStore.inactiveUpdates.pop()
+    if (lastUndone) {
+        updateStore.activeUpdates.push(lastUndone)
+        computeCombinedUpdate()
+    }
+
     if (firstUndone) firstUndone.undone = false
 }
 
+
 export function clearUpdates() {
-    updateStore.updates.length = 0
+    updateStore.combinedUpdate = null
+    updateStore.activeUpdates.length = 0
+    updateStore.inactiveUpdates.length = 0
 }
+
 
 export function createUpdate() {
     return {
