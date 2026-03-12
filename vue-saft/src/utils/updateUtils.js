@@ -3,13 +3,14 @@ import { clampValue, dbToLinear } from "./utils"
 
 
 export function pixelToIndex(pixel) {
-    return `${pixel.x},${pixel.y}`
+    return (pixel.x << 16) ^ (pixel.y & 0xffff)
 }
 
 export function indexToPixel(index) {
-    const [x, y] = index.split(',').map(Number)
-    return { x, y }
-    
+    return {
+        x: index >> 16,
+        y: index & 0xffff
+    }
 }
 
 
