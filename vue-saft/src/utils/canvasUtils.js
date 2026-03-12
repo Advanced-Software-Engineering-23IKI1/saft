@@ -35,5 +35,25 @@ export function getCanvasPoint(e, canvasRef) {
   return {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
-    };
+  };
+}
+
+
+/**
+ * Convert a point from canvas coordinates to an internal coordinate space
+ * accounting for current zoom level, a scaling factor, and manual offsets.
+ *
+ * @param {{x: number, y: number}} pos - The point in canvas coordinates.
+ * @param {number} zoom - Current zoom factor (1.0 means no zoom).
+ * @param {number} scaleFactor - Additional scaling applied after zoom.
+ * @param {number} internalHeightOffset - Vertical offset in the internal space.
+ * @param {number} internalWidthOffset - Horizontal offset in the internal space.
+ * @returns {{x: number, y: number}} The transformed point in the internal
+ *   coordinate system.
+ */
+export function computeInternalPos(pos, zoom, scaleFactor, internalHeightOffset, internalWidthOffset) {
+  return {
+    x: internalWidthOffset + pos.x * (1 / zoom) * scaleFactor,
+    y: internalHeightOffset + pos.y * (1 / zoom) * scaleFactor,
+  }
 }

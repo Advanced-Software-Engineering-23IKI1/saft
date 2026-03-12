@@ -9,13 +9,14 @@ import scrollicon from '@/assets/img/scroll.png'
 import brushicon from '@/assets/img/brush.png'
 import texticon from '@/assets/img/text.png'
 import erasericon from '@/assets/img/eraser.png'
+import imageicon from '@/assets/img/image.png'
 import deleteicon from '@/assets/img/delete.png'
 import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
 
 
 
-const activeTool = ref(Tool.Scroll)
+const activeTool = ref(Tool.Movement)
 
 
 </script>
@@ -32,8 +33,8 @@ const activeTool = ref(Tool.Scroll)
             <div class="w-full flex justify-center gap-3 py-4 px-2">
                 <div
                     class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
-                    <button @click="activeTool = Tool.Scroll"
-                        :class="[activeTool === Tool.Scroll ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                    <button @click="activeTool = Tool.Movement"
+                        :class="[activeTool === Tool.Movement ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
                         <img :src="scrollicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Scroll">
@@ -50,16 +51,11 @@ const activeTool = ref(Tool.Scroll)
                         data-tool="3">
                         <img :src="texticon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Text">
                     </button>
-                    <button @click="activeTool = Tool.Eraser"
-                        :class="[activeTool === Tool.Eraser ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
+                    <button @click="activeTool = Tool.Image"
+                        :class="[activeTool === Tool.Image ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="4">
-                        <img :src="erasericon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Eraser">
-                    </button>
-                    <button
-                        class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
-                        data-tool="5">
-                        <img :src="deleteicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Delete">
+                        <img :src="imageicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Image">
                     </button>
                 </div>
             </div>
