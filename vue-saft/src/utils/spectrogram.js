@@ -1,4 +1,6 @@
 import { fft } from "./fft";
+import { combinedValidUpdate, getPixelDelta, indexToPixel } from "./updateUtils";
+import { clampValue } from "./utils";
 
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
@@ -93,7 +95,6 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
             }
         }
 
-        // Magnitude (positive frequencies only)
         const magnitude = new Array(half);
         for (let k = 0; k < half; k++) {
             const mag = Math.hypot(re[k], im[k]);
@@ -199,6 +200,9 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     const boxwidth = canvas.width
     const boxheight = canvas.height
 
+
+    const update = combinedValidUpdate();
+
     // How many source pixels (frames/bins) you advance per 1 screen pixel.
     // zoom = 1 => 1:1, zoom = 2 => 0.5 source px per screen px (zoomed in),
     // zoom = 0.5 => 2 source px per screen px (zoomed out).
@@ -215,11 +219,18 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
 
         for (let ly = 0; ly < boxheight; ly++) {
             const yFloat = height_offset + ly * step;
-
             const binFloat = maxBin - yFloat;
             const bin = Math.floor(binFloat);
 
-            const val = Math.max(frame[bin] || 0, 1e-12);
+            const binFloatFlipped = minBin + yFloat;
+            const binFlipped = Math.floor(binFloatFlipped);
+
+            let bin_val = frame[bin] || 0;
+
+            let updateVal = getPixelDelta(update, {x: t, y: binFlipped});
+            bin_val += updateVal;
+
+            const val = Math.max(bin_val, 1e-12);
             const db = 20 * Math.log10(val);
 
             const norm = (db - minDB) / (maxDB - minDB);
@@ -227,7 +238,6 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
 
             const [r, g, b] = colormap(clamped);
 
-            // const flippedY = boxheight - 1 - ly;
             const idx = (ly * boxwidth + tx) * 4;
 
             imagedata.data[idx] = r;
