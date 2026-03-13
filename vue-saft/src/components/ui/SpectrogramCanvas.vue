@@ -3,10 +3,10 @@ import { spectrogramStore } from '@/store/store';
 import { reactive, useTemplateRef } from 'vue'
 import { renderPixels } from '@/utils/spectrogram.js';
 import { colormapInferno } from '@/utils/colormaps.js';
-import { nextTick, onUnmounted } from 'vue';
+import { nextTick, onUnmounted, onMounted } from 'vue';
 import { Tool } from '@/enums/ToolEnum.js';
 import { useCanvasTools } from '@/utils/useCanvasTools.js';
-
+import { useWebGL } from '@/utils/useWebGL.js';
 
 // export prop for activeTool
 const props = defineProps({
@@ -29,7 +29,6 @@ const canvasDimensions = reactive({
 let needsRedraw = false;
 let rafId = 0;
 
-
 const {
 zoom,
 canvasOffsets,
@@ -37,6 +36,13 @@ canvasResizeObserver,
 toolEvents,
 } = useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount);
 
+
+const {
+setupWebGL,
+renderFrame,
+updateSpectrogramIfChanged,
+updateValues,
+} = useWebGL(canvasRef, spectrogramStore);
 
 
 function onCanvasWheel(e) {
@@ -85,8 +91,10 @@ function renderSpectrogram() {
   if (!spectrogramStore.renderData){
     return
   }
-  renderPixels(spectrogramStore.renderData, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset, colormapInferno, zoom.value, canvasRef.value);
-  // generatePNG(pixels, boxwidth, boxheight, imgId, downloadBtnId);
+  // renderPixels(spectrogramStore.renderData, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset, colormapInferno, zoom.value, canvasRef.value);
+  updateSpectrogramIfChanged();
+  updateValues();
+  renderFrame();
 }
 
 
@@ -116,6 +124,7 @@ function invalidate() {
 nextTick(() => {
   if (canvasRef.value) {
     canvasResizeObserver.observe(canvasRef.value);
+    setupWebGL();
     invalidate()
 
   }
@@ -128,6 +137,9 @@ onUnmounted(() => {
     cancelAnimationFrame(rafId);
   }
 })
+
+
+
 
 </script>
 

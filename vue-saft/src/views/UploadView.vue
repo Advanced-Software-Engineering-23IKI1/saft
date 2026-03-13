@@ -56,7 +56,17 @@ async function retrieveSample() {
         maxFreq,
         conversionProgress
     )
+    const frames = spectrogramStore.renderData.data;
+    const numFrames = frames.length;
+    const frameSize = frames[0].length; 
+    const flattenedData = new Float32Array(numFrames * frameSize);
 
+    for (let i = 0; i < numFrames; i++) {
+    flattenedData.set(frames[i], i * frameSize); // copy frame into the right offset
+    }
+
+    spectrogramStore.renderData.data = flattenedData;
+    console.log("data", spectrogramStore.renderData.data)
     conversionProgress.value = 0
     conversionName.value = 'Create Spectrogram'
 }

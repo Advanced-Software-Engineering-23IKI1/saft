@@ -58,7 +58,7 @@ export async function computeSpectrogram(samples, sampleRate, windowSize = 2048,
  *          - half: Number of positive frequency bins per window.
  */
 async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
-    const spectrogram = [];
+    const spectrogram =[]; 
     const half = Math.floor(windowSize / 2) + 1;
     const maxVal = samples.length;
     fftProgress.value = 0;
@@ -94,7 +94,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
         }
 
         // Magnitude (positive frequencies only)
-        const magnitude = new Array(half);
+        const magnitude = new Float32Array(half);
         for (let k = 0; k < half; k++) {
             const mag = Math.hypot(re[k], im[k]);
             magnitude[k] = Number.isFinite(mag) ? mag : 0;
