@@ -95,7 +95,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
             }
         }
 
-        const magnitude = new Array(half);
+        const magnitude = new Float32Array(half);
         for (let k = 0; k < half; k++) {
             const mag = Math.hypot(re[k], im[k]);
             magnitude[k] = Number.isFinite(mag) ? mag : 0;
