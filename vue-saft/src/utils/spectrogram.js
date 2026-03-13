@@ -187,7 +187,7 @@ export async function computeSpectrogramRenderingData(
  * @param {HTMLCanvasElement} canvas Target canvas to draw into (uses its current width/height).
  * @returns {{ width_offset: number, height_offset: number }} The offsets used for rendering.
  */
-export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas) {
+export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas, ctx) {
 
     const width = renderData.width
     const height = renderData.height
@@ -210,9 +210,10 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     // zoom = 0.5 => 2 source px per screen px (zoomed out).
     const step = 1 / zoom;
 
-    
-    var ctx = canvas.getContext("2d");
     var imagedata = ctx.createImageData(boxwidth, boxheight);
+
+    const invDBRange = 1 / (maxDB - minDB);
+    const log10 = Math.log(10);
 
     for (let tx = 0; tx < boxwidth; tx++) {
         const tFloat = width_offset + tx * step;
@@ -234,7 +235,7 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
             }
 
             const val = Math.max(bin_val, 1e-12);
-            const db = 20 * Math.log10(val);
+            const db = 20 * Math.log(val) /  log10;
 
             const norm = (db - minDB) / (maxDB - minDB);
             const clamped = Math.max(0, Math.min(1, norm));

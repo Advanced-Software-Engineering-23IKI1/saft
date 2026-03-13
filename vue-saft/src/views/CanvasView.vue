@@ -1,6 +1,7 @@
 <script setup>
 
 import { ref } from 'vue';
+import { Undo, Redo, ArrowDownToLine } from 'lucide-vue-next';
 
 function goNext(navigate) {
     navigate()
@@ -8,15 +9,21 @@ function goNext(navigate) {
 import scrollicon from '@/assets/img/scroll.png'
 import brushicon from '@/assets/img/brush.png'
 import texticon from '@/assets/img/text.png'
-import erasericon from '@/assets/img/eraser.png'
 import imageicon from '@/assets/img/image.png'
-import deleteicon from '@/assets/img/delete.png'
 import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
+import { applyCombinedUpdateToSpectrogram, redoUpdate, undoUpdate } from '@/utils/updateUtils';
+import { updateStore } from '@/store/store';
 
 
 
 const activeTool = ref(Tool.Movement)
+
+const spectrogramRef = ref(null)
+
+function redraw() {
+  spectrogramRef.value?.invalidate()
+}
 
 
 </script>
@@ -27,7 +34,7 @@ const activeTool = ref(Tool.Movement)
         <div class="w-full h-[60vh] flex flex-col p-1">
             <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
       rounded-3xl shadow-2xl relative overflow-hidden">
-                <SpectrogramCanvas :active-tool="activeTool" />
+                <SpectrogramCanvas ref="spectrogramRef" :active-tool="activeTool" />
             </div>
             <!-- Toolbar -->
             <div class="w-full flex justify-center gap-3 py-4 px-2">
@@ -57,6 +64,30 @@ const activeTool = ref(Tool.Movement)
                         data-tool="4">
                         <img :src="imageicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Image">
                     </button>
+                </div>
+                <div
+                    class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
+                    <button @click="() => {redoUpdate(); redraw();}"
+                        :class="[(updateStore.inactiveUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                        class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
+                        <Redo class="w-7 h-7 stroke-white" />
+                        <span class="text-[10px] text-white leading-none mt-1">Redo</span>
+                    </button>
+
+                    <button @click="() => {applyCombinedUpdateToSpectrogram(); redraw();}"
+                        :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                        class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
+                        <ArrowDownToLine class="w-7 h-7 stroke-white" />
+                        <span class="text-[10px] text-white leading-none mt-1">Apply</span>
+                    </button>
+
+                    <button @click="() => {undoUpdate(); redraw();}"
+                        :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                        class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
+                        <Undo class="w-7 h-7 stroke-white" />
+                        <span class="text-[10px] text-white leading-none mt-1">Undo</span>
+                    </button>
+
                 </div>
             </div>
         </div>

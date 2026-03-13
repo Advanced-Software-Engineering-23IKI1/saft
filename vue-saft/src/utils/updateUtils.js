@@ -14,7 +14,7 @@ export function indexToPixel(index) {
 }
 
 
-function applyCombinedUpdateToSpectrogram() {
+export function applyCombinedUpdateToSpectrogram() {
     if (!spectrogramStore.renderData) return
 
 
@@ -64,7 +64,7 @@ export function addUpdate(update) {
 export function undoUpdate() {
     const lastUpdate = updateStore.activeUpdates.pop()
     if (lastUpdate) {
-    updateStore.inactiveUpdates.push(lastUpdate)
+        updateStore.inactiveUpdates.push(lastUpdate)
         computeCombinedUpdate()
 
     }
@@ -76,8 +76,6 @@ export function redoUpdate() {
         updateStore.activeUpdates.push(lastUndone)
         computeCombinedUpdate()
     }
-
-    if (firstUndone) firstUndone.undone = false
 }
 
 
@@ -92,8 +90,7 @@ export function createUpdate() {
     return {
         pixelMap: new Map(), // Map<string, delta (linear amplitude)>
         timestamp: new Date(),
-        undone: false
-    }
+        }
 }
 
 export function addIndexDelta(update, index, delta) {
