@@ -2,31 +2,42 @@ import { updateStore, spectrogramStore } from "@/store/store"
 import { clampValue, dbToLinear } from "./utils"
 
 
-export function pixelToIndex(pixel) {
-    return (pixel.x << 16) ^ (pixel.y & 0xffff)
-}
-
-export function indexToPixel(index) {
-    return {
-        x: index >> 16,
-        y: index & 0xffff
+    export function pixelToIndex(pixel) {
+        return (pixel.x << 16) ^ (pixel.y & 0xffff)
     }
-}
+
+    export function indexToPixel(index) {
+        return {
+            x: index >> 16,
+            y: index & 0xffff
+        }
+    }
+
+    export function pixelToFlatIndex(pixel, width) {
+        return pixel.y * width + pixel.x
+    }
+    export function flatIndexToPixel(flatIndex, width) {
+        return {
+            x: flatIndex % width,
+            y: Math.floor(flatIndex / width)
+        }
+    }
 
 
 export function applyCombinedUpdateToSpectrogram() {
     if (!spectrogramStore.renderData) return
 
 
-    const { data, minDB, maxDB, maxBin } = spectrogramStore.renderData
+    const { data, minDB, maxDB, maxBin, width } = spectrogramStore.renderData
     const update = updateStore.combinedUpdate
 
     if (!update) return
 
-    for (const [index, delta] of update.pixelMap.entries()) {
+    for (let index = 0; index < update.length; index++) {
+        const delta = update[index]
+        if (delta === 0) continue
 
-        const pixel = indexToPixel(index)
-
+        const pixel = flatIndexToPixel(index, width)
         const yFloatFlipped = maxBin - pixel.y;
 
         // no clue about the minus 1 but it works
@@ -40,16 +51,20 @@ export function applyCombinedUpdateToSpectrogram() {
     clearUpdates()
 }
 
-
 export function computeCombinedUpdate() {
-    const combined = createUpdate()
-
+    if(!spectrogramStore.renderData){return}
+    
+    const { width, height } = spectrogramStore.renderData
+    const combinedDeltaArray = new Float32Array(width * height);
     for (const update of updateStore.activeUpdates) {
         for (const [index, delta] of update.pixelMap.entries()) {
-            addIndexDelta(combined, index, delta)
+            let pixel = indexToPixel(index)
+            const flatIndex = pixelToFlatIndex(pixel, width)
+            combinedDeltaArray[flatIndex] +=delta
         }
     }
-    updateStore.combinedUpdate = combined
+
+    updateStore.combinedUpdate = combinedDeltaArray
 }
 
 export function addUpdate(update) {

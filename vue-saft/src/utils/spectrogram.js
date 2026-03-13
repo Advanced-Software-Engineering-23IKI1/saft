@@ -1,6 +1,6 @@
 import { updateStore } from "@/store/store";
 import { fft } from "./fft";
-import {getPixelDelta} from "./updateUtils";
+import {getPixelDelta, pixelToFlatIndex} from "./updateUtils";
 
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
@@ -230,7 +230,8 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
             if (update) {
                 const binFloatFlipped = minBin + yFloat;
                 const binFlipped = Math.floor(binFloatFlipped);
-                const updateVal = getPixelDelta(update, {x: t, y: binFlipped});
+                const flatIndex = binFlipped * width + t;
+                const updateVal = update[flatIndex]||0;
                 bin_val += updateVal;
             }
 

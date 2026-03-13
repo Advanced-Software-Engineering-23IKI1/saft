@@ -5,8 +5,7 @@ classDiagram
     class UpdateBase {
         activeUpdates: Update[]
         inactiveUpdates: Update[]
-        maxUpdateLength: number
-    }
+        combinedActiveUpdateBuffer: Float32[]    }
 
     class Update {
         +pixelMap: Map~InternalPixel, NewValue~
