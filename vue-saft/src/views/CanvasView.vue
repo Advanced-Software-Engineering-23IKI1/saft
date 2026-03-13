@@ -22,7 +22,7 @@ const activeTool = ref(Tool.Movement)
 const spectrogramRef = ref(null)
 
 function redraw() {
-  spectrogramRef.value?.invalidate()
+    spectrogramRef.value?.invalidate()
 }
 
 
@@ -37,7 +37,7 @@ function redraw() {
                 <SpectrogramCanvas ref="spectrogramRef" :active-tool="activeTool" />
             </div>
             <!-- Toolbar -->
-            <div class="w-full flex justify-center gap-3 py-4 px-2">
+            <div class="w-full flex flex-col sm:flex-row justify-center gap-3 py-4 px-2 items-center">
                 <div
                     class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
                     <button @click="activeTool = Tool.Movement"
@@ -65,23 +65,25 @@ function redraw() {
                         <img :src="imageicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Image">
                     </button>
                 </div>
+                
+                <!-- v-show="activeTool === Tool.Brush || activeTool === Tool.Text || activeTool === Tool.Image" -->
                 <div
                     class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
-                    <button @click="() => {redoUpdate(); redraw();}"
+                    <button @click="() => { redoUpdate(); redraw(); }"
                         :class="[(updateStore.inactiveUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
                         <Redo class="w-7 h-7 stroke-white" />
                         <span class="text-[10px] text-white leading-none mt-1">Redo</span>
                     </button>
 
-                    <button @click="() => {applyCombinedUpdateToSpectrogram(); redraw();}"
+                    <button @click="() => { applyCombinedUpdateToSpectrogram(); redraw(); }"
                         :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
                         <ArrowDownToLine class="w-7 h-7 stroke-white" />
                         <span class="text-[10px] text-white leading-none mt-1">Apply</span>
                     </button>
 
-                    <button @click="() => {undoUpdate(); redraw();}"
+                    <button @click="() => { undoUpdate(); redraw(); }"
                         :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
                         <Undo class="w-7 h-7 stroke-white" />
@@ -89,6 +91,7 @@ function redraw() {
                     </button>
 
                 </div>
+                
             </div>
         </div>
         <RouterLink :to="{ name: 'download' }" custom v-slot="{ navigate }">
