@@ -4,3 +4,9 @@ export const spectrogramStore = reactive({
     spectrogram: null,
     renderData: null
 });
+
+export const updateStore = reactive({
+  activeUpdates: [],
+  inactiveUpdates: [], 
+  combinedUpdate: null,
+})
