@@ -41,5 +41,7 @@ __screenshots__/
 ../prototype/node_modules
 
 
-*.png
 *.wav
+
+# other
+/package-lock.json

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-@import "tailwindcss";
+/* To support dark mode toggle with tailwind attribute dark:<color> */
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
 
 /* Tailwind v4 CSS-first theme tokens */
 @theme {
@@ -63,4 +64,68 @@
     --color-saft-brown-800: #392d2e;
     --color-saft-brown-900: #1c1717;
     --color-saft-brown-950: #141010;
+}
+
+:root.dark-mode {
+    /* switches light colors into dark and vise versa. Middle colors are one value darker*/
+    --color-saft-main-50: #201004;
+    --color-saft-main-100: #2d1806;
+    --color-saft-main-200: #5b2f0b;
+    --color-saft-main-300: #884711;
+    --color-saft-main-400: #b65e16;
+    --color-saft-main-500: #b65e16;
+    --color-saft-main-600: #e99149;
+    --color-saft-main-700: #eead77;
+    --color-saft-main-800: #f4c8a4;
+    --color-saft-main-900: #f9e4d2;
+    --color-saft-main-950: #fcf1e8;
+
+    --color-saft-green-50: #0e1b09;
+    --color-saft-green-100: #14260d;
+    --color-saft-green-200: #274d19;
+    --color-saft-green-300: #3b7326;
+    --color-saft-green-400: #4e9933;
+    --color-saft-green-500: #4e9933;
+    --color-saft-green-600: #81cc66;
+    --color-saft-green-700: #a1d98c;
+    --color-saft-green-800: #c0e6b3;
+    --color-saft-green-900: #e0f2d9;
+    --color-saft-green-950: #eff9ec;
+
+    --color-saft-mint-50: #131a0a;
+    --color-saft-mint-100: #1b250e;
+    --color-saft-mint-200: #364a1c;
+    --color-saft-mint-300: #517029;
+    --color-saft-mint-400: #6c9537;
+    --color-saft-mint-500: #6c9537;
+    --color-saft-mint-600: #9fc86a;
+    --color-saft-mint-700: #b7d68f;
+    --color-saft-mint-800: #cfe3b5;
+    --color-saft-mint-900: #e7f1da;
+    --color-saft-mint-950: #f3f8ec;
+
+    --color-saft-blue-50: #0b1718;
+    --color-saft-blue-100: #102123;
+    --color-saft-blue-200: #204346;
+    --color-saft-blue-300: #306469;
+    --color-saft-blue-400: #40858c;
+    --color-saft-blue-500: #40858c;
+    --color-saft-blue-600: #73b8bf;
+    --color-saft-blue-700: #96cacf;
+    --color-saft-blue-800: #b9dcdf;
+    --color-saft-blue-900: #dcedef;
+    --color-saft-blue-950: #eef6f7;
+
+    --color-saft-brown-50: #141010;
+    --color-saft-brown-100: #1c1717;
+    --color-saft-brown-200: #392d2e;
+    --color-saft-brown-300: #554445;
+    --color-saft-brown-400: #715b5c;
+    --color-saft-brown-500: #715b5c;
+    --color-saft-brown-600: #a48e8f;
+    --color-saft-brown-700: #bbaaab;
+    --color-saft-brown-800: #d2c6c7;
+    --color-saft-brown-900: #e8e3e3;
+    --color-saft-brown-950: #f4f1f1;
+
 }
