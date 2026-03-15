@@ -43,3 +43,6 @@ __screenshots__/
 
 *.png
 *.wav
+
+# other
+/package-lock.json
