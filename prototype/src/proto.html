@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PNG → Audio Tester</title>
+</head>
+<body>
+    <h2>PNG → Audio Tester</h2>
+    <input type="file" id="pngInput" accept="image/png" />
+    <pre id="log"></pre>
+
+    <script type="module">
+        import { loadSpectrogramFromPng } from './png_to_audio.js';
+        import { griffinLimFromImage } from './png_to_audio.js';
+
+        function log(msg) {
+            document.getElementById('log').textContent += msg + '\n';
+        }
+
+        document.getElementById('pngInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            log(`\n=== Testing: ${file.name} ===`);
+
+            // Load PNG → spectrogram
+            log('Loading spectrogram from PNG...');
+            const { mag, frames, freqBins } = await loadSpectrogramFromPng(file);
+            log(`Spectrogram: ${frames} frames x ${freqBins} freq bins`);
+
+            // Run Griffin-Lim
+            log('Running Griffin-Lim (20 iters)...');
+            const t0 = performance.now();
+            const audio = griffinLimFromImage(mag, 1024, 256, 20);
+            log(`Done in ${(performance.now() - t0).toFixed(0)}ms`);
+
+            // Basic validation
+            const hasNaN = Array.from(audio).some(isNaN);
+            const hasInf = Array.from(audio).some(v => !isFinite(v));
+            let max = -Infinity, min = Infinity, sum = 0;
+            for (let i = 0; i < audio.length; i++) {
+                if (audio[i] > max) max = audio[i];
+                if (audio[i] < min) min = audio[i];
+                sum += audio[i] * audio[i];
+            }
+            const rms = Math.sqrt(sum / audio.length);
+            log(`Samples : ${audio.length}`);
+            log(`Duration: ${(audio.length / 44100).toFixed(2)}s`);
+            log(`Range   : [${min.toFixed(4)}, ${max.toFixed(4)}]`);
+            log(`RMS     : ${rms.toFixed(4)}`);
+            log(`NaN     : ${hasNaN ? ' YES' : ' none'}`);
+            log(`Inf     : ${hasInf ? ' YES' : ' none'}`);
+
+            // Download as .raw for Audacity
+            const blob = new Blob([audio.buffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name.replace('.png', '.raw');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            log('\n Audacity → File → Import → Raw Data');
+            log('   Encoding: 32-bit float (little-endian)');
+            log('   Sample rate: 44100 Hz, Channels: 1 (mono)');
+        });
+    </script>
+</body>
+</html>
