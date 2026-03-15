@@ -28,19 +28,19 @@ function stepClass(enabled, active) {
 
   if (enabled && !active) {
     return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
-      'bg-white/30 text-saft-brown-900 border-transparent ' +
-      'hover:bg-white/50 transition-all duration-200 active:scale-[0.98]'
+      'bg-saft-brown-100 text-saft-brown-900 border-transparent ' +
+      'hover:bg-saft-brown-200 transition-all duration-200 active:scale-[0.98]'
   }
 
   if (active) {
     return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
-      'bg-white/70 text-saft-brown-900 border-saft-main-500 ' +
-      'hover:bg-white/80 transition-all duration-200 active:scale-[0.98]'
+      'bg-saft-brown-50 text-saft-brown-900 border-saft-main-500 ' +
+      'hover:saft-brown-100 transition-all duration-200 active:scale-[0.98]'
   }
 
   return 'tab-btn flex-1 px-1 py-3 font-semibold text-lg rounded-t-xl border-b-2 ' +
     'text-saft-brown-500 bg-transparent border-transparent ' +
-    'hover:bg-white/50 hover:text-saft-brown-900 transition-all duration-200 active:scale-[0.98]'
+    'hover:bg-saft-brown-200 hover:text-saft-brown-900 transition-all duration-200 active:scale-[0.98]'
 }
 </script>
 

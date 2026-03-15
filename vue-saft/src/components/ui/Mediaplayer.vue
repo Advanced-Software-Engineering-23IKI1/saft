@@ -104,7 +104,7 @@ function seekAudio(event) {
   <div
     v-if="audioPreviewUrl"
     class="w-full max-w-[22rem] mx-auto mb-4
-           bg-white/80 backdrop-blur-sm
+           bg-saft-brown-50 backdrop-blur-sm
            rounded-3xl border-2 border-saft-blue-200/50
            shadow-lg px-4 py-4"
   >

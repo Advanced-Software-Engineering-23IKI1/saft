@@ -117,7 +117,7 @@ async function goNext(navigate) {
                     class="absolute left-0 bottom-0 w-full bg-red-800/70 transition-all duration-100"
                     :style="{ height: `${Math.min(peakIndicator * 1.5, 100)}%` }"></div>
 
-                <img :src="microfonicon" class="w-12 h-12 brightness-0 invert relative z-10" alt="Mikrofon" />
+                <img :src="microfonicon" class="w-12 h-12 invert relative z-10" alt="Mikrofon" />
             </button>
 
             <!-- Upload Button -->
@@ -130,7 +130,7 @@ async function goNext(navigate) {
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
-                <img :src="uploadicon" class="w-11 h-11 brightness-0 invert" alt="Upload" />
+                <img :src="uploadicon" class="w-11 h-11 invert" alt="Upload" />
             </label>
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
                 accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
@@ -146,7 +146,7 @@ async function goNext(navigate) {
                     </label>
                     <div class="relative">
                         <input type="number" id="stride" min="0" step="0.1" placeholder="0.0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-                bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
+                bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
                 focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
                 shadow-lg hover:shadow-xl transition-all duration-200
                 invalid:text-red-500 invalid:border-red-300"
@@ -159,7 +159,7 @@ async function goNext(navigate) {
                     </label>
                     <div class="relative">
                         <input type="number" id="windowSize" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-                bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
+                bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
                 focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
                 shadow-lg hover:shadow-xl transition-all duration-200
                 invalid:text-red-500 invalid:border-red-300"
@@ -172,7 +172,7 @@ async function goNext(navigate) {
                     </label>
                     <div class="relative">
                         <input type="number" id="nbins" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-                bg-white/80 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
+                bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
                 focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
                 shadow-lg hover:shadow-xl transition-all duration-200
                 invalid:text-red-500 invalid:border-red-300"
