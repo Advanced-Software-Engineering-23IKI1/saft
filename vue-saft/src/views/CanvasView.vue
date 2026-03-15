@@ -33,8 +33,8 @@ const activeTool = ref(Tool.Movement)
             <div class="w-full flex justify-center gap-3 py-4 px-2">
                 <div
                     class="flex gap-2 bg-saft-brown-50 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
-                    <button @click="activeTool = Tool.Scroll"
-                        :class="[activeTool === Tool.Scroll ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
+                    <button @click="activeTool = Tool.Movement"
+                        :class="[activeTool === Tool.Movement ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
                         <img :src="scrollicon" class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto" alt="Scroll">
