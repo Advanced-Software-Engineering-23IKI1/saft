@@ -23,7 +23,7 @@ const toggleDarkMode = (event) => {
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                px-2 py-4 max-h-[90vh] overflow-auto">
         <div class="flex items-center justify-center gap-4 mx-auto mb-6">
-          <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo" />
+          <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo" @click="/*trust me*/(e) => {let l=e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) {l.getRootNode().documentElement.classList.add('uwu')}}"/>
           <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
         </div>
 
@@ -65,4 +65,6 @@ div#background-wrapper {
   background-image: var(--bg-url-dark);
   /* filter: invert(); */
 }
+
+.uwu div#background-wrapper { background-image: url('https://images.stockcake.com/public/3/7/7/377c4d6a-c3bd-4154-8d8a-00fa793e4648_large/refreshing-juice-joy-stockcake.jpg'); }
 </style>
