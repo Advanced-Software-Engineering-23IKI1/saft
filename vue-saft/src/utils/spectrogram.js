@@ -1,4 +1,4 @@
-import { fft } from './fft.js';
+import { fft } from "./fft";
 
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
@@ -9,7 +9,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  * @param {number} sampleRate Sample rate in Hz.
  * @param {number} [windowSize=2048] FFT window size (power of 2).
  * @param {number} [hopSize=512] Hop size between frames in samples.
- * @param {HTMLProgressElement} fftProgressBar Progress bar to update during FFT computation.
+ * @param {HTMLProgressElement} fftProgress Progress bar to update during FFT computation.
  * @returns {{
  *   data: number[][],
  *   freqBins: number,
@@ -18,9 +18,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  *   timeResolution: number
  * }}
  */
-export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgressBar ) {
-    console.log('DEBUG: samples.length:', samples.length);
-
+export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress ) {
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
         throw new Error(`windowSize must be power of 2, got ${windowSize}`);
@@ -35,7 +33,7 @@ export async function computeSpectrogram(samples, sampleRate, windowSize = 2048,
         throw new Error(`Input samples contain NaN/Infinity at index ${firstBad}: ${samples[firstBad]}`);
     }
 
-    const { spectrogram, half } = await computeFFTs(windowSize, samples, hopSize, fftProgressBar);
+    const { spectrogram, half } = await computeFFTs(windowSize, samples, hopSize, fftProgress);
 
     return {
         data: spectrogram,
@@ -54,17 +52,23 @@ export async function computeSpectrogram(samples, sampleRate, windowSize = 2048,
  * @param {number} windowSize Number of samples per FFT window.
  * @param {Float32Array|Array<number>} samples Input audio samples.
  * @param {number} hopSize Step size between successive windows.
- * @param {HTMLProgressElement} fftProgressBar Progress bar to update during FFT computation.
+ * @param {HTMLProgressElement} fftProgress Progress bar to update during FFT computation.
  * @returns {{ spectrogram: Array<Array<number>>, half: number }}
  *          - spectrogram: 2D array [time][frequency] of magnitudes.
  *          - half: Number of positive frequency bins per window.
  */
-async function computeFFTs(windowSize, samples, hopSize, fftProgressBar) {
+async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     const spectrogram = [];
     const half = Math.floor(windowSize / 2) + 1;
     const maxVal = samples.length;
-    fftProgressBar.max = maxVal;
-    fftProgressBar.value = 0;
+    fftProgress.value = 0;
+
+    // figure out how many FFT frames we will generate (window-hopping)
+    const numFrames = Math.floor((maxVal - windowSize) / hopSize) + 1;
+    // determine how frequently to update so we get ~50 progress steps
+    const fftUpdateInterval = Math.max(1, Math.floor(numFrames / 50));
+    // index for progress updates
+    let frameIndex = 0;
 
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
         
@@ -85,7 +89,6 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgressBar) {
         // Tripwire: detect NaNs early in FFT output
         for (let k = 0; k < Math.min(16, re.length); k++) {
             if (!Number.isFinite(re[k]) || !Number.isFinite(im[k])) {
-                console.log('BAD FFT BIN', k, { re: re[k], im: im[k] });
                 throw new Error(`FFT produced NaN/Infinity at bin ${k}`);
             }
         }
@@ -99,12 +102,14 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgressBar) {
 
         spectrogram.push(magnitude);
 
-        if ((start & (Math.floor(maxVal/50)-1)) === 0) {
-            fftProgressBar.value = start;
+        // Update progress every N frames to avoid too many UI updates
+        frameIndex += 1;
+        if (frameIndex % fftUpdateInterval === 0) {
+            fftProgress.value = frameIndex / numFrames;
             await nextFrame(); 
         }
     }
-    fftProgressBar.value = maxVal;
+    fftProgress.value = 1;
     return { spectrogram, half };
 }
 
@@ -246,16 +251,18 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
  * @param {Array<Array<number>>} data 2D array [time][frequency] of magnitudes.
  * @param {number} minBin Starting bin index (inclusive).
  * @param {number} maxBin Ending bin index (inclusive).
- * @param {HTMLProgressElement} renderDataProgressBar Progress bar to update during computation.
+ * @param {HTMLProgressElement} renderDataProgress Progress bar to update during computation.
  * @returns {{ minDB: number, maxDB: number }}
  */
-async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgressBar) {
+async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgress) {
 
     let minDB = Infinity;
     let maxDB = -Infinity;
 
-    renderDataProgressBar.value = 0;
-    renderDataProgressBar.max = timeFrames;
+    renderDataProgress.value = 0;
+
+    // precompute update interval to give at most 50 edits
+    const renderUpdateInterval = Math.max(1, Math.floor(timeFrames / 50));
 
     for (let t = 0; t < timeFrames; t++) {
         const frame = data[t] || [];
@@ -265,8 +272,8 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
             if (db < minDB) minDB = db;
             if (db > maxDB) maxDB = db;
         }
-        if ((t & (Math.floor(timeFrames/50) - 1)) === 0) {
-            renderDataProgressBar.value = t;
+        if (t % renderUpdateInterval === 0) {
+            renderDataProgress.value = t / timeFrames;
             await nextFrame();
         }
     }
@@ -275,7 +282,7 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
     maxDB = Math.max(maxDB, -10);
     minDB = maxDB - 80; 
 
-    renderDataProgressBar.value = timeFrames;
+    renderDataProgress.value = 1;
 
     return { maxDB, minDB };
 }
@@ -303,4 +310,3 @@ function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
 
     return { maxBin, minBin };
 }
-
