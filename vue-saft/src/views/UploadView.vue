@@ -84,10 +84,43 @@ const currentAudioFile = computed(() => {
     return recordedFile.value ?? uploadedFile.value ?? null
 })
 
+function downloadSpectrogram() {
+  const data = spectrogramStore.renderData.data;
+
+  const rows = data.length;
+  const cols = data[0].length;
+
+  // Flatten ONLY for storage (structure saved separately)
+  const flat = new Float32Array(rows * cols);
+
+  let index = 0;
+  for (let i = 0; i < rows; i++) {
+    flat.set(data[i], index);
+    index += cols;
+  }
+
+  // Create header (store dimensions)
+  const header = new Uint32Array([rows, cols]);
+
+  // Combine header + data
+  const blob = new Blob([header.buffer, flat.buffer], {
+    type: "application/octet-stream"
+  });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "spectrogram.bin";
+  link.click();
+
+  URL.revokeObjectURL(link.href);
+}
+
+
 async function goNext(navigate) {
     try {
         await retrieveSample()
         if (spectrogramStore.renderData) {
+            downloadSpectrogram()
             navigate()
         }
     } catch (error) {
