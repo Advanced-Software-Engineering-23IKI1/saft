@@ -303,4 +303,13 @@ async function goNext(navigate) {
     /*var(--color-saft-blue-500)*/
     background: linear-gradient(to right, var(--color-saft-blue-700) 0%, var(--color-saft-blue-700) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) calc(var(--progress-value) * 100%), var(--color-saft-blue-500) 100%);
 }
+
+
+/* Dark mode spin button */
+.dark-mode input[type="number"]::-webkit-inner-spin-button,
+.dark-mode input[type="number"]::-webkit-outer-spin-button {
+  filter: invert(1);
+}
+
+
 </style>
