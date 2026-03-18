@@ -20,9 +20,12 @@ const props = defineProps({
 // subject to fine-tuning (based on device)
 const maxPixelCount = 300 * 300;
 const canvasRef = useTemplateRef('spectrogramCanvas');
+const overlayRef = useTemplateRef('overlayCanvas');
+
 const canvasContext = reactive({
   value: null
 })
+
 
 const canvasDimensions = reactive({
   width: 300,
@@ -39,7 +42,7 @@ const {
   canvasOffsets,
   canvasResizeObserver,
   toolEvents,
-} = useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount);
+} = useCanvasTools(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount);
 
 
 
@@ -155,6 +158,7 @@ onUnmounted(() => {
     <canvas ref="spectrogramCanvas" id="spectrogramCanvas" @wheel="onCanvasWheel" @pointerdown="onCanvasPointerDown"
       @pointermove="onCanvasPointerMove" @pointerup="onCanvasPointerUp" @pointercancel="onCanvasPointerCancel"
       @pointerleave="onCanvasPointerLeave" v-bind="canvasDimensions"></canvas>
+      <canvas ref="overlayCanvas" id="overlayCanvas"></canvas>
     <input ref="vScrollbar" @input="onVSliderInput" type="range" id="vScrollbar" orient="vertical" min="0"
       :max="canvasOffsets.maxInternalHeightOffset" :value="canvasOffsets.internalHeightOffset" />
     <input ref="hScrollbar" @input="onHSliderInput" type="range" id="hScrollbar" min="0"
@@ -171,6 +175,15 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
+
+
+#overlayCanvas {
+  position: absolute;
+    pointer-events: none;
+  top: 0;
+  left: 0;
+}
+
 
 #wrapper {
   position: relative;

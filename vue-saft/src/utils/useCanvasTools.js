@@ -7,7 +7,7 @@ import { useImageTool } from './tools/useImageTool';
 
 
 
-export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount) {
+export function useCanvasTools(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount) {
 
     const toolEvents = new Map(); // toolId -> { onCanvasWheel, onCanvasPointerDown, onCanvasPointerMove, onCanvasPointerUp, onCanvasPointerCancel, onCanvasPointerLeave }
 
@@ -24,23 +24,23 @@ export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, in
 
 
     const { canvasResizeObserver } = useMovementTool(
-        canvasDimensions, canvasRef, spectrogramStore,
+        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
 
 
     useDrawingTool(
-        canvasDimensions, canvasRef, spectrogramStore,
+        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
 
     useTextTool(
-        canvasDimensions, canvasRef, spectrogramStore,
+        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
 
     useImageTool(
-        canvasDimensions, canvasRef, spectrogramStore,
+        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
     

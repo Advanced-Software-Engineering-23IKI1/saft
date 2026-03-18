@@ -8,7 +8,7 @@ import { dbToLinear } from '../utils';
 
 
 
-export function useDrawingTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
+export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
     class OptimizedBrush {
         constructor(radius) {
             this.radius = radius;
@@ -73,15 +73,15 @@ calculateOffsets(size) {
     let brushsize = 5, minBrush = 1, maxBrush = 50;
     const myBrush = new OptimizedBrush(5);
     toolEvents.set(Tool.Brush, {
-
+        
         onCanvasWheel(e) {
-            
             if (e.deltaY>0) {
                 brushsize = Math.min(++brushsize,maxBrush);
             }
             else if (e.deltaY<0){
                 brushsize = Math.max(--brushsize,minBrush);
             }
+            const rect = canvasRef.value.getBoundingClientRect();
             myBrush.offsets = myBrush.calculateOffsets(brushsize)
             console.log(brushsize);
             e.preventDefault();
@@ -91,6 +91,14 @@ calculateOffsets(size) {
             canvasRef.value.setPointerCapture(e.pointerId);
             const point = getCanvasPoint(e, canvasRef);
             pointers.set(e.pointerId, point);
+            let tempupdate = popActiveUpdate()
+            const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
+            const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
+            currentPixels.forEach(({ x, y }) => {
+            addPixelDelta(tempupdate, { x:x, y:y }, dbToLinear(-6))
+            });
+            addUpdateClearRedo(tempupdate);
+            invalidate();
         },
 
         onCanvasPointerMove(e) {
@@ -104,8 +112,8 @@ calculateOffsets(size) {
                 currentPixels.forEach(({ x, y }) => {
                 addPixelDelta(tempupdate, { x:x, y:y }, dbToLinear(-6))
                 });
-                console.log(currentPixels);
-                console.log(canvasDimensions.width, canvasDimensions.height);
+                console.log(dbToLinear(-6));
+                // console.log(canvasDimensions.width, canvasDimensions.height);
                 
                 addUpdateClearRedo(tempupdate);
                 invalidate();
@@ -129,6 +137,7 @@ calculateOffsets(size) {
         }
 });
 
+    
     return {}
 }
 
