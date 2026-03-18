@@ -21,7 +21,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  *   timeResolution: number
  * }}
  */
-export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress ) {
+export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress) {
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
         throw new Error(`windowSize must be power of 2, got ${windowSize}`);
@@ -74,7 +74,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     let frameIndex = 0;
 
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
-        
+
         // Frame (works for Float32Array too)
         const frame = samples.slice(start, start + windowSize);
 
@@ -109,7 +109,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
         frameIndex += 1;
         if (frameIndex % fftUpdateInterval === 0) {
             fftProgress.value = frameIndex / numFrames;
-            await nextFrame(); 
+            await nextFrame();
         }
     }
     fftProgress.value = 1;
@@ -137,18 +137,19 @@ function applyHannWindow(frame, size) {
 }
 
 /**
- * Prepare derived rendering metadata for a spectrogram so it can be drawn efficiently
- * (dimensions, bin range, and dB normalization range).
+ * Prepares derived rendering metadata for a spectrogram so it can be drawn
+ * efficiently, including dimensions, frequency bin range, and dB normalization range.
  *
- * @param {{ data: Array<Array<number>>, freqBins: number, timeFrames: number }} spectrogram
- * Spectrogram object containing the magnitude data and its time/frequency dimensions.
- * @param {number} sampleRate Sample rate of the original audio (Hz).
- * @param {number} [minFreq=0] Minimum frequency to include (Hz).
- * @param {number} [maxFreq=sampleRate/2] Maximum frequency to include (Hz).
- * @param {HTMLProgressElement} renderDataProgressBar Progress bar to update during dB range computation.
- * @returns {{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }}
- * Rendering data including the original spectrogram data plus computed width/height, selected bin range,
- * and dB range for normalization.
+ * @param {Array<Array<number>>} data - Raw spectrogram magnitude data (time × frequency).
+ * @param {number} freqBins - Number of frequency bins in the spectrogram.
+ * @param {number} timeFrames - Number of time frames in the spectrogram.
+ * @param {number} sampleRate - Sample rate of the original audio (Hz).
+ * @param {number} [minFreq=0] - Minimum frequency to include (Hz).
+ * @param {number} [maxFreq=sampleRate/2] - Maximum frequency to include (Hz).
+ * @param {HTMLProgressElement} renderDataProgressBar - Progress bar updated during dB range computation.
+ * @returns {Promise<{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }>}
+ * The original spectrogram data alongside computed width, height, selected bin
+ * range, and dB range for normalization.
  */
 export async function computeSpectrogramRenderingData(
     data,
@@ -165,7 +166,7 @@ export async function computeSpectrogramRenderingData(
     const width = timeFrames;
 
     const { maxDB, minDB } = await computeDBrange(width, data, minBin, maxBin, renderDataProgressBar);
-    return {data, width, height, minBin, maxBin, minDB, maxDB}
+    return { data, width, height, minBin, maxBin, minDB, maxDB }
 }
 
 
@@ -208,7 +209,7 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     // zoom = 0.5 => 2 source px per screen px (zoomed out).
     const step = 1 / zoom;
 
-    
+
     var ctx = canvas.getContext("2d");
     var imagedata = ctx.createImageData(boxwidth, boxheight);
 
@@ -235,15 +236,15 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
             const idx = (ly * boxwidth + tx) * 4;
 
             imagedata.data[idx] = r;
-            imagedata.data[idx+1] = g;
-            imagedata.data[idx+2] = b;
-            imagedata.data[idx+3] = 255;
+            imagedata.data[idx + 1] = g;
+            imagedata.data[idx + 2] = b;
+            imagedata.data[idx + 3] = 255;
 
         }
     }
-    ctx.putImageData(imagedata, 0,0);
+    ctx.putImageData(imagedata, 0, 0);
 
-    return {width_offset, height_offset}
+    return { width_offset, height_offset }
 }
 
 
@@ -284,7 +285,7 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
 
     // Clamp dynamic range (better visuals)
     maxDB = Math.max(maxDB, -10);
-    minDB = maxDB - 80; 
+    minDB = maxDB - 80;
 
     renderDataProgress.value = 1;
 
@@ -318,46 +319,54 @@ function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
 
 
 
-
+/**
+ * Exports the currently loaded spectrogram from the store into a compressed
+ * binary \(.saft\) file and triggers a browser download.
+ *
+ * The file contains a magic header, spectrogram dimensions, rendering metadata,
+ * and gzipped \(Float32\) spectrogram data.
+ *
+ * @returns {void}
+ */
 export function downloadSpectrogram() {
-  if (!spectrogramStore.renderData) {
-    alert("No spectrogram data to export. Please create a spectrogram first.");
-    return;
-  }
+    if (!spectrogramStore.renderData) {
+        alert("No spectrogram data to export. Please create a spectrogram first.");
+        return;
+    }
 
-  const data = spectrogramStore.renderData.data;
+    const data = spectrogramStore.renderData.data;
     const freqBins = spectrogramStore.renderData.freqBins;
     const timeFrames = spectrogramStore.renderData.timeFrames;
-  const sampleRate = spectrogramStore.renderData.sampleRate;
-  const minFreq = spectrogramStore.renderData.minFreq;
-  const maxFreq = spectrogramStore.renderData.maxFreq;
-  const windowSize = spectrogramStore.renderData.windowSize;
-  const hopSize = spectrogramStore.renderData.hopSize;
+    const sampleRate = spectrogramStore.renderData.sampleRate;
+    const minFreq = spectrogramStore.renderData.minFreq;
+    const maxFreq = spectrogramStore.renderData.maxFreq;
+    const windowSize = spectrogramStore.renderData.windowSize;
+    const hopSize = spectrogramStore.renderData.hopSize;
 
 
-  const rows = data.length;
-  const cols = data[0].length;
+    const rows = data.length;
+    const cols = data[0].length;
 
-  const flat = new Float32Array(rows * cols);
+    const flat = new Float32Array(rows * cols);
 
-  let index = 0;
-  for (let i = 0; i < rows; i++) {
-    flat.set(data[i], index);
-    index += cols;
-  }
+    let index = 0;
+    for (let i = 0; i < rows; i++) {
+        flat.set(data[i], index);
+        index += cols;
+    }
 
-  const header = new Uint32Array([rows, cols, freqBins, timeFrames, sampleRate, minFreq, maxFreq, windowSize, hopSize]);
-  const compressed = pako.gzip(new Uint8Array(flat.buffer));
+    const header = new Uint32Array([rows, cols, freqBins, timeFrames, sampleRate, minFreq, maxFreq, windowSize, hopSize]);
+    const compressed = pako.gzip(new Uint8Array(flat.buffer));
 
-  const magic = new TextEncoder().encode("SAFT"); 
-  const blob = new Blob([magic, header.buffer, compressed]);
+    const magic = new TextEncoder().encode("SAFT");
+    const blob = new Blob([magic, header.buffer, compressed]);
 
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "export.saft";
-  link.click();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "export.saft";
+    link.click();
 
-  URL.revokeObjectURL(link.href);
+    URL.revokeObjectURL(link.href);
 
 
 }
@@ -365,52 +374,60 @@ export function downloadSpectrogram() {
 
 
 
-
+/**
+ * Imports a compressed \(.saft\) spectrogram file, validates its header,
+ * decompresses the stored data, and reconstructs the spectrogram matrix
+ * together with its associated metadata.
+ *
+ * @param {File} file - The spectrogram file to import.
+ * @returns {Promise<{ spectrogram: Array<Float32Array>, freqBins: number, timeFrames: number, sampleRate: number, minFreq: number, maxFreq: number, windowSize: number, hopSize: number }>}
+ * Imported spectrogram data and metadata extracted from the file.
+ */
 export async function importSpectrogram(file) {
-  const buffer = await file.arrayBuffer();
+    const buffer = await file.arrayBuffer();
 
-  let offset = 0;
+    let offset = 0;
 
-  const magic = new TextDecoder().decode(
-    new Uint8Array(buffer, offset, 4)
-  );
-  offset += 4;
+    const magic = new TextDecoder().decode(
+        new Uint8Array(buffer, offset, 4)
+    );
+    offset += 4;
 
-  if (magic !== "SAFT") {
-    throw new Error("Invalid file format");
-  }
+    if (magic !== "SAFT") {
+        throw new Error("Invalid file format");
+    }
 
-  const header = new Uint32Array(buffer, offset, 7);
-  const rows = header[0];
-  const cols = header[1];
-  const freqBins = header[2];
-  const timeFrames = header[3];
-  const sampleRate = header[4];
-  const minFreq = header[5];
-  const maxFreq = header[6];
-  const windowSize = header[7];
-  const hopSize = header[8];
-  offset += 36; // 9 * 4 bytes
+    const header = new Uint32Array(buffer, offset, 7);
+    const rows = header[0];
+    const cols = header[1];
+    const freqBins = header[2];
+    const timeFrames = header[3];
+    const sampleRate = header[4];
+    const minFreq = header[5];
+    const maxFreq = header[6];
+    const windowSize = header[7];
+    const hopSize = header[8];
+    offset += 36; // 9 * 4 bytes
 
-  let dataBytes = new Uint8Array(buffer, offset);
-  dataBytes = pako.ungzip(dataBytes);
-  
+    let dataBytes = new Uint8Array(buffer, offset);
+    dataBytes = pako.ungzip(dataBytes);
 
-  const floatData = new Float32Array(dataBytes.buffer);
-  const result = [];
-  for (let i = 0; i < rows; i++) {
-    result.push(floatData.slice(i * cols, (i + 1) * cols));
-  }
 
-  const importedSpectrogram = {
-    spectrogram: result,
-    freqBins: freqBins,
-    timeFrames: timeFrames,
-    sampleRate: sampleRate,
-    minFreq: minFreq,
-    maxFreq: maxFreq,
-    windowSize: windowSize,
-    hopSize: hopSize
-  };
-  return importedSpectrogram;
+    const floatData = new Float32Array(dataBytes.buffer);
+    const result = [];
+    for (let i = 0; i < rows; i++) {
+        result.push(floatData.slice(i * cols, (i + 1) * cols));
+    }
+
+    const importedSpectrogram = {
+        spectrogram: result,
+        freqBins: freqBins,
+        timeFrames: timeFrames,
+        sampleRate: sampleRate,
+        minFreq: minFreq,
+        maxFreq: maxFreq,
+        windowSize: windowSize,
+        hopSize: hopSize
+    };
+    return importedSpectrogram;
 }
