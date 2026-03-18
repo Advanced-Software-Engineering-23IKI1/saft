@@ -120,7 +120,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
  * @param {number} size Number of samples in the frame.
  * @returns {Array<number>} Windowed samples.
  */
-function applyHannWindow(frame, size) {
+export function applyHannWindow(frame, size) {
     const out = new Array(size);
     const denom = (size - 1) || 1;
 
