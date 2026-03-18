@@ -1,15 +1,12 @@
 <script setup>
 
 import { ref } from 'vue';
-import { Undo, Redo, ArrowDownToLine } from 'lucide-vue-next';
+import { Undo, Redo, ArrowDownToLine, Move, Brush, Eraser, TextCursorInput, ImagePlus } from 'lucide-vue-next';
 
 function goNext(navigate) {
     navigate()
 }
-import scrollicon from '@/assets/img/scroll.png'
-import brushicon from '@/assets/img/brush.png'
-import texticon from '@/assets/img/text.png'
-import imageicon from '@/assets/img/image.png'
+
 import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
 import { applyCombinedUpdateToSpectrogram, redoUpdate, undoUpdate } from '@/utils/updateUtils';
@@ -44,25 +41,32 @@ function redraw() {
                         :class="[activeTool === Tool.Movement ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
-                        <img :src="scrollicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Scroll">
+                        <Move class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Brush"
                         :class="[activeTool === Tool.Brush ? 'bg-saft-blue-500 hover:bg-saft-blue-600' : 'bg-saft-blue-200 hover:bg-saft-blue-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
-                        <img :src="brushicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Brush">
+                        <Brush class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+                    </button>
+                    <button @click="activeTool = Tool.Brush2"
+                        :class="[activeTool === Tool.Brush2 ? 'bg-saft-blue-500 hover:bg-saft-blue-600' : 'bg-saft-blue-200 hover:bg-saft-blue-300']"
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                        data-tool="2">
+                        <Eraser class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Text"
                         :class="[activeTool === Tool.Text ? 'bg-saft-brown-500 hover:bg-saft-brown-600' : 'bg-saft-brown-200 hover:bg-saft-brown-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="3">
-                        <img :src="texticon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Text">
+                        <TextCursorInput class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Image"
                         :class="[activeTool === Tool.Image ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="4">
-                        <img :src="imageicon" class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto" alt="Image">
+                        <ImagePlus class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+            
                     </button>
                 </div>
                 

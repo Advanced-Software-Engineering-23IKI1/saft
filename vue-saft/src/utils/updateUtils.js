@@ -76,7 +76,7 @@ export function addUpdateClearRedo(update) {
 
 export function popActiveUpdate() {
     let update = updateStore.activeUpdates.pop()||createUpdate()
-    computeCombinedUpdate() // vielleicht unnötig TODO
+    // computeCombinedUpdate() // vielleicht unnötig TODO
     return update
 }
 
