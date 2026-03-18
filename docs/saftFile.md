@@ -55,8 +55,6 @@ Used to validate that the file is a valid SAFT file.
 | 7     | windowSize   | FFT window size                      |
 | 8     | hopSize      | Hop size between frames              |
 
-> ⚠️ Note: Although stored as `Uint32`, some fields (e.g. frequencies) may conceptually represent continuous values.
-
 ---
 
 ## 3. Spectrogram Data
@@ -90,7 +88,6 @@ row1_col0, row1_col1, ..., row1_colN,
 ## File Extension
 
 ```
-
 .saft
 
 ```
