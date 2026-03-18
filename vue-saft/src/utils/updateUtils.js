@@ -67,13 +67,18 @@ export function computeCombinedUpdate() {
     updateStore.combinedUpdate = combinedDeltaArray
 }
 
-export function addUpdate(update) {
+export function addUpdateClearRedo(update) {
     updateStore.activeUpdates.push(update)
     updateStore.inactiveUpdates.length = 0 // clear redo stack
     computeCombinedUpdate()
 }
 
 
+export function popActiveUpdate() {
+    let update = updateStore.activeUpdates.pop()||createUpdate()
+    computeCombinedUpdate() // vielleicht unnötig TODO
+    return update
+}
 
 
 export function undoUpdate() {
