@@ -2,7 +2,7 @@ import { Tool } from '@/enums/ToolEnum.js';
 import { distance, getMidpoint } from '@/utils/canvasUtils.js';
 import { getCanvasPoint } from '@/utils/canvasUtils.js';
 import { computeInternalPos } from '@/utils/canvasUtils.js';
-import { clearOverlay, addRedCircleOverlay } from '../overlay';
+import { clearOverlay } from '../overlay';
 
 
 export function useMovementTool(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
@@ -102,8 +102,6 @@ export function useMovementTool(canvasDimensions, canvasRef, overlayRef, spectro
 
                     canvasOffsets.internalWidthOffset -= internalRelativePos.x;
                     canvasOffsets.internalHeightOffset -= internalRelativePos.y;
-
-                    addRedCircleOverlay(overlayRef.value);
                     checkInternalOffsetValues();
                     invalidate();
                     return;
