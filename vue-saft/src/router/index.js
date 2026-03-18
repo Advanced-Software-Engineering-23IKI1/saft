@@ -19,7 +19,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from) => {
-  if (to.meta.requiresSpectrogramData && !(spectrogramStore.renderData && spectrogramStore.spectrogram)) {
+  if (to.meta.requiresSpectrogramData && !(spectrogramStore.renderData)) {
     return '/upload';
   }
 });

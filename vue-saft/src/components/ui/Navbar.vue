@@ -6,7 +6,7 @@ import { spectrogramStore } from '@/store/store.js';
 const route = useRoute()
 
 function spectrogramDataAvailable() {
-  return spectrogramStore.renderData && spectrogramStore.spectrogram
+  return spectrogramStore.renderData
 }
 
 const steps = computed(() => ([

@@ -1,18 +1,23 @@
 <script setup>
 import { useTemplateRef, computed, ref } from 'vue'
 import { getSample, closeAudio } from '@/utils/input'
-import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram'
+import { computeSpectrogram, computeSpectrogramRenderingData, importSpectrogram } from '@/utils/spectrogram'
 import { spectrogramStore } from '@/store/store'
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 import { useAudioRecorder } from '@/utils/useAudioRecorder'
 import microfonicon from '@/assets/img/micIcon.png'
 import uploadicon from '@/assets/img/uploadIcon.png'
 
-const fileInput = useTemplateRef('fileInput')
 const conversionProgress = ref(0)
 const conversionName = ref('Create Spectrogram')
+
+const fileInput = useTemplateRef('fileInput')
 const fileSelected = ref(false)
 const uploadedFile = ref(null)
+
+const spectrogramInput = useTemplateRef('spectrogramInput')
+const spectrogramSelected = ref(false)
+const spectrogramFile = ref(null)
 
 const {
     recordedFile,
@@ -23,43 +28,79 @@ const {
     clearRecording,
 } = useAudioRecorder()
 
-const maxFreq = 20000
-const minFreq = 0
-const windowSize = 2048
-const hopSize = 250
 const channel = 0
 
 async function retrieveSample() {
-    spectrogramStore.spectrogram = null
     spectrogramStore.renderData = null
 
-    const file = recordedFile.value ?? uploadedFile.value
-    const sample = await getSample(file, channel)
-    if (!sample) return
+    let maxFreq = 20000
+    let minFreq = 0
+    let windowSize = 2048
+    let hopSize = 250
 
-    conversionName.value = 'Running FFT'
-    spectrogramStore.spectrogram = await computeSpectrogram(
-        sample.samples,
-        sample.sampleRate,
-        windowSize,
-        hopSize,
-        conversionProgress
-    )
+    let spectrogram = null
+    let sampleRate = null
+    let freqBins = null
+    let timeFrames = null
 
-    await closeAudio()
+    if (!spectrogramFile.value) {
+        const file = recordedFile.value ?? uploadedFile.value
+        const sample = await getSample(file, channel)
+        sampleRate = sample.sampleRate
+        const samples = sample.samples
+        if (!sample) return
+
+        conversionName.value = 'Running FFT'
+        const computedSpectrogram = await computeSpectrogram(
+            samples,
+            sampleRate,
+            windowSize,
+            hopSize,
+            conversionProgress
+        )
+        spectrogram = computedSpectrogram.data
+        freqBins = computedSpectrogram.freqBins
+        timeFrames = computedSpectrogram.timeFrames
+
+        await closeAudio()
+    } else {
+
+        const importedSpectrogram = await importSpectrogram(spectrogramFile.value)
+        spectrogram = importedSpectrogram.spectrogram
+        freqBins = importedSpectrogram.freqBins
+        timeFrames = importedSpectrogram.timeFrames
+        sampleRate = importedSpectrogram.sampleRate
+        minFreq = importedSpectrogram.minFreq
+        maxFreq = importedSpectrogram.maxFreq
+        windowSize = importedSpectrogram.windowSize
+        hopSize = importedSpectrogram.hopSize
+    }
+
 
     conversionName.value = 'Prerendering Spectrogram'
     spectrogramStore.renderData = await computeSpectrogramRenderingData(
-        spectrogramStore.spectrogram,
-        sample.sampleRate,
+        spectrogram,
+        freqBins,
+        timeFrames,
+        sampleRate,
         minFreq,
         maxFreq,
         conversionProgress
     )
 
+    spectrogramStore.renderData.windowSize = windowSize
+    spectrogramStore.renderData.hopSize = hopSize
+    spectrogramStore.renderData.sampleRate = sampleRate
+    spectrogramStore.renderData.minFreq = minFreq
+    spectrogramStore.renderData.maxFreq = maxFreq
+    spectrogramStore.renderData.freqBins = freqBins
+    spectrogramStore.renderData.timeFrames = timeFrames
+
     conversionProgress.value = 0
     conversionName.value = 'Create Spectrogram'
 }
+
+
 
 function handleFileSelect() {
     uploadedFile.value = fileInput.value?.files?.[0] ?? null
@@ -67,14 +108,42 @@ function handleFileSelect() {
 
     if (fileSelected.value) {
         clearRecording()
+        resetSpectrogramSelection()
     }
 }
 
-async function handleRecordingToggle() {
-    if (!isRecording.value && fileInput.value) {
+function handleSpectrogramFileSelect() {
+    spectrogramFile.value = spectrogramInput.value?.files?.[0] ?? null
+    spectrogramSelected.value = !!spectrogramFile.value
+
+    if (spectrogramSelected.value) {
+        clearRecording()
+        resetFileSelection()
+    }
+}
+
+function resetFileSelection() {
+    if (fileInput.value) {
         fileInput.value.value = ''
-        uploadedFile.value = null
-        fileSelected.value = false
+           uploadedFile.value = null
+            fileSelected.value = false
+    }
+ 
+}
+
+function resetSpectrogramSelection() {
+    if (spectrogramInput.value) {
+        spectrogramInput.value.value = ''
+        spectrogramFile.value = null
+        spectrogramSelected.value = false
+    }
+}
+ 
+
+async function handleRecordingToggle() {
+    if (!isRecording.value) {
+        resetFileSelection()
+        resetSpectrogramSelection()
     }
 
     await toggleRecording()
@@ -84,43 +153,12 @@ const currentAudioFile = computed(() => {
     return recordedFile.value ?? uploadedFile.value ?? null
 })
 
-function downloadSpectrogram() {
-  const data = spectrogramStore.renderData.data;
-
-  const rows = data.length;
-  const cols = data[0].length;
-
-  // Flatten ONLY for storage (structure saved separately)
-  const flat = new Float32Array(rows * cols);
-
-  let index = 0;
-  for (let i = 0; i < rows; i++) {
-    flat.set(data[i], index);
-    index += cols;
-  }
-
-  // Create header (store dimensions)
-  const header = new Uint32Array([rows, cols]);
-
-  // Combine header + data
-  const blob = new Blob([header.buffer, flat.buffer], {
-    type: "application/octet-stream"
-  });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "spectrogram.bin";
-  link.click();
-
-  URL.revokeObjectURL(link.href);
-}
 
 
 async function goNext(navigate) {
     try {
         await retrieveSample()
         if (spectrogramStore.renderData) {
-            downloadSpectrogram()
             navigate()
         }
     } catch (error) {
@@ -167,6 +205,24 @@ async function goNext(navigate) {
             </label>
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
                 accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
+
+
+            <!-- Spektrogram Button -->
+            <label for="spectrogramInput"
+                :class="[spectrogramFile ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']"
+                class=" w-20 h-20
+                          active:scale-[0.95]
+                          rounded-full flex items-center justify-center 
+                          shadow-xl
+                          border-2 border-white/50 
+                          transition-all duration-200
+                          touch-manipulation">
+                <img :src="uploadicon" class="w-11 h-11 invert" alt="Upload" />
+            </label>
+            <input style="display: none" type="file" ref="spectrogramInput" id="spectrogramInput" accept=".saft"
+                @change="handleSpectrogramFileSelect">
+
+
         </div>
 
         <MediaPlayer :file="currentAudioFile" />
@@ -174,45 +230,46 @@ async function goNext(navigate) {
         <div class="flex justify-center gap-6">
             <div class="grid grid-cols-[1fr_2fr] gap-x-2 gap-y-2 justify-items-center max-w-md">
                 <!-- Stride Input -->
-                    <label for="stride" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                        Stride
-                    </label>
-                    <div class="relative">
-                        <input type="number" id="stride" min="0" step="0.1" placeholder="0.0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
+                <label for="stride" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
+                    Stride
+                </label>
+                <div class="relative">
+                    <input type="number" id="stride" min="0" step="0.1" placeholder="0.0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
                 bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
                 focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
                 shadow-lg hover:shadow-xl transition-all duration-200
                 invalid:text-red-500 invalid:border-red-300"
-                            oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                    </div>
+                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
+                </div>
 
                 <!-- Window Size Input -->
-                    <label for="windowSize" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                        Win Size
-                    </label>
-                    <div class="relative">
-                        <input type="number" id="windowSize" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
+                <label for="windowSize"
+                    class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
+                    Win Size
+                </label>
+                <div class="relative">
+                    <input type="number" id="windowSize" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
                 bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
                 focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
                 shadow-lg hover:shadow-xl transition-all duration-200
                 invalid:text-red-500 invalid:border-red-300"
-                            oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                    </div>
+                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
+                </div>
 
                 <!-- N Bins Input -->
-                    <label for="nbins" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                        n bins
-                    </label>
-                    <div class="relative">
-                        <input type="number" id="nbins" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
+                <label for="nbins" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
+                    n bins
+                </label>
+                <div class="relative">
+                    <input type="number" id="nbins" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
                 bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
                 focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
                 shadow-lg hover:shadow-xl transition-all duration-200
                 invalid:text-red-500 invalid:border-red-300"
-                            oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                    </div>
+                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
+                </div>
             </div>
-        </div>    
+        </div>
 
         <RouterLink :to="{ name: 'canvas' }" custom v-slot="{ navigate }">
             <div class="flex justify-center">
@@ -228,9 +285,9 @@ async function goNext(navigate) {
                     :style="{ '--progress-value': conversionProgress }">
                     {{ conversionName }}
                 </button>
-            </div>    
+            </div>
         </RouterLink>
-    </div>    
+    </div>
 </template>
 
 <style scoped>
