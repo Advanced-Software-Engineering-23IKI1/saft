@@ -13,6 +13,8 @@ import deleteicon from '@/assets/img/delete.png'
 import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
 import { downloadSpectrogram } from '@/utils/spectrogram';
+import { Save } from 'lucide-vue-next';
+
 
 
 
@@ -65,7 +67,7 @@ const activeTool = ref(Tool.Movement)
                     <button @click="downloadSpectrogram"
                         class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="5">
-                        <img :src="deleteicon" class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto" alt="Delete">
+                        <Save/>
                     </button>
                 </div>
             </div>

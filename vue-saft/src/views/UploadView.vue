@@ -5,8 +5,7 @@ import { computeSpectrogram, computeSpectrogramRenderingData, importSpectrogram 
 import { spectrogramStore } from '@/store/store'
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 import { useAudioRecorder } from '@/utils/useAudioRecorder'
-import microfonicon from '@/assets/img/micIcon.png'
-import uploadicon from '@/assets/img/uploadIcon.png'
+import { Citrus, Mic, Upload } from 'lucide-vue-next';
 
 const conversionProgress = ref(0)
 const conversionName = ref('Create Spectrogram')
@@ -188,7 +187,9 @@ async function goNext(navigate) {
                     class="absolute left-0 bottom-0 w-full bg-red-800/70 transition-all duration-100"
                     :style="{ height: `${Math.min(peakIndicator * 1.5, 100)}%` }"></div>
 
-                <img :src="microfonicon" class="w-12 h-12 invert relative z-10" alt="Mikrofon" />
+                <!-- <img :src="microfonicon" class="w-12 h-12 invert relative z-10" alt="Mikrofon" />
+                  -->
+                <Mic class="w-11 h-11 stroke-white"/>
             </button>
 
             <!-- Upload Button -->
@@ -201,7 +202,8 @@ async function goNext(navigate) {
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
-                <img :src="uploadicon" class="w-11 h-11 invert" alt="Upload" />
+            <Upload class="w-11 h-11 stroke-white"/>
+
             </label>
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
                 accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
@@ -217,7 +219,9 @@ async function goNext(navigate) {
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
-                <img :src="uploadicon" class="w-11 h-11 invert" alt="Upload" />
+
+                          
+                          <Citrus class="w-11 h-11 stroke-white" />
             </label>
             <input style="display: none" type="file" ref="spectrogramInput" id="spectrogramInput" accept=".saft"
                 @change="handleSpectrogramFileSelect">
