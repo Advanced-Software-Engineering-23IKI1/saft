@@ -1,11 +1,12 @@
 <script setup>
 import { useTemplateRef, computed, ref } from 'vue'
 import { getSample, closeAudio } from '@/utils/input'
-import { computeSpectrogram, computeSpectrogramRenderingData, importSpectrogram } from '@/utils/spectrogram'
+import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram'
+import { useSaftFileWorker } from '@/utils/useSaftFileWorker'
 import { spectrogramStore } from '@/store/store'
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 import { useAudioRecorder } from '@/utils/useAudioRecorder'
-import { Citrus, Mic, Upload } from 'lucide-vue-next';
+import { Citrus, Mic, Upload, LoaderCircle } from 'lucide-vue-next';
 
 const conversionProgress = ref(0)
 const conversionName = ref('Create Spectrogram')
@@ -17,6 +18,9 @@ const uploadedFile = ref(null)
 const spectrogramInput = useTemplateRef('spectrogramInput')
 const spectrogramSelected = ref(false)
 const spectrogramFile = ref(null)
+
+
+const { importSpectrogram, isLoading } = useSaftFileWorker()
 
 const {
     recordedFile,
@@ -124,10 +128,10 @@ function handleSpectrogramFileSelect() {
 function resetFileSelection() {
     if (fileInput.value) {
         fileInput.value.value = ''
-           uploadedFile.value = null
-            fileSelected.value = false
+        uploadedFile.value = null
+        fileSelected.value = false
     }
- 
+
 }
 
 function resetSpectrogramSelection() {
@@ -137,7 +141,7 @@ function resetSpectrogramSelection() {
         spectrogramSelected.value = false
     }
 }
- 
+
 
 async function handleRecordingToggle() {
     if (!isRecording.value) {
@@ -189,7 +193,7 @@ async function goNext(navigate) {
 
                 <!-- <img :src="microfonicon" class="w-12 h-12 invert relative z-10" alt="Mikrofon" />
                   -->
-                <Mic class="w-11 h-11 stroke-white"/>
+                <Mic class="w-11 h-11 stroke-white" />
             </button>
 
             <!-- Upload Button -->
@@ -202,30 +206,25 @@ async function goNext(navigate) {
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
-            <Upload class="w-11 h-11 stroke-white"/>
+                <Upload class="w-11 h-11 stroke-white" />
 
             </label>
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
                 accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
 
-
             <!-- Spektrogram Button -->
-            <label for="spectrogramInput"
-                :class="[spectrogramFile ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']"
-                class=" w-20 h-20
-                          active:scale-[0.95]
-                          rounded-full flex items-center justify-center 
-                          shadow-xl
-                          border-2 border-white/50 
-                          transition-all duration-200
-                          touch-manipulation">
-
-                          
-                          <Citrus class="w-11 h-11 stroke-white" />
+            <label for="spectrogramInput" :class="[
+                spectrogramFile
+                    ? 'bg-green-500 hover:bg-green-600'
+                    : 'bg-saft-main-500 hover:bg-saft-main-600',
+                isLoading ? 'cursor-wait opacity-80' : 'cursor-pointer'
+            ]" class="w-20 h-20 active:scale-[0.95] rounded-full flex items-center justify-center shadow-xl border-2 border-white/50 transition-all duration-200 touch-manipulation">
+                <LoaderCircle v-if="isLoading" class="w-11 h-11 stroke-white animate-spin" />
+                <Citrus v-else class="w-11 h-11 stroke-white" />
             </label>
-            <input style="display: none" type="file" ref="spectrogramInput" id="spectrogramInput" accept=".saft"
-                @change="handleSpectrogramFileSelect">
 
+            <input id="spectrogramInput" ref="spectrogramInput" type="file" accept=".saft" style="display: none"
+                :disabled="isLoading" @change="handleSpectrogramFileSelect">
 
         </div>
 
@@ -308,8 +307,6 @@ async function goNext(navigate) {
 /* Dark mode spin button */
 .dark-mode input[type="number"]::-webkit-inner-spin-button,
 .dark-mode input[type="number"]::-webkit-outer-spin-button {
-  filter: invert(1);
+    filter: invert(1);
 }
-
-
 </style>
