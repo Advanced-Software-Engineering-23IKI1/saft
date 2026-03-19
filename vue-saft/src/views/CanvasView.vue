@@ -28,44 +28,44 @@ function redraw() {
 <template>
     <div class="flex flex-col gap-3 mb-4">
         <!-- Image Container – Responsive + Horizontal Scroll -->
-        <div class="w-full h-[60vh] flex flex-col p-1">
-            <div class="flex-1 bg-saft-brown-50/90 backdrop-blur-md border-4 border-saft-blue-300/70 
-      rounded-3xl shadow-2xl relative overflow-hidden">
+        <div class="w-full h-[45vh] flex flex-col p-1">
+            <div class="h-full flex bg-saft-brown-50/90 backdrop-blur-md
+      rounded-2xl shadow-2xl relative overflow-hidden">
                 <SpectrogramCanvas ref="spectrogramRef" :active-tool="activeTool" />
             </div>
             <!-- Toolbar -->
             <div class="w-full flex flex-col sm:flex-row justify-center gap-3 py-4 px-2 items-center">
                 <div
-                    class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
+                    class="flex gap-2 bg-saft-brown-50 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
                     <button @click="activeTool = Tool.Movement"
-                        :class="[activeTool === Tool.Movement ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
+                        :class="[activeTool === Tool.Movement ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
-                        <Move class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+                        <Move class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Brush"
-                        :class="[activeTool === Tool.Brush ? 'bg-saft-blue-500 hover:bg-saft-blue-600' : 'bg-saft-blue-200 hover:bg-saft-blue-300']"
+                        :class="[activeTool === Tool.Brush ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
-                        <Brush class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+                        <Brush class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Brush2"
-                        :class="[activeTool === Tool.Brush2 ? 'bg-saft-blue-500 hover:bg-saft-blue-600' : 'bg-saft-blue-200 hover:bg-saft-blue-300']"
+                        :class="[activeTool === Tool.Brush2 ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
-                        <Eraser class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+                        <Eraser class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Text"
-                        :class="[activeTool === Tool.Text ? 'bg-saft-brown-500 hover:bg-saft-brown-600' : 'bg-saft-brown-200 hover:bg-saft-brown-300']"
+                        :class="[activeTool === Tool.Text ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="3">
-                        <TextCursorInput class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+                        <TextCursorInput class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
                     </button>
                     <button @click="activeTool = Tool.Image"
                         :class="[activeTool === Tool.Image ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="4">
-                        <ImagePlus class="w-7 h-7 brightness-0 invert absolute inset-0 m-auto"/>
+                        <ImagePlus class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
             
                     </button>
                 </div>
@@ -99,18 +99,20 @@ function redraw() {
             </div>
         </div>
         <RouterLink :to="{ name: 'download' }" custom v-slot="{ navigate }">
-            <button class="w-full py-4
-                      text-lg text-white font-semibold
-                      bg-saft-blue-500
-                      hover:bg-saft-blue-600 
-                      active:scale-[0.95]
-                      rounded-full flex items-center justify-center 
-                      shadow-xl
-                      border-2 border-white/50 
-                      transition-all duration-200
-                      touch-manipulation" @click="goNext(navigate)">
-                Compute Spectrogram
-            </button>
+            <div class="flex justify-center">
+                <button class="w-full max-w-sm py-4
+                        text-lg text-white font-semibold
+                        bg-saft-blue-500
+                        hover:bg-saft-blue-600 
+                        active:scale-[0.95]
+                        rounded-full flex items-center justify-center 
+                        shadow-xl
+                        border-2 border-white/50 
+                        transition-all duration-200
+                        touch-manipulation" @click="goNext(navigate)">
+                    Compute Spectrogram
+                </button>
+            </div>
         </RouterLink>
     </div>
 </template>
