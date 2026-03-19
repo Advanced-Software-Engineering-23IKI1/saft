@@ -28,8 +28,8 @@ function redraw() {
 <template>
     <div class="flex flex-col gap-3 mb-4">
         <!-- Image Container – Responsive + Horizontal Scroll -->
-        <div class="w-full h-[45vh] flex flex-col p-1">
-            <div class="h-full flex bg-saft-brown-50/90 backdrop-blur-md
+        <div class="w-full  flex flex-col px-5">
+            <div class=" flex bg-saft-brown-50/90 backdrop-blur-md
       rounded-2xl shadow-2xl relative overflow-hidden">
                 <SpectrogramCanvas ref="spectrogramRef" :active-tool="activeTool" />
             </div>
@@ -72,26 +72,26 @@ function redraw() {
                 
                 <!-- v-show="activeTool === Tool.Brush || activeTool === Tool.Text || activeTool === Tool.Image" -->
                 <div
-                    class="flex gap-2 bg-white/95 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
+                    class="flex gap-2 bg-saft-brown-50 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
                     <button @click="() => { redoUpdate(); redraw(); }"
                         :class="[(updateStore.inactiveUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
-                        class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
-                        <Redo class="w-7 h-7 stroke-white" />
-                        <span class="text-[10px] text-white leading-none mt-1">Redo</span>
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden">
+                        <Redo class="w-7 h-7 stroke-black dark:invert" />
+                        <span class="text-[10px] text-black dark:invert leading-none mt-1">Redo</span>
                     </button>
 
                     <button @click="() => { applyCombinedUpdateToSpectrogram(); redraw(); }"
                         :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
-                        class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
-                        <ArrowDownToLine class="w-7 h-7 stroke-white" />
-                        <span class="text-[10px] text-white leading-none mt-1">Apply</span>
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden">
+                        <ArrowDownToLine class="w-7 h-7 stroke-black dark:invert" />
+                        <span class="text-[10px] text-black dark:invert leading-none mt-1">Apply</span>
                     </button>
 
                     <button @click="() => { undoUpdate(); redraw(); }"
                         :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
-                        class=" w-16 h-16 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all">
-                        <Undo class="w-7 h-7 stroke-white" />
-                        <span class="text-[10px] text-white leading-none mt-1">Undo</span>
+                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden">
+                        <Undo class="w-7 h-7 stroke-black dark:invert" />
+                        <span class="text-[10px] text-black dark:invert leading-none mt-1">Undo</span>
                     </button>
 
                 </div>

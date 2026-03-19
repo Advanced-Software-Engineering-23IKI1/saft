@@ -1,14 +1,34 @@
+/**
+ * Circular brush that caches local pixel offsets for a given brush size.
+ */
 export class OptimizedBrush {
+  /**
+   * Create a brush and precompute its pixel offsets.
+   *
+   * @param {number} [size=5] Brush diameter in pixels.
+   */
   constructor(size = 5) {
     this.size = size;
     this.offsets = this.calculateOffsets(size);
   }
 
+  /**
+   * Update the brush size and recalculate cached offsets.
+   *
+   * @param {number} size New brush diameter in pixels.
+   * @returns {void}
+   */
   setSize(size) {
     this.size = size;
     this.offsets = this.calculateOffsets(size);
   }
 
+  /**
+   * Compute local pixel offsets that fall inside the brush shape.
+   *
+   * @param {number} size Brush diameter in pixels.
+   * @returns {{dx: number, dy: number}[]} Cached local offsets for the brush.
+   */
   calculateOffsets(size) {
     const offsets = [];
     const radius = size / 2;
@@ -30,6 +50,15 @@ export class OptimizedBrush {
     return offsets;
   }
 
+  /**
+   * Get all brush pixels at a given center position, optionally clipped to bounds.
+   *
+   * @param {number} cx Brush center x-coordinate.
+   * @param {number} cy Brush center y-coordinate.
+   * @param {number} [gridWidth=Infinity] Maximum allowed x bound.
+   * @param {number} [gridHeight=Infinity] Maximum allowed y bound.
+   * @returns {{x: number, y: number}[]} Absolute pixel coordinates inside the brush.
+   */
   getPixels(cx, cy, gridWidth = Infinity, gridHeight = Infinity) {
     const pixels = [];
     for (let i = 0; i < this.offsets.length; i++) {

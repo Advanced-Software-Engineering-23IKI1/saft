@@ -5,6 +5,7 @@ export function clampValue(value, minDB, maxDB) {
 
 
 
-export function dbToLinear(db) {
-    return Math.pow(10, db / 20);
+export function dbToLinear(db, strength = 0.5) {
+  const value = Math.pow(10, db / 20) * strength;
+  return db < 0 ? -value : value;
 }

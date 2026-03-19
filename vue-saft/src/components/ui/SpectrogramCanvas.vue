@@ -21,14 +21,14 @@ const props = defineProps({
 const maxPixelCount = 300 * 300;
 const canvasRef = useTemplateRef('spectrogramCanvas');
 const overlayRef = useTemplateRef('overlayCanvas');
-
+const wrapperRef = useTemplateRef('wrapperRef');
 const canvasContext = reactive({
   value: null
 })
 
 
 const canvasDimensions = reactive({
-  width: 300,
+  width: 600,
   height: 300,
 })
 
@@ -182,13 +182,16 @@ onUnmounted(() => {
     pointer-events: none;
   top: 0;
   left: 0;
+  
+  width: 100%;
+  height: 100%;
 }
 
 
 #wrapper {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 500px;
   overflow: hidden;
 }
 

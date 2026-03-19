@@ -2,18 +2,17 @@ import { Tool } from '@/enums/ToolEnum.js';
 import { computeInternalPos, distance, getMidpoint } from '../canvasUtils';
 import { getCanvasPoint } from '../canvasUtils';
 import { addPixelDelta, addUpdateClearRedo, popActiveUpdate, undoUpdate } from '../updateUtils';
-import { dbToLinear } from '../utils';
 import { clearOverlay, brushSizeOverlay } from '../overlay';
 import { OptimizedBrush } from '../optimizedBrush';
 
 
 
 export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
-    
+
     let pinchStartDist = 0;
     let isPinching = false;
     let blockDrawingUntilAllTouchesUp = false;
-    const brushdb = -4;
+    const brushdb = 0.000005;
     let pointers = new Map(); // pointerId -> {x,y}
     let brushsize = 5, minBrush = 1, maxBrush = 50;
     const myBrush = new OptimizedBrush(5);
@@ -28,9 +27,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
             else if (e.deltaY < 0) {
                 brushsize = Math.max(--brushsize, minBrush);
             }
-            myBrush.offsets = myBrush.calculateOffsets(brushsize)
-            
-            brushSizeOverlay(overlayRef.value, brushsize * zoom.value * 1.25);
+            resizeBrushOverlay();
         },
 
         onCanvasPointerDown(e) {
@@ -44,9 +41,8 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                currentPixels.forEach(({ x, y }) => {
-                    addPixelDelta(tempupdate, { x: x, y: y }, dbToLinear(-6))
-                });
+                addPixelsToUpdate(currentPixels, tempupdate, brushdb)
+
                 addUpdateClearRedo(tempupdate);
                 invalidate();
 
@@ -72,9 +68,9 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                currentPixels.forEach(({ x, y }) => {
-                    addPixelDelta(tempupdate, { x: x, y: y }, dbToLinear(brushdb))
-                });
+                
+                addPixelsToUpdate(currentPixels, tempupdate, brushdb);
+
                 addUpdateClearRedo(tempupdate);
                 invalidate();
                 return;
@@ -93,8 +89,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                         brushsize = Math.max(brushsize - 1, minBrush);
                     }
 
-                    myBrush.offsets = myBrush.calculateOffsets(brushsize);
-                    brushSizeOverlay(overlayRef.value, brushsize * zoom.value * 1.25);
+                    resizeBrushOverlay()
 
                     pinchStartDist = pinchCurrentDist;
                 }
@@ -138,9 +133,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
             else if (e.deltaY < 0) {
                 brushsize = Math.max(--brushsize, minBrush);
             }
-            myBrush.offsets = myBrush.calculateOffsets(brushsize)
-            
-            brushSizeOverlay(overlayRef.value, brushsize * zoom.value * 1.25);
+            resizeBrushOverlay()
         },
 
         onCanvasPointerDown(e) {
@@ -154,9 +147,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                currentPixels.forEach(({ x, y }) => {
-                    addPixelDelta(tempupdate, { x: x, y: y }, - dbToLinear(brushdb))
-                });
+                addPixelsToUpdate(currentPixels, tempupdate, -brushdb)
                 addUpdateClearRedo(tempupdate);
                 invalidate();
 
@@ -182,9 +173,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                currentPixels.forEach(({ x, y }) => {
-                    addPixelDelta(tempupdate, { x: x, y: y },- dbToLinear(brushdb))
-                });
+                addPixelsToUpdate(currentPixels, tempupdate, -brushdb)
                 addUpdateClearRedo(tempupdate);
                 invalidate();
                 return;
@@ -203,9 +192,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                         brushsize = Math.max(brushsize - 1, minBrush);
                     }
 
-                    myBrush.offsets = myBrush.calculateOffsets(brushsize);
-                    brushSizeOverlay(overlayRef.value, brushsize * zoom.value * 1.25);
-
+                    resizeBrushOverlay()
                     pinchStartDist = pinchCurrentDist;
                 }
 
@@ -238,6 +225,20 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
             this.endPointer(e);
         }
     });
+
+    function resizeBrushOverlay() {
+        myBrush.offsets = myBrush.calculateOffsets(brushsize);
+        brushSizeOverlay(overlayRef.value, brushsize * zoom.value * canvasScaleFactor.value);
+    }
+
+    function addPixelsToUpdate(currentPixels, tempupdate, brushdb) {
+       
+        currentPixels.forEach(({ x, y }) => {
+            addPixelDelta(tempupdate, { x: x, y: y }, brushdb);
+        });
+
+        
+    }
 
     return {}
 }

@@ -205,8 +205,7 @@ export function useMovementTool(canvasDimensions, canvasRef, overlayRef, spectro
         for (let entry of entries) {
             if (entry.target === canvasRef.value) {
                 const { width, height } = entry.contentRect;
-                overlayRef.value.height =height;
-                overlayRef.value.width = width;
+                
                 canvasDimensions.width = width;
                 canvasDimensions.height = height;
 
@@ -214,6 +213,9 @@ export function useMovementTool(canvasDimensions, canvasRef, overlayRef, spectro
                 canvasScaleFactor.value = Math.min(Math.sqrt(maxPixelCount / currentPixelCount), 1);
                 canvasDimensions.width = width * canvasScaleFactor.value;
                 canvasDimensions.height = height * canvasScaleFactor.value;
+
+                overlayRef.value.height =canvasDimensions.height;
+                overlayRef.value.width = canvasDimensions.width;
                 updateMinZoom();
                 checkInternalOffsetValues();
                 invalidate();
