@@ -1,9 +1,11 @@
 import { Tool } from '@/enums/ToolEnum.js';
 import { computeInternalPos, distance, getMidpoint } from '../canvasUtils';
 import { getCanvasPoint } from '../canvasUtils';
-import { addPixelDelta, addUpdateClearRedo, popActiveUpdate, undoUpdate } from '../updateUtils';
+import { addPixelValue, addUpdate, pixelToFlatIndex, popActiveUpdate, undoUpdate } from '../updateUtils';
 import { clearOverlay, brushSizeOverlay } from '../overlay';
 import { OptimizedBrush } from '../optimizedBrush';
+import { clampValue, dbToLinear, linearToDb } from '../utils';
+import { updateStore } from '@/store/store';
 
 
 
@@ -12,7 +14,10 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
     let pinchStartDist = 0;
     let isPinching = false;
     let blockDrawingUntilAllTouchesUp = false;
-    const brushdb = 0.000005;
+
+    const brushDbAdd = 2;   
+    const brushDbRemove = -2; 
+
     let pointers = new Map(); // pointerId -> {x,y}
     let brushsize = 5, minBrush = 1, maxBrush = 50;
     const myBrush = new OptimizedBrush(5);
@@ -41,9 +46,9 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                addPixelsToUpdate(currentPixels, tempupdate, brushdb)
+                addPixelsToUpdate(currentPixels, tempupdate, brushDbAdd)
 
-                addUpdateClearRedo(tempupdate);
+                addUpdate(tempupdate);
                 invalidate();
 
             }
@@ -68,10 +73,10 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                
-                addPixelsToUpdate(currentPixels, tempupdate, brushdb);
 
-                addUpdateClearRedo(tempupdate);
+                addPixelsToUpdate(currentPixels, tempupdate, brushDbAdd);
+
+                addUpdate(tempupdate);
                 invalidate();
                 return;
 
@@ -147,8 +152,8 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                addPixelsToUpdate(currentPixels, tempupdate, -brushdb)
-                addUpdateClearRedo(tempupdate);
+                addPixelsToUpdate(currentPixels, tempupdate, brushDbRemove)
+                addUpdate(tempupdate);
                 invalidate();
 
             }
@@ -173,8 +178,8 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
                 let tempupdate = popActiveUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
-                addPixelsToUpdate(currentPixels, tempupdate, -brushdb)
-                addUpdateClearRedo(tempupdate);
+                addPixelsToUpdate(currentPixels, tempupdate, brushDbRemove)
+                addUpdate(tempupdate);
                 invalidate();
                 return;
 
@@ -231,16 +236,45 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
         brushSizeOverlay(overlayRef.value, brushsize * zoom.value * canvasScaleFactor.value);
     }
 
-    function addPixelsToUpdate(currentPixels, tempupdate, brushdb) {
-       
-        currentPixels.forEach(({ x, y }) => {
-            addPixelDelta(tempupdate, { x: x, y: y }, brushdb);
-        });
 
-        
+        function addPixelsToUpdate(currentPixels, tempupdate, brushDB) {
+            if (!spectrogramStore.renderData) return
+            const { minDB, maxDB, data, maxBin, width } = spectrogramStore.renderData
+            let update = null
+            if (updateStore) {
+                update = updateStore.combinedUpdate
+            }
+
+            currentPixels.forEach((pixel) => {
+                let val = getSpectrogramValue(maxBin, data, pixel);
+                if (update) {
+                    const updateVal = update[pixelToFlatIndex(pixel, width)]
+                    if (!Number.isNaN(updateVal)) {
+                        val = updateVal
+                    }
+                }
+             
+                const minAmp = 1e-8; 
+                val = Math.max(val, minAmp);
+
+                let db = linearToDb(val)
+                db += brushDB;
+                db = clampValue(db, minDB, maxDB)
+                val = dbToLinear(db);
+                addPixelValue(tempupdate, pixel, val);
+            });
+        }
+
+        return {}
     }
 
-    return {}
-}
 
+
+
+function getSpectrogramValue(maxBin, data, pixel) {
+    const yFloatFlipped = maxBin - pixel.y;
+    const yFlipped = Math.floor(yFloatFlipped) - 1;
+    return data[pixel.x][yFlipped];
+
+}
 

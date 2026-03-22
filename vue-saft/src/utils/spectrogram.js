@@ -1,6 +1,5 @@
 import { updateStore } from "@/store/store";
 import { fft } from "./fft";
-import {getPixelDelta, pixelToFlatIndex} from "./updateUtils";
 
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
@@ -20,7 +19,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  *   timeResolution: number
  * }}
  */
-export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress ) {
+export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress) {
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
         throw new Error(`windowSize must be power of 2, got ${windowSize}`);
@@ -73,7 +72,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     let frameIndex = 0;
 
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
-        
+
         // Frame (works for Float32Array too)
         const frame = samples.slice(start, start + windowSize);
 
@@ -107,7 +106,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
         frameIndex += 1;
         if (frameIndex % fftUpdateInterval === 0) {
             fftProgress.value = frameIndex / numFrames;
-            await nextFrame(); 
+            await nextFrame();
         }
     }
     fftProgress.value = 1;
@@ -162,7 +161,7 @@ export async function computeSpectrogramRenderingData(
     const width = timeFrames;
 
     const { maxDB, minDB } = await computeDBrange(width, data, minBin, maxBin, renderDataProgressBar);
-    return {data, width, height, minBin, maxBin, minDB, maxDB}
+    return { data, width, height, minBin, maxBin, minDB, maxDB }
 }
 
 
@@ -201,7 +200,7 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     const boxheight = canvas.height
 
     let update = null
-    if (updateStore){
+    if (updateStore) {
         update = updateStore.combinedUpdate
     }
 
@@ -231,12 +230,14 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
                 const binFloatFlipped = minBin + yFloat;
                 const binFlipped = Math.floor(binFloatFlipped);
                 const flatIndex = binFlipped * width + t;
-                const updateVal = update[flatIndex]||0;
-                bin_val += updateVal;
+                const updateVal = update[flatIndex];
+                if (!Number.isNaN(updateVal)) {
+                    bin_val = updateVal;
+                }
             }
 
             const val = Math.max(bin_val, 1e-12);
-            const db = 20 * Math.log(val) /  log10;
+            const db = 20 * Math.log(val) / log10;
 
             const norm = (db - minDB) / (maxDB - minDB);
             const clamped = Math.max(0, Math.min(1, norm));
@@ -246,15 +247,15 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
             const idx = (ly * boxwidth + tx) * 4;
 
             imagedata.data[idx] = r;
-            imagedata.data[idx+1] = g;
-            imagedata.data[idx+2] = b;
-            imagedata.data[idx+3] = 255;
+            imagedata.data[idx + 1] = g;
+            imagedata.data[idx + 2] = b;
+            imagedata.data[idx + 3] = 255;
 
         }
     }
-    ctx.putImageData(imagedata, 0,0);
+    ctx.putImageData(imagedata, 0, 0);
 
-    return {width_offset, height_offset}
+    return { width_offset, height_offset }
 }
 
 
@@ -295,7 +296,7 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
 
     // Clamp dynamic range (better visuals)
     maxDB = Math.max(maxDB, -10);
-    minDB = maxDB - 80; 
+    minDB = maxDB - 80;
 
     renderDataProgress.value = 1;
 
