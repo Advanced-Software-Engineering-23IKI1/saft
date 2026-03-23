@@ -56,7 +56,7 @@ export function flatIndexToPixel(flatIndex, width) {
 export function applyCombinedUpdateToSpectrogram() {
     if (!spectrogramStore.renderData) return
     const { data, maxBin, width, minDB, maxDB } = spectrogramStore.renderData
-    
+
     const update = updateStore.combinedUpdate
 
     if (!update) return
@@ -174,10 +174,15 @@ export function createUpdate() {
 }
 
 
-
+/**
+ * Stores a linear pixel value in the update map for a given pixel.
+ *
+ * @param {{ pixelMap: Map<number, number> }} update - Update object containing the pixel map.
+ * @param {{ x: number, y: number }} pixel - Pixel coordinate to update.
+ * @param {number} valueLinear - Linear amplitude value to store.
+ * @returns {void}
+ */
 export function addPixelValue(update, pixel, valueLinear) {
-    const index = pixelToIndex(pixel)
-    const existingDelta = update.pixelMap.get(index) || 0
-    update.pixelMap.set(index, valueLinear)
+    const index = pixelToIndex(pixel);
+    update.pixelMap.set(index, valueLinear);
 }
-
