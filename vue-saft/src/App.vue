@@ -1,7 +1,7 @@
 <script setup>
 import { RouterView } from 'vue-router'
 import Navbar from './components/ui/Navbar.vue'
-import { ref } from 'vue'
+import { onBeforeMount, onMounted, ref } from 'vue'
 
 import bgUrl from '@/assets/img/background.png'
 import bgDarkUrl from '@/assets/img/background-dark.png'
@@ -9,15 +9,30 @@ import logoUrl from '@/assets/img/saftLogoOrange.png'
 import { Moon, Sun } from 'lucide-vue-next'
 const isDark = ref(false)
 
-const toggleDarkMode = (event) => {
-  if (event.target.checked) {
-    isDark.value = true
+const toggleDarkMode = () => {
+  isDark.value = !isDark.value
+
+  if (isDark.value) {
     document.documentElement.classList.add('dark-mode')
   } else {
-    isDark.value = false
     document.documentElement.classList.remove('dark-mode')
   }
 }
+const preventBrowserZoom = (event) => {
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('wheel', preventBrowserZoom, { passive: false })
+})
+
+onBeforeMount(() => {
+  window.removeEventListener('wheel', preventBrowserZoom, { passive: false })
+})
+
+
 </script>
 
 <template>
@@ -27,31 +42,26 @@ const toggleDarkMode = (event) => {
       <div class="w-full max-w-3xl backdrop-blur-sm bg-saft-brown-50/80
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                px-2 py-4 max-h-[90vh] overflow-auto">
-        <div class="flex items-center justify-center gap-4 mx-auto mb-6">
-          <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
-            @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
-          <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
 
-          <!-- dark mode toggle -->
-          <div class="flex justify-end py-3">
-            <label class="relative inline-flex items-center cursor-pointer">
-
-              <input type="checkbox" class="sr-only" :checked="isDark" @change="toggleDarkMode" />
-
-              <div class="w-14 h-8 rounded-full transition-colors duration-300"
-                :class="isDark ? 'bg-saft-main-500' : 'bg-black'">
-                <div
-                  class="absolute top-1 left-1 w-6 h-6 bg-white dark:bg-black rounded-full flex items-center justify-center transition-all duration-300"
-                  :class="isDark ? 'translate-x-6' : ''">
-                  <Sun v-if="!isDark" class="w-4 h-4 text-black" />
-                  <Moon v-else class="w-4 h-4 text-white" />
-                </div>
-              </div>
-
-            </label>
+        <div class="relative w-full mb-6">
+          <div class="flex items-center justify-center gap-4">
+            <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
+              @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
+            <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
           </div>
-          
+
+          <div class="absolute right-4 top-1/2 -translate-y-1/2">
+            <button type="button" @click="toggleDarkMode"
+              class="flex items-center justify-center rounded-full p-2 transition-colors duration-300"
+              :class="isDark ? 'bg-saft-main-500 text-white' : 'bg-saft-main-500 text-white'">
+              <Sun v-if="!isDark" class="w-5 h-5" />
+              <Moon v-else class="w-5 h-5" />
+            </button>
+          </div>
+
         </div>
+
+
 
 
 
