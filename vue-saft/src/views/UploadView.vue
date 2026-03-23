@@ -7,6 +7,7 @@ import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 import { useAudioRecorder } from '@/utils/useAudioRecorder'
 import microfonicon from '@/assets/img/micIcon.png'
 import uploadicon from '@/assets/img/uploadIcon.png'
+import { clearUpdates } from '@/utils/updateUtils'
 
 const fileInput = useTemplateRef('fileInput')
 const conversionProgress = ref(0)
@@ -88,6 +89,7 @@ async function goNext(navigate) {
     try {
         await retrieveSample()
         if (spectrogramStore.renderData) {
+            clearUpdates()
             navigate()
         }
     } catch (error) {

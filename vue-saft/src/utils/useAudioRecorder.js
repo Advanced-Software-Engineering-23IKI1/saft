@@ -1,6 +1,21 @@
 // src/utils/useAudioRecorder.js
 import { ref, onBeforeUnmount } from 'vue'
 
+/**
+ * Manage microphone recording state, recorded audio file creation,
+ * and a live peak level indicator.
+ *
+ * @returns {{
+ *   recordedFile: import('vue').Ref<File|null>,
+ *   isRecording: import('vue').Ref<boolean>,
+ *   recordedFileSelected: import('vue').Ref<boolean>,
+ *   peakIndicator: import('vue').Ref<number>,
+ *   startRecording: () => Promise<boolean>,
+ *   stopRecording: () => void,
+ *   toggleRecording: () => Promise<void>,
+ *   clearRecording: () => void,
+ * }} Reactive recorder state and control functions.
+ */
 export function useAudioRecorder() {
   let mediaRecorder = null
   let recordChunks = []
@@ -12,6 +27,11 @@ export function useAudioRecorder() {
   const recordedFileSelected = ref(false)
   const peakIndicator = ref(0)
 
+  /**
+   * Stop active media resources and reset transient recording state.
+   *
+   * @returns {void}
+   */
   const cleanup = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop())
@@ -27,10 +47,21 @@ export function useAudioRecorder() {
     peakIndicator.value = 0
   }
 
+  /**
+   * Append a recorded audio chunk to the current in-memory recording.
+   *
+   * @param {BlobEvent} event Recorded chunk event from the MediaRecorder.
+   * @returns {void}
+   */
   const saveChunkToRecording = (event) => {
     recordChunks.push(event.data)
   }
 
+  /**
+   * Build a file from the recorded chunks and store it in reactive state.
+   *
+   * @returns {Promise<void>}
+   */
   const saveRecording = async () => {
     if (!recordChunks.length) {
       recordedFile.value = null
@@ -49,6 +80,11 @@ export function useAudioRecorder() {
     recordChunks = []
   }
 
+  /**
+   * Request microphone access and start recording audio input.
+   *
+   * @returns {Promise<boolean>} `true` if recording started successfully, otherwise `false`.
+   */
   async function startRecording() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert('Microphone recording is not available here. Use HTTPS or localhost.')
@@ -70,11 +106,21 @@ export function useAudioRecorder() {
 
       const array = new Uint8Array(analyser.fftSize)
 
+      /**
+       * Read the current peak level from the analyser node.
+       *
+       * @returns {number} Peak level normalized to the range `0..1`.
+       */
       function getPeakLevel() {
         analyser.getByteTimeDomainData(array)
         return array.reduce((max, current) => Math.max(max, Math.abs(current - 127)), 0) / 128
       }
 
+      /**
+       * Update the reactive peak indicator while recording is active.
+       *
+       * @returns {void}
+       */
       function tick() {
         if (isRecording.value) {
           peakIndicator.value = getPeakLevel() * 100
@@ -103,12 +149,22 @@ export function useAudioRecorder() {
     }
   }
 
+  /**
+   * Stop the active recording session.
+   *
+   * @returns {void}
+   */
   function stopRecording() {
     if (mediaRecorder && isRecording.value) {
       mediaRecorder.stop()
     }
   }
 
+  /**
+   * Toggle between starting and stopping the recorder.
+   *
+   * @returns {Promise<void>}
+   */
   async function toggleRecording() {
     if (isRecording.value) {
       stopRecording()
@@ -117,6 +173,11 @@ export function useAudioRecorder() {
     }
   }
 
+  /**
+   * Clear the currently stored recording and reset related state.
+   *
+   * @returns {void}
+   */
   function clearRecording() {
     recordedFile.value = null
     recordedFileSelected.value = false

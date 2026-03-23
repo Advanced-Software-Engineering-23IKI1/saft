@@ -2,9 +2,10 @@ import { Tool } from '@/enums/ToolEnum.js';
 import { distance, getMidpoint } from '@/utils/canvasUtils.js';
 import { getCanvasPoint } from '@/utils/canvasUtils.js';
 import { computeInternalPos } from '@/utils/canvasUtils.js';
+import { clearOverlay } from '../overlay';
 
 
-export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
+export function useMovementTool(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
 
 
 
@@ -81,7 +82,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                     pinchStartCenterCanvas = getMidpoint(p1, p2);
                     pinchStartCenterInternal = computeInternalPos(pinchStartCenterCanvas, pinchStartZoom, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset);
                 }
-            },
+                            },
 
 
             onCanvasPointerMove(e) {
@@ -101,7 +102,6 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
 
                     canvasOffsets.internalWidthOffset -= internalRelativePos.x;
                     canvasOffsets.internalHeightOffset -= internalRelativePos.y;
-
                     checkInternalOffsetValues();
                     invalidate();
                     return;
@@ -131,6 +131,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
             endPointer(e) {
                 pointers.delete(e.pointerId);
 
+                clearOverlay(overlayRef.value);
 
                 // new pan origin
                 if (pointers.size === 1) {
@@ -204,6 +205,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
         for (let entry of entries) {
             if (entry.target === canvasRef.value) {
                 const { width, height } = entry.contentRect;
+                
                 canvasDimensions.width = width;
                 canvasDimensions.height = height;
 
@@ -211,6 +213,9 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
                 canvasScaleFactor.value = Math.min(Math.sqrt(maxPixelCount / currentPixelCount), 1);
                 canvasDimensions.width = width * canvasScaleFactor.value;
                 canvasDimensions.height = height * canvasScaleFactor.value;
+
+                overlayRef.value.height =canvasDimensions.height;
+                overlayRef.value.width = canvasDimensions.width;
                 updateMinZoom();
                 checkInternalOffsetValues();
                 invalidate();
@@ -222,5 +227,7 @@ export function useMovementTool(canvasDimensions, canvasRef, spectrogramStore, i
     return {
         canvasResizeObserver
     }
+
+
 
 }

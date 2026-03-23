@@ -6,7 +6,7 @@ import { getCanvasPoint } from '../canvasUtils';
 
 
 
-export function useTextTool(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
+export function useTextTool(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount, toolEvents, canvasOffsets, canvasScaleFactor, zoom) {
     
 
 
