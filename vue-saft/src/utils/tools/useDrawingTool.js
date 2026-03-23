@@ -1,7 +1,7 @@
 import { Tool } from '@/enums/ToolEnum.js';
 import { computeInternalPos, distance, getMidpoint } from '../canvasUtils';
 import { getCanvasPoint } from '../canvasUtils';
-import { addPixelValue, addUpdate, pixelToFlatIndex, popActiveUpdate, undoUpdate } from '../updateUtils';
+import { addPixelValue, addUpdate, createUpdate, pixelToFlatIndex, popActiveUpdate, undoUpdate } from '../updateUtils';
 import { clearOverlay, brushSizeOverlay } from '../overlay';
 import { OptimizedBrush } from '../optimizedBrush';
 import { clampValue, dbToLinear, linearToDb } from '../utils';
@@ -19,7 +19,8 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
     const brushDbRemove = -2; 
 
     let pointers = new Map(); // pointerId -> {x,y}
-    let brushsize = 5, minBrush = 1, maxBrush = 50;
+    let brushsize = 5
+    const minBrush = 1, maxBrush = 50;
     const myBrush = new OptimizedBrush(5);
 
     toolEvents.set(Tool.Brush, {
@@ -43,7 +44,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
 
             if (pointers.size === 1) {
                 if (e.pointerType === 'touch') return;
-                let tempupdate = popActiveUpdate()
+                let tempupdate = createUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
                 addPixelsToUpdate(currentPixels, tempupdate, brushDbAdd)
@@ -149,7 +150,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
 
             if (pointers.size === 1) {
                 if (e.pointerType === 'touch') return;
-                let tempupdate = popActiveUpdate()
+                let tempupdate = createUpdate()
                 const internalPos = computeInternalPos(point, zoom.value, canvasScaleFactor.value, canvasOffsets.internalHeightOffset, canvasOffsets.internalWidthOffset)
                 const currentPixels = myBrush.getPixels(Math.floor(internalPos.x), Math.floor(internalPos.y));
                 addPixelsToUpdate(currentPixels, tempupdate, brushDbRemove)

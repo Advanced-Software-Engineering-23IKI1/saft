@@ -131,8 +131,9 @@ export function undoUpdate() {
     const lastUpdate = updateStore.activeUpdates.pop()
     if (lastUpdate) {
         updateStore.inactiveUpdates.push(lastUpdate)
-        computeCombinedUpdate()
     }
+    computeCombinedUpdate()
+
 }
 
 /**
@@ -144,8 +145,9 @@ export function redoUpdate() {
     const lastUndone = updateStore.inactiveUpdates.pop()
     if (lastUndone) {
         updateStore.activeUpdates.push(lastUndone)
-        computeCombinedUpdate()
     }
+    computeCombinedUpdate()
+
 }
 
 /**
