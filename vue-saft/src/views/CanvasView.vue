@@ -26,6 +26,12 @@ function redraw() {
     spectrogramRef.value?.invalidate()
 }
 
+function applyAndExport(){
+    applyCombinedUpdateToSpectrogram(); 
+    redraw(); 
+    exportSpectrogram();
+}
+
 
 </script>
 
@@ -61,20 +67,6 @@ function redraw() {
                         <Eraser class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
 
                     </button>
-                    <button @click="activeTool = Tool.Text"
-                        :class="[activeTool === Tool.Text ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
-                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
-                        data-tool="3">
-                        <TextCursorInput class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
-
-                    </button>
-                    <button @click="activeTool = Tool.Image"
-                        :class="[activeTool === Tool.Image ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
-                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
-                        data-tool="4">
-                        <ImagePlus class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
-        
-                    </button>
                 </div>
               
 
@@ -87,14 +79,6 @@ function redraw() {
                         <span class="text-[10px] text-black dark:invert leading-none mt-1">Redo</span>
                     </button>
 
-                    <button @click="() => { applyCombinedUpdateToSpectrogram(); redraw(); }"
-                        :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
-                        class="w-14 h-14 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden">
-                        <ArrowDownToLine class="w-7 h-7 stroke-black dark:invert" />
-                        <span class="text-[10px] text-black dark:invert leading-none mt-1">Apply</span>
-                    </button>
-
-
                     <button @click="() => { undoUpdate(); redraw(); }"
                         :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden">
@@ -102,11 +86,13 @@ function redraw() {
                         <span class="text-[10px] text-black dark:invert leading-none mt-1">Undo</span>
                     </button>
               
-                    <button @click="exportSpectrogram" :disabled="isLoading"
-                        class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 disabled:bg-saft-main-300 disabled:cursor-not-allowed active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                    <button @click="applyAndExport" :disabled="isLoading"
+                        class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 disabled:bg-saft-main-300 disabled:cursor-not-allowed 
+                        active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="5">
                         <LoaderCircle v-if="isLoading" class="w-6 h-6 animate-spin  dark:invert" />
-                        <Download v-else class="w-6 h-6 dark:invert" />
+                        <Download v-else class="w-7 h-7 stroke-black dark:invert" />
+                        <span class="text-[10px] text-black dark:invert leading-none mt-1">Save</span>
                     </button>
 
                 </div>

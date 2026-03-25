@@ -39,7 +39,7 @@ onBeforeMount(() => {
       <div class="w-full max-w-5xl backdrop-blur-sm bg-saft-brown-50/80
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
 
-               px-2 py-4 max-h-[90vh] overflow-auto">
+               px-2 py-4 overflow-auto">
 
         <div class="flex items-center justify-center gap-4 mx-auto mb-0">
             <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
