@@ -11,21 +11,21 @@ export function useSaftFileWorker() {
         worker = new saftFileWorker();
     }
 
-const isLoading = ref(false);
+    const isLoading = ref(false);
 
 
-/**
- * Sends a task to the spectrogram worker and waits for the matching response.
- *
- * The worker is expected to reply with either:
- * - `ERROR`, which rejects the promise with the error payload, or
- * - `${type}_DONE`, which resolves the promise with the result payload.
- *
- * @param {string} type - The worker task name, for example `EXPORT` or `IMPORT`.
- * @param {*} payload - The data sent to the worker for processing.
- * @returns {Promise<*>} A promise that resolves with the worker result payload
- * and rejects with the worker error payload.
- */
+    /**
+     * Sends a task to the spectrogram worker and waits for the matching response.
+     *
+     * The worker is expected to reply with either:
+     * - `ERROR`, which rejects the promise with the error payload, or
+     * - `${type}_DONE`, which resolves the promise with the result payload.
+     *
+     * @param {string} type - The worker task name, for example `EXPORT` or `IMPORT`.
+     * @param {*} payload - The data sent to the worker for processing.
+     * @returns {Promise<*>} A promise that resolves with the worker result payload
+     * and rejects with the worker error payload.
+     */
     const runTask = (type, payload) => {
         return new Promise((resolve, reject) => {
             isLoading.value = true;
@@ -113,10 +113,25 @@ const isLoading = ref(false);
         return runTask("IMPORT", buffer)
     }
 
+    async function isSpectrogram(file) {
+
+        const buffer = await file.arrayBuffer();
+
+        const magic = new TextDecoder().decode(
+            new Uint8Array(buffer, 0, 4)
+        );
+
+        if (magic !== "SAFT") {
+            return false;
+        }
+        return true
+    }
+
 
     return {
         exportSpectrogram,
         importSpectrogram,
+        isSpectrogram,
         isLoading
     };
 }

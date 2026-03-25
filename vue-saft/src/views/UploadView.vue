@@ -15,12 +15,9 @@ const fileInput = useTemplateRef('fileInput')
 const fileSelected = ref(false)
 const uploadedFile = ref(null)
 
-const spectrogramInput = useTemplateRef('spectrogramInput')
-const spectrogramSelected = ref(false)
-const spectrogramFile = ref(null)
 
 
-const { importSpectrogram, isLoading } = useSaftFileWorker()
+const { importSpectrogram, isLoading, isSpectrogram } = useSaftFileWorker()
 
 const {
     recordedFile,
@@ -46,7 +43,18 @@ async function retrieveSample() {
     let freqBins = null
     let timeFrames = null
 
-    if (!spectrogramFile.value) {
+    if (uploadedFile.value && (await isSpectrogram(uploadedFile.value))) {
+        const importedSpectrogram = await importSpectrogram(uploadedFile.value)
+        spectrogram = importedSpectrogram.spectrogram
+        freqBins = importedSpectrogram.freqBins
+        timeFrames = importedSpectrogram.timeFrames
+        sampleRate = importedSpectrogram.sampleRate
+        minFreq = importedSpectrogram.minFreq
+        maxFreq = importedSpectrogram.maxFreq
+        windowSize = importedSpectrogram.windowSize
+        hopSize = importedSpectrogram.hopSize
+
+    } else {
         const file = recordedFile.value ?? uploadedFile.value
         const sample = await getSample(file, channel)
         sampleRate = sample.sampleRate
@@ -66,17 +74,8 @@ async function retrieveSample() {
         timeFrames = computedSpectrogram.timeFrames
 
         await closeAudio()
-    } else {
 
-        const importedSpectrogram = await importSpectrogram(spectrogramFile.value)
-        spectrogram = importedSpectrogram.spectrogram
-        freqBins = importedSpectrogram.freqBins
-        timeFrames = importedSpectrogram.timeFrames
-        sampleRate = importedSpectrogram.sampleRate
-        minFreq = importedSpectrogram.minFreq
-        maxFreq = importedSpectrogram.maxFreq
-        windowSize = importedSpectrogram.windowSize
-        hopSize = importedSpectrogram.hopSize
+
     }
 
 
@@ -111,19 +110,9 @@ function handleFileSelect() {
 
     if (fileSelected.value) {
         clearRecording()
-        resetSpectrogramSelection()
     }
 }
 
-function handleSpectrogramFileSelect() {
-    spectrogramFile.value = spectrogramInput.value?.files?.[0] ?? null
-    spectrogramSelected.value = !!spectrogramFile.value
-
-    if (spectrogramSelected.value) {
-        clearRecording()
-        resetFileSelection()
-    }
-}
 
 function resetFileSelection() {
     if (fileInput.value) {
@@ -134,19 +123,10 @@ function resetFileSelection() {
 
 }
 
-function resetSpectrogramSelection() {
-    if (spectrogramInput.value) {
-        spectrogramInput.value.value = ''
-        spectrogramFile.value = null
-        spectrogramSelected.value = false
-    }
-}
-
 
 async function handleRecordingToggle() {
     if (!isRecording.value) {
         resetFileSelection()
-        resetSpectrogramSelection()
     }
 
     await toggleRecording()
@@ -197,34 +177,19 @@ async function goNext(navigate) {
             </button>
 
             <!-- Upload Button -->
-            <label for="fileInput"
-                :class="[fileSelected ? 'bg-green-500 hover:bg-green-600' : 'bg-saft-main-500 hover:bg-saft-main-600']"
-                class=" w-20 h-20
-                          active:scale-[0.95]
-                          rounded-full flex items-center justify-center 
-                          shadow-xl
-                          border-2 border-white/50 
-                          transition-all duration-200
-                          touch-manipulation">
-                <Music class="w-11 h-11 stroke-white" />
-
-            </label>
-            <input style="display: none" type="file" ref="fileInput" id="fileInput"
-                accept=".wav, .mp3, audio/wav, audio/mpeg" @change="handleFileSelect">
-
-            <!-- Spektrogram Button -->
-            <label for="spectrogramInput" :class="[
-                spectrogramFile
+            <label for="fileInput" :class="[
+                fileSelected
                     ? 'bg-green-500 hover:bg-green-600'
                     : 'bg-saft-main-500 hover:bg-saft-main-600',
                 isLoading ? 'cursor-wait opacity-80' : 'cursor-pointer'
-            ]" class="w-20 h-20 active:scale-[0.95] rounded-full flex items-center justify-center shadow-xl border-2 border-white/50 transition-all duration-200 touch-manipulation">
+            ]"
+                class="w-20 h-20 active:scale-[0.95] rounded-full flex items-center justify-center shadow-xl border-2 border-white/50 transition-all duration-200 touch-manipulation">
                 <LoaderCircle v-if="isLoading" class="w-11 h-11 stroke-white animate-spin" />
-                <HardDriveUpload v-else class="w-11 h-11 stroke-white" />
+                <Upload v-else class="w-11 h-11 stroke-white" />
             </label>
 
-            <input id="spectrogramInput" ref="spectrogramInput" type="file" accept=".saft" style="display: none"
-                :disabled="isLoading" @change="handleSpectrogramFileSelect">
+            <input id="fileInput" ref="fileInput" type="file" accept=".wav, .mp3, .saft" style="display: none"
+                :disabled="isLoading" @change="handleFileSelect">
 
         </div>
 

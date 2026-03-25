@@ -12,7 +12,7 @@ import erasericon from '@/assets/img/eraser.png'
 import deleteicon from '@/assets/img/delete.png'
 import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
-import { Save, LoaderCircle, HardDriveDownload } from 'lucide-vue-next';
+import { Save, LoaderCircle, HardDriveDownload, Download } from 'lucide-vue-next';
 import { useSaftFileWorker } from '@/utils/useSaftFileWorker';
 
 
@@ -74,7 +74,7 @@ const { exportSpectrogram, isLoading } = useSaftFileWorker()
                         class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 disabled:bg-saft-main-300 disabled:cursor-not-allowed active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="5">
                         <LoaderCircle v-if="isLoading" class="w-6 h-6 animate-spin  dark:invert" />
-                        <HardDriveDownload v-else class="w-6 h-6 dark:invert" />
+                        <Download v-else class="w-6 h-6 dark:invert" />
                     </button>
                 </div>
             </div>
