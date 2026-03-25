@@ -1,4 +1,6 @@
+import { updateStore } from "@/store/store";
 import { fft } from "./fft";
+
 
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
@@ -18,7 +20,7 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  *   timeResolution: number
  * }}
  */
-export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress ) {
+export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress) {
     // FFT requires power-of-2 window size
     if ((windowSize & (windowSize - 1)) !== 0) {
         throw new Error(`windowSize must be power of 2, got ${windowSize}`);
@@ -71,7 +73,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     let frameIndex = 0;
 
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
-        
+
         // Frame (works for Float32Array too)
         const frame = samples.slice(start, start + windowSize);
 
@@ -93,8 +95,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
             }
         }
 
-        // Magnitude (positive frequencies only)
-        const magnitude = new Array(half);
+        const magnitude = new Float32Array(half);
         for (let k = 0; k < half; k++) {
             const mag = Math.hypot(re[k], im[k]);
             magnitude[k] = Number.isFinite(mag) ? mag : 0;
@@ -106,7 +107,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
         frameIndex += 1;
         if (frameIndex % fftUpdateInterval === 0) {
             fftProgress.value = frameIndex / numFrames;
-            await nextFrame(); 
+            await nextFrame();
         }
     }
     fftProgress.value = 1;
@@ -134,34 +135,36 @@ export function applyHannWindow(frame, size) {
 }
 
 /**
- * Prepare derived rendering metadata for a spectrogram so it can be drawn efficiently
- * (dimensions, bin range, and dB normalization range).
+ * Prepares derived rendering metadata for a spectrogram so it can be drawn
+ * efficiently, including dimensions, frequency bin range, and dB normalization range.
  *
- * @param {{ data: Array<Array<number>>, freqBins: number, timeFrames: number }} spectrogram
- * Spectrogram object containing the magnitude data and its time/frequency dimensions.
- * @param {number} sampleRate Sample rate of the original audio (Hz).
- * @param {number} [minFreq=0] Minimum frequency to include (Hz).
- * @param {number} [maxFreq=sampleRate/2] Maximum frequency to include (Hz).
- * @param {HTMLProgressElement} renderDataProgressBar Progress bar to update during dB range computation.
- * @returns {{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }}
- * Rendering data including the original spectrogram data plus computed width/height, selected bin range,
- * and dB range for normalization.
+ * @param {Array<Array<number>>} data - Raw spectrogram magnitude data (time × frequency).
+ * @param {number} freqBins - Number of frequency bins in the spectrogram.
+ * @param {number} timeFrames - Number of time frames in the spectrogram.
+ * @param {number} sampleRate - Sample rate of the original audio (Hz).
+ * @param {number} [minFreq=0] - Minimum frequency to include (Hz).
+ * @param {number} [maxFreq=sampleRate/2] - Maximum frequency to include (Hz).
+ * @param {HTMLProgressElement} renderDataProgressBar - Progress bar updated during dB range computation.
+ * @returns {Promise<{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }>}
+ * The original spectrogram data alongside computed width, height, selected bin
+ * range, and dB range for normalization.
  */
 export async function computeSpectrogramRenderingData(
-    spectrogram,
+    data,
+    freqBins,
+    timeFrames,
     sampleRate,
     minFreq = 0,
     maxFreq = sampleRate / 2,
     renderDataProgressBar
 ) {
-    const { data, freqBins, timeFrames } = spectrogram;
     const { maxBin, minBin } = computeBins(freqBins, sampleRate, minFreq, maxFreq);
 
     const height = maxBin - minBin + 1
     const width = timeFrames;
 
     const { maxDB, minDB } = await computeDBrange(width, data, minBin, maxBin, renderDataProgressBar);
-    return {data, width, height, minBin, maxBin, minDB, maxDB}
+    return { data, width, height, minBin, maxBin, minDB, maxDB }
 }
 
 
@@ -186,7 +189,7 @@ export async function computeSpectrogramRenderingData(
  * @param {HTMLCanvasElement} canvas Target canvas to draw into (uses its current width/height).
  * @returns {{ width_offset: number, height_offset: number }} The offsets used for rendering.
  */
-export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas) {
+export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas, ctx) {
 
     const width = renderData.width
     const height = renderData.height
@@ -199,14 +202,21 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     const boxwidth = canvas.width
     const boxheight = canvas.height
 
+    let update = null
+    if (updateStore) {
+        update = updateStore.combinedUpdate
+    }
+
     // How many source pixels (frames/bins) you advance per 1 screen pixel.
     // zoom = 1 => 1:1, zoom = 2 => 0.5 source px per screen px (zoomed in),
     // zoom = 0.5 => 2 source px per screen px (zoomed out).
     const step = 1 / zoom;
 
-    
-    var ctx = canvas.getContext("2d");
+
     var imagedata = ctx.createImageData(boxwidth, boxheight);
+
+    const invDBRange = 1 / (maxDB - minDB);
+    const log10 = Math.log(10);
 
     for (let tx = 0; tx < boxwidth; tx++) {
         const tFloat = width_offset + tx * step;
@@ -215,31 +225,41 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
 
         for (let ly = 0; ly < boxheight; ly++) {
             const yFloat = height_offset + ly * step;
-
             const binFloat = maxBin - yFloat;
             const bin = Math.floor(binFloat);
 
-            const val = Math.max(frame[bin] || 0, 1e-12);
-            const db = 20 * Math.log10(val);
+            let bin_val = frame[bin] || 0;
+
+            if (update) {
+                const binFloatFlipped = minBin + yFloat;
+                const binFlipped = Math.floor(binFloatFlipped);
+                const flatIndex = binFlipped * width + t;
+                const updateVal = update[flatIndex];
+                if (!Number.isNaN(updateVal)) {
+                    bin_val = updateVal;
+                }
+            }
+
+            const val = Math.max(bin_val, 1e-12);
+            const db = 20 * Math.log(val) / log10;
 
             const norm = (db - minDB) / (maxDB - minDB);
             const clamped = Math.max(0, Math.min(1, norm));
 
             const [r, g, b] = colormap(clamped);
 
-            // const flippedY = boxheight - 1 - ly;
             const idx = (ly * boxwidth + tx) * 4;
 
             imagedata.data[idx] = r;
-            imagedata.data[idx+1] = g;
-            imagedata.data[idx+2] = b;
-            imagedata.data[idx+3] = 255;
+            imagedata.data[idx + 1] = g;
+            imagedata.data[idx + 2] = b;
+            imagedata.data[idx + 3] = 255;
 
         }
     }
-    ctx.putImageData(imagedata, 0,0);
+    ctx.putImageData(imagedata, 0, 0);
 
-    return {width_offset, height_offset}
+    return { width_offset, height_offset }
 }
 
 
@@ -280,7 +300,7 @@ async function computeDBrange(timeFrames, data, minBin, maxBin, renderDataProgre
 
     // Clamp dynamic range (better visuals)
     maxDB = Math.max(maxDB, -10);
-    minDB = maxDB - 80; 
+    minDB = maxDB - 80;
 
     renderDataProgress.value = 1;
 
@@ -310,3 +330,6 @@ function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
 
     return { maxBin, minBin };
 }
+
+
+
