@@ -21,7 +21,6 @@ const props = defineProps({
 const maxPixelCount = 300 * 300;
 const canvasRef = useTemplateRef('spectrogramCanvas');
 const overlayRef = useTemplateRef('overlayCanvas');
-const wrapperRef = useTemplateRef('wrapperRef');
 const canvasContext = reactive({
   value: null
 })

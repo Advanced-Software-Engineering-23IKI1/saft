@@ -43,7 +43,7 @@ onBeforeMount(() => {
 
         <div class="flex items-center justify-center gap-4 mx-auto mb-0">
             <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
-              @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
+              @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
             <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
           </div>
 

@@ -137,7 +137,7 @@ async function handleRecordingToggle() {
 watch(
   [uploadedFile, recordedFile],
   async ([uploaded, recorded]) => {
-    if (uploaded && await isSpectrogram(uploaded)) {
+    if (uploaded && await isSpectrogram(uploaded.slice(0, 4))) {
       currentAudioFile.value = null
       return
     }

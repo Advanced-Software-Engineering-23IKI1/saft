@@ -1,7 +1,7 @@
 <script setup>
 
 import { ref } from 'vue';
-import { Undo, Redo, ArrowDownToLine, Move, Brush, Eraser, TextCursorInput, ImagePlus } from 'lucide-vue-next';
+import { Undo, Redo, Move, Brush, Eraser, LoaderCircle, Download } from 'lucide-vue-next';
 
 function goNext(navigate) {
     navigate()
@@ -11,7 +11,6 @@ import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
 import { applyCombinedUpdateToSpectrogram, redoUpdate, undoUpdate } from '@/utils/updateUtils';
 import { updateStore } from '@/store/store';
-import { Save, LoaderCircle, HardDriveDownload, Download } from 'lucide-vue-next';
 import { useSaftFileWorker } from '@/utils/useSaftFileWorker';
 
 

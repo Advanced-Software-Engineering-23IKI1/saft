@@ -291,7 +291,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
      */
     function getSpectrogramValue(maxBin, data, pixel) {
         const yFloatFlipped = maxBin - pixel.y;
-        const yFlipped = Math.floor(yFloatFlipped) - 1;
+        const yFlipped = Math.floor(yFloatFlipped)-1;
         return data[pixel.x][yFlipped];
 
     }

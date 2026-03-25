@@ -2,8 +2,6 @@
 import { reactive, ref } from 'vue';
 import { useMovementTool } from './tools/useMovementTool';
 import { useDrawingTool } from './tools/useDrawingTool';
-import { useTextTool } from './tools/useTextTool';
-import { useImageTool } from './tools/useImageTool';
 
 
 
@@ -33,17 +31,6 @@ export function useCanvasTools(canvasDimensions, canvasRef, overlayRef, spectrog
         canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
-
-    useTextTool(
-        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
-        invalidate, maxPixelCount,
-        toolEvents, canvasOffsets, canvasScaleFactor, zoom);
-
-    useImageTool(
-        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
-        invalidate, maxPixelCount,
-        toolEvents, canvasOffsets, canvasScaleFactor, zoom);
-    
 
 
     return {

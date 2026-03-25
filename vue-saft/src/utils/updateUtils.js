@@ -87,7 +87,14 @@ export function computeCombinedUpdate() {
     if (!spectrogramStore.renderData) { return }
 
     const { width, height } = spectrogramStore.renderData
-    const combinedUpdateArray = new Float32Array(width * height).fill(NaN);
+
+    const size = width * height
+    let combinedUpdateArray = updateStore.combinedUpdate
+    if (!(combinedUpdateArray instanceof Float32Array)||combinedUpdateArray.length !== size){
+        combinedUpdateArray = new Float32Array(size)
+    }
+    combinedUpdateArray.fill(NaN)
+
 
     for (const update of updateStore.activeUpdates) {
         for (const [index, newVal] of update.pixelMap.entries()) {
