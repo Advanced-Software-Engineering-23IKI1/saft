@@ -33,16 +33,17 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div id="background-wrapper" class="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+  <div id="background-wrapper" class=" bg-cover bg-center bg-no-repeat bg-fixed"
     :style="{ '--bg-url-light': `url(${bgUrl})`, '--bg-url-dark': `url(${bgDarkUrl})` }">
     <div class="min-h-screen flex items-start justify-center py-6 px-2">
-      <div class="w-full max-w-3xl backdrop-blur-sm bg-saft-brown-50/80
+      <div class="w-full max-w-5xl backdrop-blur-sm bg-saft-brown-50/80
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
-               px-2 py-4 max-h-[90vh] overflow-auto">
+
+               px-2 py-4 overflow-auto">
 
         <div class="flex items-center justify-center gap-4 mx-auto mb-0">
             <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
-              @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
+              @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
             <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
           </div>
 

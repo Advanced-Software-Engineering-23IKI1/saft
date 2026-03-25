@@ -1,3 +1,4 @@
+import { updateStore } from "@/store/store";
 import { fft } from "./fft";
 
 
@@ -94,8 +95,7 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
             }
         }
 
-        // Magnitude (positive frequencies only)
-        const magnitude = new Array(half);
+        const magnitude = new Float32Array(half);
         for (let k = 0; k < half; k++) {
             const mag = Math.hypot(re[k], im[k]);
             magnitude[k] = Number.isFinite(mag) ? mag : 0;
@@ -189,7 +189,7 @@ export async function computeSpectrogramRenderingData(
  * @param {HTMLCanvasElement} canvas Target canvas to draw into (uses its current width/height).
  * @returns {{ width_offset: number, height_offset: number }} The offsets used for rendering.
  */
-export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas) {
+export function renderPixels(renderData, height_offset, width_offset, colormap, zoom, canvas, ctx) {
 
     const width = renderData.width
     const height = renderData.height
@@ -202,14 +202,21 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     const boxwidth = canvas.width
     const boxheight = canvas.height
 
+    let update = null
+    if (updateStore) {
+        update = updateStore.combinedUpdate
+    }
+
     // How many source pixels (frames/bins) you advance per 1 screen pixel.
     // zoom = 1 => 1:1, zoom = 2 => 0.5 source px per screen px (zoomed in),
     // zoom = 0.5 => 2 source px per screen px (zoomed out).
     const step = 1 / zoom;
 
 
-    var ctx = canvas.getContext("2d");
     var imagedata = ctx.createImageData(boxwidth, boxheight);
+
+    const invDBRange = 1 / (maxDB - minDB);
+    const log10 = Math.log(10);
 
     for (let tx = 0; tx < boxwidth; tx++) {
         const tFloat = width_offset + tx * step;
@@ -218,19 +225,29 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
 
         for (let ly = 0; ly < boxheight; ly++) {
             const yFloat = height_offset + ly * step;
-
             const binFloat = maxBin - yFloat;
             const bin = Math.floor(binFloat);
 
-            const val = Math.max(frame[bin] || 0, 1e-12);
-            const db = 20 * Math.log10(val);
+            let bin_val = frame[bin] || 0;
+
+            if (update) {
+                const binFloatFlipped = minBin + yFloat;
+                const binFlipped = Math.floor(binFloatFlipped);
+                const flatIndex = binFlipped * width + t;
+                const updateVal = update[flatIndex];
+                if (!Number.isNaN(updateVal)) {
+                    bin_val = updateVal;
+                }
+            }
+
+            const val = Math.max(bin_val, 1e-12);
+            const db = 20 * Math.log(val) / log10;
 
             const norm = (db - minDB) / (maxDB - minDB);
             const clamped = Math.max(0, Math.min(1, norm));
 
             const [r, g, b] = colormap(clamped);
 
-            // const flippedY = boxheight - 1 - ly;
             const idx = (ly * boxwidth + tx) * 4;
 
             imagedata.data[idx] = r;

@@ -1,11 +1,13 @@
 <script setup>
-import { useTemplateRef, computed, ref } from 'vue'
+import { useTemplateRef, computed, ref, watch } from 'vue'
 import { getSample, closeAudio } from '@/utils/input'
 import { computeSpectrogram, computeSpectrogramRenderingData } from '@/utils/spectrogram'
 import { useSaftFileWorker } from '@/utils/useSaftFileWorker'
 import { spectrogramStore } from '@/store/store'
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 import { useAudioRecorder } from '@/utils/useAudioRecorder'
+
+import { clearUpdates } from '@/utils/updateUtils'
 import { Citrus, Mic, Upload, LoaderCircle, Music, HardDriveUpload } from 'lucide-vue-next';
 
 const conversionProgress = ref(0)
@@ -14,8 +16,7 @@ const conversionName = ref('Create Spectrogram')
 const fileInput = useTemplateRef('fileInput')
 const fileSelected = ref(false)
 const uploadedFile = ref(null)
-
-
+const currentAudioFile = ref(null)
 
 const { importSpectrogram, isLoading, isSpectrogram } = useSaftFileWorker()
 
@@ -132,16 +133,25 @@ async function handleRecordingToggle() {
     await toggleRecording()
 }
 
-const currentAudioFile = computed(() => {
-    return recordedFile.value ?? uploadedFile.value ?? null
-})
 
+watch(
+  [uploadedFile, recordedFile],
+  async ([uploaded, recorded]) => {
+    if (uploaded && await isSpectrogram(uploaded.slice(0, 4))) {
+      currentAudioFile.value = null
+      return
+    }
+    currentAudioFile.value = recorded ?? uploaded ?? null
+  },
+  { immediate: true }
+)
 
 
 async function goNext(navigate) {
     try {
         await retrieveSample()
         if (spectrogramStore.renderData) {
+            clearUpdates()
             navigate()
         }
     } catch (error) {
@@ -195,52 +205,8 @@ async function goNext(navigate) {
 
         <MediaPlayer :file="currentAudioFile" />
 
-        <div class="flex justify-center gap-6">
-            <div class="grid grid-cols-[1fr_2fr] gap-x-2 gap-y-2 justify-items-center max-w-md">
-                <!-- Stride Input -->
-                <label for="stride" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                    Stride
-                </label>
-                <div class="relative">
-                    <input type="number" id="stride" min="0" step="0.1" placeholder="0.0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-                bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
-                focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
-                shadow-lg hover:shadow-xl transition-all duration-200
-                invalid:text-red-500 invalid:border-red-300"
-                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                </div>
-
-                <!-- Window Size Input -->
-                <label for="windowSize"
-                    class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                    Win Size
-                </label>
-                <div class="relative">
-                    <input type="number" id="windowSize" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-                bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
-                focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
-                shadow-lg hover:shadow-xl transition-all duration-200
-                invalid:text-red-500 invalid:border-red-300"
-                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                </div>
-
-                <!-- N Bins Input -->
-                <label for="nbins" class="text-lg font-semibold text-saft-brown-700 justify-center flex items-center">
-                    n bins
-                </label>
-                <div class="relative">
-                    <input type="number" id="nbins" min="0" step="1" placeholder="0" class="w-full max-w-xs py-2 pl-4 pr-4 text-lg font-semibold text-saft-brown-900
-                bg-saft-brown-50 backdrop-blur-sm rounded-full border-2 border-saft-blue-200/50 
-                focus:border-saft-blue-400 focus:ring-4 focus:ring-saft-blue-200/50
-                shadow-lg hover:shadow-xl transition-all duration-200
-                invalid:text-red-500 invalid:border-red-300"
-                        oninput="this.value = !!this.value && this.value >= 0 ? this.value : ''" />
-                </div>
-            </div>
-        </div>
-
         <RouterLink :to="{ name: 'canvas' }" custom v-slot="{ navigate }">
-            <div class="flex justify-center">
+            <div class="flex justify-center py-4">
                 <!-- Create Spectrogram Button -->
                 <button id="createSpectrogramButton" class="w-full max-w-sm py-4
                         text-lg text-white font-semibold

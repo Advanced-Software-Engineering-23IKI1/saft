@@ -2,12 +2,10 @@
 import { reactive, ref } from 'vue';
 import { useMovementTool } from './tools/useMovementTool';
 import { useDrawingTool } from './tools/useDrawingTool';
-import { useTextTool } from './tools/useTextTool';
-import { useImageTool } from './tools/useImageTool';
 
 
 
-export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, invalidate, maxPixelCount) {
+export function useCanvasTools(canvasDimensions, canvasRef, overlayRef, spectrogramStore, invalidate, maxPixelCount) {
 
     const toolEvents = new Map(); // toolId -> { onCanvasWheel, onCanvasPointerDown, onCanvasPointerMove, onCanvasPointerUp, onCanvasPointerCancel, onCanvasPointerLeave }
 
@@ -24,26 +22,15 @@ export function useCanvasTools(canvasDimensions, canvasRef, spectrogramStore, in
 
 
     const { canvasResizeObserver } = useMovementTool(
-        canvasDimensions, canvasRef, spectrogramStore,
+        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
 
 
     useDrawingTool(
-        canvasDimensions, canvasRef, spectrogramStore,
+        canvasDimensions, canvasRef, overlayRef, spectrogramStore,
         invalidate, maxPixelCount,
         toolEvents, canvasOffsets, canvasScaleFactor, zoom);
-
-    useTextTool(
-        canvasDimensions, canvasRef, spectrogramStore,
-        invalidate, maxPixelCount,
-        toolEvents, canvasOffsets, canvasScaleFactor, zoom);
-
-    useImageTool(
-        canvasDimensions, canvasRef, spectrogramStore,
-        invalidate, maxPixelCount,
-        toolEvents, canvasOffsets, canvasScaleFactor, zoom);
-    
 
 
     return {
