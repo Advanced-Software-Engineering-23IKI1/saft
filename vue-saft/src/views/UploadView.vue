@@ -6,7 +6,7 @@ import { useSaftFileWorker } from '@/utils/useSaftFileWorker'
 import { spectrogramStore } from '@/store/store'
 import MediaPlayer from '@/components/ui/Mediaplayer.vue'
 import { useAudioRecorder } from '@/utils/useAudioRecorder'
-import { Citrus, Mic, Upload, LoaderCircle } from 'lucide-vue-next';
+import { Citrus, Mic, Upload, LoaderCircle, Music, HardDriveUpload } from 'lucide-vue-next';
 
 const conversionProgress = ref(0)
 const conversionName = ref('Create Spectrogram')
@@ -206,7 +206,7 @@ async function goNext(navigate) {
                           border-2 border-white/50 
                           transition-all duration-200
                           touch-manipulation">
-                <Upload class="w-11 h-11 stroke-white" />
+                <Music class="w-11 h-11 stroke-white" />
 
             </label>
             <input style="display: none" type="file" ref="fileInput" id="fileInput"
@@ -220,7 +220,7 @@ async function goNext(navigate) {
                 isLoading ? 'cursor-wait opacity-80' : 'cursor-pointer'
             ]" class="w-20 h-20 active:scale-[0.95] rounded-full flex items-center justify-center shadow-xl border-2 border-white/50 transition-all duration-200 touch-manipulation">
                 <LoaderCircle v-if="isLoading" class="w-11 h-11 stroke-white animate-spin" />
-                <Citrus v-else class="w-11 h-11 stroke-white" />
+                <HardDriveUpload v-else class="w-11 h-11 stroke-white" />
             </label>
 
             <input id="spectrogramInput" ref="spectrogramInput" type="file" accept=".saft" style="display: none"
