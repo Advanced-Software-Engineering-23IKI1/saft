@@ -40,10 +40,10 @@ export function linearToDb(lin) {
  * @param {number} brushDB - The decibel amount to add.
  * @param {number} minDB - The minimum allowed decibel value after adjustment.
  * @param {number} maxDB - The maximum allowed decibel value after adjustment.
+ * @param {number} minAmp
  * @returns {number} The adjusted linear amplitude value.
  */
-export function addDBtoLinear(val, brushDB, minDB, maxDB) {
-  const minAmp = 1e-8;
+export function addDBtoLinear(val, brushDB, minDB, maxDB, minAmp=1e-8) {
   val = Math.max(val, minAmp);
 
   let db = linearToDb(val);

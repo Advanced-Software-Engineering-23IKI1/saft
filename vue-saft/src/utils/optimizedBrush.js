@@ -1,3 +1,5 @@
+import { pixelToIndex } from "./updateUtils";
+
 /**
  * Circular brush that caches local pixel offsets for a given brush size.
  */
@@ -68,6 +70,57 @@ export class OptimizedBrush {
         pixels.push({ x, y });
       }
     }
+    return pixels;
+  }
+
+  /**
+   * Returns the discrete pixel centers along a straight line between two points.
+   *
+   * Interpolates from `p1` to `p2` using the larger axis delta as the step count
+   * and rounds each intermediate position to integer pixel coordinates. The
+   * result includes both endpoints and is used as the stroke path between brush
+   * samples.
+   *
+   * @param {{x: number, y: number}} p1 - Line start point in pixel coordinates.
+   * @param {{x: number, y: number}} p2 - Line end point in pixel coordinates.
+   * @returns {{x: number, y: number}[]} Pixel coordinates along the line.
+   */
+  getLinePixels(p1, p2) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+    const pixels = [];
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      pixels.push({
+        x: Math.round(p1.x + dx * t),
+        y: Math.round(p1.y + dy * t),
+      });
+    }
+
+    return pixels;
+  }
+
+    /**
+   * Returns the union of brush-covered pixels for all interpolated points between two positions.
+   *
+   * Samples the line from `p1` to `p2`, expands each sampled point into its full
+   * brush footprint, and stores the covered pixels as unique flat indices in a
+   * set. This is used to build a continuous brush stroke without duplicate pixel
+   * entries.
+   *
+   * @param {{x: number, y: number}} p1 - Stroke start position in pixel coordinates.
+   * @param {{x: number, y: number}} p2 - Stroke end position in pixel coordinates.
+   * @returns {Set<number>} Unique indexed pixels covered by the interpolated brush stroke.
+   */
+  getInterpolatedPixelsSet(p1, p2) {
+    const pixels = new Set();
+    this.getLinePixels(p1, p2).forEach(element => {
+      this.getPixels(element.x, element.y).forEach(element => {
+        pixels.add(pixelToIndex(element))
+      });
+    });
     return pixels;
   }
 }
