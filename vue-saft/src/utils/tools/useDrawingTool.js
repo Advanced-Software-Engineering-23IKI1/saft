@@ -16,7 +16,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
 
     const brushDbAdd = 2;
     const brushDbRemove = -2;
-    const minAmpAdd = 0.5e-2
+    const minAmpAdd = 1e-1
     const minAmpRemove = 1e-8
 
     let pointers = new Map(); // pointerId -> {x,y}
