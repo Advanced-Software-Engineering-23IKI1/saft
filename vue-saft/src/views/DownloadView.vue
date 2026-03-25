@@ -1,7 +1,6 @@
 <script setup>
+import { Speaker, Volume2 } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router'
-
-import speakericon from '@/assets/img/speaker.png'
 
 </script>
 
@@ -18,7 +17,7 @@ import speakericon from '@/assets/img/speaker.png'
                                         border-2 border-white/50 
                                         transition-all duration-200
                                         touch-manipulation">
-        <img :src="speakericon" class="w-11 h-11 brightness-0 invert" alt="Mikrofon" />
+        <Volume2 class="w-11 h-11 brightness-0 invert" />
       </button>
     </div>
     <div class="flex justify-center">

@@ -11,10 +11,14 @@ import SpectrogramCanvas from '@/components/ui/SpectrogramCanvas.vue'
 import { Tool } from '@/enums/ToolEnum.js';
 import { applyCombinedUpdateToSpectrogram, redoUpdate, undoUpdate } from '@/utils/updateUtils';
 import { updateStore } from '@/store/store';
+import { Save, LoaderCircle, HardDriveDownload, Download } from 'lucide-vue-next';
+import { useSaftFileWorker } from '@/utils/useSaftFileWorker';
+
 
 
 
 const activeTool = ref(Tool.Movement)
+const { exportSpectrogram, isLoading } = useSaftFileWorker()
 
 const spectrogramRef = ref(null)
 
@@ -42,6 +46,7 @@ function redraw() {
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
                         <Move class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
+
                     </button>
                     <button @click="activeTool = Tool.Brush"
                         :class="[activeTool === Tool.Brush ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
@@ -54,23 +59,25 @@ function redraw() {
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
                         <Eraser class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
+
                     </button>
                     <button @click="activeTool = Tool.Text"
                         :class="[activeTool === Tool.Text ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="3">
                         <TextCursorInput class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
+
                     </button>
                     <button @click="activeTool = Tool.Image"
                         :class="[activeTool === Tool.Image ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="4">
                         <ImagePlus class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto"/>
-            
+        
                     </button>
                 </div>
-                
-                <!-- v-show="activeTool === Tool.Brush || activeTool === Tool.Text || activeTool === Tool.Image" -->
+              
+
                 <div
                     class="flex gap-2 bg-saft-brown-50 backdrop-blur-lg border-2 border-saft-blue-200/90 rounded-2xl p-3 shadow-2xl">
                     <button @click="() => { redoUpdate(); redraw(); }"
@@ -87,11 +94,19 @@ function redraw() {
                         <span class="text-[10px] text-black dark:invert leading-none mt-1">Apply</span>
                     </button>
 
+
                     <button @click="() => { undoUpdate(); redraw(); }"
                         :class="[(updateStore.activeUpdates.length > 0) ? 'bg-saft-main-500 hover:bg-saft-main-600' : 'bg-saft-main-200 hover:bg-saft-main-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex flex-col items-center justify-center shadow-lg transition-all relative overflow-hidden">
                         <Undo class="w-7 h-7 stroke-black dark:invert" />
                         <span class="text-[10px] text-black dark:invert leading-none mt-1">Undo</span>
+                    </button>
+              
+                    <button @click="exportSpectrogram" :disabled="isLoading"
+                        class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 disabled:bg-saft-main-300 disabled:cursor-not-allowed active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
+                        data-tool="5">
+                        <LoaderCircle v-if="isLoading" class="w-6 h-6 animate-spin  dark:invert" />
+                        <Download v-else class="w-6 h-6 dark:invert" />
                     </button>
 
                 </div>

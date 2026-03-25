@@ -1,6 +1,7 @@
 import { updateStore } from "@/store/store";
 import { fft } from "./fft";
 
+
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
 /**
@@ -134,27 +135,29 @@ function applyHannWindow(frame, size) {
 }
 
 /**
- * Prepare derived rendering metadata for a spectrogram so it can be drawn efficiently
- * (dimensions, bin range, and dB normalization range).
+ * Prepares derived rendering metadata for a spectrogram so it can be drawn
+ * efficiently, including dimensions, frequency bin range, and dB normalization range.
  *
- * @param {{ data: Array<Array<number>>, freqBins: number, timeFrames: number }} spectrogram
- * Spectrogram object containing the magnitude data and its time/frequency dimensions.
- * @param {number} sampleRate Sample rate of the original audio (Hz).
- * @param {number} [minFreq=0] Minimum frequency to include (Hz).
- * @param {number} [maxFreq=sampleRate/2] Maximum frequency to include (Hz).
- * @param {HTMLProgressElement} renderDataProgressBar Progress bar to update during dB range computation.
- * @returns {{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }}
- * Rendering data including the original spectrogram data plus computed width/height, selected bin range,
- * and dB range for normalization.
+ * @param {Array<Array<number>>} data - Raw spectrogram magnitude data (time × frequency).
+ * @param {number} freqBins - Number of frequency bins in the spectrogram.
+ * @param {number} timeFrames - Number of time frames in the spectrogram.
+ * @param {number} sampleRate - Sample rate of the original audio (Hz).
+ * @param {number} [minFreq=0] - Minimum frequency to include (Hz).
+ * @param {number} [maxFreq=sampleRate/2] - Maximum frequency to include (Hz).
+ * @param {HTMLProgressElement} renderDataProgressBar - Progress bar updated during dB range computation.
+ * @returns {Promise<{ data: Array<Array<number>>, width: number, height: number, minBin: number, maxBin: number, minDB: number, maxDB: number }>}
+ * The original spectrogram data alongside computed width, height, selected bin
+ * range, and dB range for normalization.
  */
 export async function computeSpectrogramRenderingData(
-    spectrogram,
+    data,
+    freqBins,
+    timeFrames,
     sampleRate,
     minFreq = 0,
     maxFreq = sampleRate / 2,
     renderDataProgressBar
 ) {
-    const { data, freqBins, timeFrames } = spectrogram;
     const { maxBin, minBin } = computeBins(freqBins, sampleRate, minFreq, maxFreq);
 
     const height = maxBin - minBin + 1
@@ -208,6 +211,7 @@ export function renderPixels(renderData, height_offset, width_offset, colormap, 
     // zoom = 1 => 1:1, zoom = 2 => 0.5 source px per screen px (zoomed in),
     // zoom = 0.5 => 2 source px per screen px (zoomed out).
     const step = 1 / zoom;
+
 
     var imagedata = ctx.createImageData(boxwidth, boxheight);
 
@@ -326,3 +330,6 @@ function computeBins(freqBins, sampleRate, minFreq, maxFreq) {
 
     return { maxBin, minBin };
 }
+
+
+
