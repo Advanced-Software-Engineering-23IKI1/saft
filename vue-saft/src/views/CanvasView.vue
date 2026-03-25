@@ -73,8 +73,8 @@ const { exportSpectrogram, isLoading } = useSaftFileWorker()
                     <button @click="exportSpectrogram" :disabled="isLoading"
                         class="w-14 h-14 bg-saft-main-400 hover:bg-saft-main-500 disabled:bg-saft-main-300 disabled:cursor-not-allowed active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="5">
-                        <LoaderCircle v-if="isLoading" class="w-6 h-6 animate-spin text-white" />
-                        <Save v-else class="w-6 h-6 text-white" />
+                        <LoaderCircle v-if="isLoading" class="w-6 h-6 animate-spin  dark:invert" />
+                        <Save v-else class="w-6 h-6 dark:invert" />
                     </button>
                 </div>
             </div>

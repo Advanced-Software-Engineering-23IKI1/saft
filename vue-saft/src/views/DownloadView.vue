@@ -1,5 +1,5 @@
 <script setup>
-import { Speaker } from 'lucide-vue-next';
+import { Speaker, Volume2 } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router'
 
 </script>
@@ -17,7 +17,7 @@ import { RouterLink } from 'vue-router'
                                         border-2 border-white/50 
                                         transition-all duration-200
                                         touch-manipulation">
-         <Speaker class="w-11 h-11 brightness-0 invert"/>
+        <Volume2 class="w-11 h-11 brightness-0 invert" />
       </button>
     </div>
     <div class="flex justify-center">

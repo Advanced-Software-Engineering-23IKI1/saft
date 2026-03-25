@@ -7,12 +7,9 @@ import bgUrl from '@/assets/img/background.png'
 import bgDarkUrl from '@/assets/img/background-dark.png'
 import logoUrl from '@/assets/img/saftLogoOrange.png'
 import { Moon, Sun } from 'lucide-vue-next'
-const isDark = ref(false)
 
-const toggleDarkMode = () => {
-  isDark.value = !isDark.value
-
-  if (isDark.value) {
+const toggleDarkMode = (event) => {
+  if (event.target.checked) {
     document.documentElement.classList.add('dark-mode')
   } else {
     document.documentElement.classList.remove('dark-mode')
@@ -43,27 +40,23 @@ onBeforeMount(() => {
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                px-2 py-4 max-h-[90vh] overflow-auto">
 
-        <div class="relative w-full mb-6">
-          <div class="flex items-center justify-center gap-4">
+        <div class="flex items-center justify-center gap-4 mx-auto mb-0">
             <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
               @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
             <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
           </div>
 
-          <div class="absolute right-4 top-1/2 -translate-y-1/2">
-            <button type="button" @click="toggleDarkMode"
-              class="flex items-center justify-center rounded-full p-2 transition-colors duration-300"
-              :class="isDark ? 'bg-saft-main-500 text-white' : 'bg-saft-main-500 text-white'">
-              <Sun v-if="!isDark" class="w-5 h-5" />
-              <Moon v-else class="w-5 h-5" />
-            </button>
-          </div>
-
+        <!-- Dark Mode Toggle -->
+        <div class="flex-1 flex justify-center py-3">
+          <label class="inline-flex items-center cursor-pointer">
+            <Sun class="w-5 h-5 dark:invert" />
+            <input type="checkbox" value="" class="sr-only peer" @change="toggleDarkMode">
+            <div
+              class="relative mx-3 w-9 h-5 bg-gray-800 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-saft-main-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-gray-200 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-saft-main-500">
+            </div>
+            <Moon class="w-5 h-5 dark:invert" />
+          </label>
         </div>
-
-
-
-
 
         <Navbar />
         <main class="mx-auto max-w-5xl px-0 py-0">
