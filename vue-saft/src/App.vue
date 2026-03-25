@@ -1,10 +1,12 @@
 <script setup>
 import { RouterView } from 'vue-router'
 import Navbar from './components/ui/Navbar.vue'
+import { onBeforeMount, onMounted, ref } from 'vue'
 
 import bgUrl from '@/assets/img/background.png'
 import bgDarkUrl from '@/assets/img/background-dark.png'
 import logoUrl from '@/assets/img/saftLogoOrange.png'
+import { Moon, Sun } from 'lucide-vue-next'
 
 const toggleDarkMode = (event) => {
   if (event.target.checked) {
@@ -13,6 +15,21 @@ const toggleDarkMode = (event) => {
     document.documentElement.classList.remove('dark-mode')
   }
 }
+const preventBrowserZoom = (event) => {
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('wheel', preventBrowserZoom, { passive: false })
+})
+
+onBeforeMount(() => {
+  window.removeEventListener('wheel', preventBrowserZoom, { passive: false })
+})
+
+
 </script>
 
 <template>
@@ -22,25 +39,24 @@ const toggleDarkMode = (event) => {
       <div class="w-full max-w-3xl backdrop-blur-sm bg-saft-brown-50/80
                border border-saft-blue-200/50 rounded-3xl shadow-2xl
                px-2 py-4 max-h-[90vh] overflow-auto">
-        <div class="flex items-center justify-center gap-4 mx-auto mb-6">
-          <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo" @click="/*trust me*/(e) => {let l=e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) {l.getRootNode().documentElement.classList.add('uwu')}}"/>
-          <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
-        </div>
 
+        <div class="flex items-center justify-center gap-4 mx-auto mb-0">
+            <img :src="logoUrl" class="w-15 h-auto" alt="SAFT Logo"
+              @click="/*trust me*/(e) => { let l = e.target; l.c = (l.c || 0) + 1; console.log(l.c); l.style = `transform: rotate(${l.c >= 2 ? l.c * 15 : 0}deg)`; if (l.c >= 30) { l.getRootNode().documentElement.classList.add('uwu') } }" />
+            <span class="text-saft-brown-900 font-bold text-4xl">S.A.F.T.</span>
+          </div>
 
         <!-- Dark Mode Toggle -->
-        <div class="flex-1 flex justify-end py-3">
+        <div class="flex-1 flex justify-center py-3">
           <label class="inline-flex items-center cursor-pointer">
-            <img src="./assets/img/sun.png" alt="Dark Mode" class="w-5 h-5 dark:invert-[80%]">
+            <Sun class="w-5 h-5 dark:invert" />
             <input type="checkbox" value="" class="sr-only peer" @change="toggleDarkMode">
             <div
               class="relative mx-3 w-9 h-5 bg-gray-800 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-saft-main-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-gray-200 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-saft-main-500">
             </div>
-            <img src="./assets/img/moon.png" alt="Light Mode" class="w-5 h-5 dark:invert-[80%]">
+            <Moon class="w-5 h-5 dark:invert" />
           </label>
         </div>
-
-
 
         <Navbar />
         <main class="mx-auto max-w-5xl px-0 py-0">
@@ -66,5 +82,7 @@ div#background-wrapper {
   /* filter: invert(); */
 }
 
-.uwu div#background-wrapper { background-image: url('https://images.stockcake.com/public/3/7/7/377c4d6a-c3bd-4154-8d8a-00fa793e4648_large/refreshing-juice-joy-stockcake.jpg'); }
+.uwu div#background-wrapper {
+  background-image: url('https://images.stockcake.com/public/3/7/7/377c4d6a-c3bd-4154-8d8a-00fa793e4648_large/refreshing-juice-joy-stockcake.jpg');
+}
 </style>
