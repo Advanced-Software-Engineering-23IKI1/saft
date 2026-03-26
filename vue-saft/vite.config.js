@@ -13,8 +13,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: [
-        'favicon.png',
-        'apple-touch-icon.png'
+        'favicon.png'
       ],
       manifest: {
         name: 'SAFT Audio File Transformer',
