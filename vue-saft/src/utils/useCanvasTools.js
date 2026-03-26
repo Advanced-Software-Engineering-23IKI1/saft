@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import { useMovementTool } from './tools/useMovementTool';
 import { useDrawingTool } from './tools/useDrawingTool';
+import { computeInternalPos } from './canvasUtils';
 
 
 
@@ -12,8 +13,8 @@ export function useCanvasTools(canvasDimensions, canvasRef, overlayRef, spectrog
 
     const canvasOffsets = reactive({
         internalWidthOffset: 0,
-        internalHeightOffset: 0,
-        maxInternalHeightOffset: 1,
+        internalHeightOffset: Math.max(0, spectrogramStore.renderData.height),
+        maxInternalHeightOffset: Math.max(0, spectrogramStore.renderData.height),
         maxInternalWidthOffset: 1,
     })
     const canvasScaleFactor = ref(1);
