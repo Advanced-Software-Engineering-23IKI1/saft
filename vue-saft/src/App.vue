@@ -8,13 +8,30 @@ const bgDarkUrl = '/images/background-dark.png'
 const logoUrl = '/images/favicon.png'
 import { Moon, Sun } from 'lucide-vue-next'
 
+const setThemeColor = (color) => {
+  let meta = document.querySelector('meta[name="theme-color"]:not([media])')
+
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.setAttribute('name', 'theme-color')
+    document.head.appendChild(meta)
+  }
+
+  meta.setAttribute('content', color)
+}
+
+
 const toggleDarkMode = (event) => {
   if (event.target.checked) {
     document.documentElement.classList.add('dark-mode')
+    setThemeColor('#0f0f0f')
   } else {
     document.documentElement.classList.remove('dark-mode')
+    setThemeColor('#f8f5f2')
   }
 }
+
+
 const preventBrowserZoom = (event) => {
   if (event.ctrlKey || event.metaKey) {
     event.preventDefault()
@@ -50,12 +67,12 @@ onBeforeMount(() => {
         <!-- Dark Mode Toggle -->
         <div class="flex-1 flex justify-center py-3">
           <label class="inline-flex items-center cursor-pointer">
-            <Sun class="w-5 h-5 dark:invert" />
+            <Sun class="w-5 h-5 dark:invert stroke-black" />
             <input type="checkbox" value="" class="sr-only peer" @change="toggleDarkMode">
             <div
               class="relative mx-3 w-9 h-5 bg-gray-800 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-saft-main-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-gray-200 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-saft-main-500">
             </div>
-            <Moon class="w-5 h-5 dark:invert" />
+            <Moon class="w-5 h-5 stroke-black dark:invert" />
           </label>
         </div>
 

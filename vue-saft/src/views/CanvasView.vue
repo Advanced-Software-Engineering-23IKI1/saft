@@ -75,20 +75,20 @@ async function goNext(navigate) {
                         :class="[activeTool === Tool.Movement ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="1">
-                        <Move class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto" />
+                        <Move class="w-7 h-7 stroke-black dark:invert absolute inset-0 m-auto" />
 
                     </button>
                     <button @click="activeTool = Tool.Brush"
                         :class="[activeTool === Tool.Brush ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
-                        <Brush class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto" />
+                        <Brush class="w-7 h-7 stroke-black dark:invert absolute inset-0 m-auto" />
                     </button>
                     <button @click="activeTool = Tool.Brush2"
                         :class="[activeTool === Tool.Brush2 ? 'bg-saft-mint-500 hover:bg-saft-mint-600' : 'bg-saft-mint-200 hover:bg-saft-mint-300']"
                         class="w-14 h-14 active:scale-[0.95] rounded-xl flex items-center justify-center shadow-lg transition-all relative overflow-hidden"
                         data-tool="2">
-                        <Eraser class="w-7 h-7 brightness-0 dark:invert absolute inset-0 m-auto" />
+                        <Eraser class="w-7 h-7 stroke-black dark:invert absolute inset-0 m-auto" />
 
                     </button>
                 </div>
