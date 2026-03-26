@@ -96,7 +96,7 @@ export function useAudioRecorder() {
     recordedFileSelected.value = false
     
 
-    recorderConstraints = {
+    let recorderConstraints = {
       // remove all audio processing to get the rawest possible input for better peak level analysis
       echoCancellation: false,
       noiseSuppression: false,
