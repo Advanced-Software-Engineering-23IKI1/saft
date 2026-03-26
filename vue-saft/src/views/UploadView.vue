@@ -210,6 +210,8 @@ async function goNext(navigate) {
                 <!-- Create Spectrogram Button -->
                 <button id="createSpectrogramButton" class="w-full max-w-sm py-4
                         text-lg text-white font-semibold
+                        bg-saft-blue-500
+                        hover:bg-saft-blue-600 
                         active:scale-[0.95]
                         rounded-full flex items-center justify-center 
                         shadow-xl

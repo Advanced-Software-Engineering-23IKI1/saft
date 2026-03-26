@@ -1,40 +1,6 @@
 import { fftComplex } from './fft.js';
 import { applyHannWindow } from './spectrogram.js';
-// Load PNG -> magnitude spectrogram
-export async function loadSpectrogramFromPng(file) {
-    // `file` can be a File object (from <input>) or a URL string
-    const url = typeof file === 'string' ? file : URL.createObjectURL(file);
-
-    const img = await new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = reject;
-        image.src = url;
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-
-    if (typeof file !== 'string') URL.revokeObjectURL(url);
-
-    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const frames = canvas.width;
-    const freqBins = canvas.height;
-    const mag = Array.from({ length: frames }, () => new Float32Array(freqBins));
-
-    for (let x = 0; x < frames; x++) {
-        for (let y = 0; y < freqBins; y++) {
-            const idx = (y * frames + x) * 4;
-            const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3 / 255;
-            mag[x][freqBins - 1 - y] = gray * gray;
-        }
-    }
-
-    return { mag, frames, freqBins };
-}
+const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
 // Updated STFT using your applyHannWindow
 export function stft(signal, nFFT, hopLength) {
@@ -86,7 +52,7 @@ function overlapAdd(frames, hopLength) {
 }
 
 // Griffin-Lim 
-export function griffinLimFromImage(mag, nFFT, hopLength, nIter = 32) {
+export async function griffinLimFromImage(mag, nFFT, hopLength, nIter = 32, conversionName, conversionProgress) {
     const nFrames = mag.length;
     const freqBins = mag[0].length;
     if (freqBins !== nFFT / 2 + 1) {
@@ -98,6 +64,9 @@ export function griffinLimFromImage(mag, nFFT, hopLength, nIter = 32) {
     let stftFrames = [];
 
     // Random phase init
+    conversionName.value = "Random Phase Init"
+    let updateInterval = Math.max(1, Math.floor(nFrames / 50));
+    let updateIndex = 0;
     for (let t = 0; t < nFrames; t++) {
         const real = new Float64Array(nFFT);
         const imag = new Float64Array(nFFT);
@@ -112,9 +81,17 @@ export function griffinLimFromImage(mag, nFFT, hopLength, nIter = 32) {
             imag[m] = -imag[k];
         }
         stftFrames.push({ re: real, im: imag });
+        updateIndex += 1;
+        if (updateIndex % updateInterval === 0) {
+            conversionProgress.value = updateIndex / nFrames;
+            await nextFrame();
+        }
     }
 
     // Iterations
+    conversionName.value = "Running Iterations"
+    updateInterval = Math.max(1, Math.floor(nIter / 50));
+    updateIndex = 0;
     for (let it = 0; it < nIter; it++) {
         const y = istft(stftFrames, nFFT, hopLength);
         const newStft = stft(y, nFFT, hopLength);
@@ -134,7 +111,60 @@ export function griffinLimFromImage(mag, nFFT, hopLength, nIter = 32) {
                 imag[m] = -imag[k];
             }
         }
+        updateIndex += 1;
+        if (updateIndex % updateInterval === 0) {
+            conversionProgress.value = updateIndex / nIter;
+            await nextFrame();
+        }
     }
 
     return istft(stftFrames, nFFT, hopLength);
+}
+
+
+
+function floatTo16BitPCM(float32) {
+    const out = new Int16Array(float32.length);
+    for (let i = 0; i < float32.length; i++) {
+        let s = Math.max(-1, Math.min(1, float32[i]));
+        out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    }
+    return out;
+}
+
+function writeString(view, offset, str) {
+    for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+    }
+}
+
+export function encodeWAV(samples, sampleRate, numChannels = 1) {
+    const pcm = floatTo16BitPCM(samples);
+    const bitsPerSample = 16;
+    const blockAlign = numChannels * bitsPerSample / 8;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = pcm.length * 2;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitsPerSample, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    let offset = 44;
+    for (let i = 0; i < pcm.length; i++, offset += 2) {
+        view.setInt16(offset, pcm[i], true);
+    }
+
+    return new Blob([buffer], { type: 'audio/wav' });
 }
