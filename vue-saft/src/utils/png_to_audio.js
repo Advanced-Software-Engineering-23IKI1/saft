@@ -54,13 +54,20 @@ function stftFrameInto(signal, offset, nFFT, win, outRe, outIm, fftRe, fftIm) {
     }
 }
 
-function istftFromHalfSpectra(framesRe, framesIm, nFFT, hopLength, win, outY, outNorm, fftRe, fftIm) {
+
+async function istftFromHalfSpectra(framesRe, framesIm, nFFT, hopLength, win, outY, outNorm, fftRe, fftIm, conversionName, conversionProgress) {
     const nFrames = framesRe.length;
     const freqBins = framesRe[0].length;
     const totalLength = hopLength * (nFrames - 1) + nFFT;
 
     outY.fill(0, 0, totalLength);
     outNorm.fill(0, 0, totalLength);
+
+    conversionName.value = "Inverse STFT";
+    conversionProgress.value = 0;
+    let updateInterval = Math.max(1, Math.floor(nFrames / 50));
+    let updateIndex = 0;
+
 
     for (let t = 0; t < nFrames; t++) {
         buildHermitianSpectrum(framesRe[t], framesIm[t], fftRe, fftIm, nFFT, freqBins);
@@ -74,6 +81,13 @@ function istftFromHalfSpectra(framesRe, framesIm, nFFT, hopLength, win, outY, ou
             outY[offset + n] += v;
             outNorm[offset + n] += win[n] * win[n];
         }
+
+        updateIndex += 1;
+        if (updateIndex % updateInterval === 0) {
+            conversionProgress.value = updateIndex / nFrames;
+            await nextFrame();
+        }
+
     }
 
     for (let i = 0; i < totalLength; i++) {
@@ -84,18 +98,17 @@ function istftFromHalfSpectra(framesRe, framesIm, nFFT, hopLength, win, outY, ou
     return outY.subarray(0, totalLength);
 }
 
-export async function griffinLimFromImageFast(
+
+export async function reverseFFT(
     mag,
+    phase,
     nFFT,
     hopLength,
-    nIter = 12,
     conversionName,
     conversionProgress
 ) {
     const nFrames = mag.length;
     const freqBins = mag[0].length;
-
-    const momentum = .99
 
     if (freqBins !== (nFFT >> 1) + 1) {
         const rawNFFT = (freqBins - 1) * 2;
@@ -105,10 +118,8 @@ export async function griffinLimFromImageFast(
 
     const win = makeHannWindow(nFFT);
     const totalLength = hopLength * (nFrames - 1) + nFFT;
-    const eps = 1e-12;
 
     const spec = makeComplexFrames(nFrames, freqBins);
-    const prevSpec = momentum > 0 ? makeComplexFrames(nFrames, freqBins) : null;
 
     const y = new Float32Array(totalLength);
     const norm = new Float32Array(totalLength);
@@ -116,12 +127,7 @@ export async function griffinLimFromImageFast(
     const fullRe = new Float32Array(nFFT);
     const fullIm = new Float32Array(nFFT);
 
-    const anaRe = new Float32Array(nFFT);
-    const anaIm = new Float32Array(nFFT);
-
-
-
-    conversionName.value = "First Loop"
+    conversionName.value = "Building spectrum";
     let updateInterval = Math.max(1, Math.floor(nFrames / 50));
     let updateIndex = 0;
 
@@ -129,12 +135,13 @@ export async function griffinLimFromImageFast(
         const re = spec.re[t];
         const im = spec.im[t];
         const magFrame = mag[t];
+        const phaseFrame = phase[t];
 
         for (let k = 0; k < freqBins; k++) {
-            const phase = (Math.random() * 2 - 1) * Math.PI;
             const m = magFrame[k];
-            re[k] = m * Math.cos(phase);
-            im[k] = m * Math.sin(phase);
+            const p = phaseFrame[k];
+            re[k] = m * Math.cos(p);
+            im[k] = m * Math.sin(p);
         }
 
         updateIndex += 1;
@@ -144,52 +151,26 @@ export async function griffinLimFromImageFast(
         }
     }
 
-    conversionName.value = "Second Loop"
-    updateInterval = Math.max(1, Math.floor(nIter / 50));
-    updateIndex = 0;
 
-    for (let it = 0; it < nIter; it++) {
-        istftFromHalfSpectra(spec.re, spec.im, nFFT, hopLength, win, y, norm, fullRe, fullIm);
 
-        for (let t = 0; t < nFrames; t++) {
-            const offset = t * hopLength;
-            stftFrameInto(y, offset, nFFT, win, anaRe, anaIm, fullRe, fullIm);
+    const out = (await istftFromHalfSpectra(
+        spec.re,
+        spec.im,
+        nFFT,
+        hopLength,
+        win,
+        y,
+        norm,
+        fullRe,
+        fullIm,
+        conversionName,
+        conversionProgress
+    )).slice();
 
-            const re = spec.re[t];
-            const im = spec.im[t];
-            const magFrame = mag[t];
-            const prevRe = prevSpec ? prevSpec.re[t] : null;
-            const prevIm = prevSpec ? prevSpec.im[t] : null;
-
-            for (let k = 0; k < freqBins; k++) {
-                let xr = anaRe[k];
-                let xi = anaIm[k];
-
-                if (momentum > 0 && prevRe && prevIm) {
-                    const oldRe = re[k];
-                    const oldIm = im[k];
-                    xr = xr + momentum * (xr - prevRe[k]);
-                    xi = xi + momentum * (xi - prevIm[k]);
-                    prevRe[k] = oldRe;
-                    prevIm[k] = oldIm;
-                }
-
-                const scale = magFrame[k] / (Math.hypot(xr, xi) + eps);
-                re[k] = xr * scale;
-                im[k] = xi * scale;
-            }
-        }
-
-        updateIndex += 1;
-        if (updateIndex % updateInterval === 0) {
-            conversionProgress.value = updateIndex / nIter;
-            await nextFrame();
-        }
-
-    }
-
-    return istftFromHalfSpectra(spec.re, spec.im, nFFT, hopLength, win, y, norm, fullRe, fullIm).slice();
+    conversionProgress.value = 1;
+    return out;
 }
+
 
 
 function floatTo16BitPCM(float32) {

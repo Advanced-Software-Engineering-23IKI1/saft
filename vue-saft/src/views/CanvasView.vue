@@ -7,7 +7,7 @@ import { Tool } from '@/enums/ToolEnum.js';
 import { applyCombinedUpdateToSpectrogram, redoUpdate, undoUpdate } from '@/utils/updateUtils';
 import { audioStore, spectrogramStore, updateStore } from '@/store/store';
 import { useSaftFileWorker } from '@/utils/useSaftFileWorker';
-import { encodeWAV, griffinLimFromImageFast } from '@/utils/png_to_audio';
+import { encodeWAV, reverseFFT } from '@/utils/png_to_audio';
 
 const conversionProgress = ref(0)
 const conversionName = ref('Create Audio')
@@ -33,11 +33,12 @@ async function convertToWav() {
     redraw();
 
     const data = spectrogramStore.renderData.data
+    const phase = spectrogramStore.renderData.phase
     const windowSize = spectrogramStore.renderData.windowSize
     const hopSize = spectrogramStore.renderData.hopSize
     const sampleRate = spectrogramStore.renderData.sampleRate
 
-    const samples = await griffinLimFromImageFast(data, windowSize, hopSize, 16, conversionName, conversionProgress);
+    const samples = await reverseFFT(data, phase, windowSize, hopSize, conversionName, conversionProgress);
     audioStore.audioFile = encodeWAV(samples, sampleRate);
 }
 
