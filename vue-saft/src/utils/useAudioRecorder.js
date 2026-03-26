@@ -101,6 +101,8 @@ export function useAudioRecorder() {
       echoCancellation: false,
       noiseSuppression: false,
       autoGainControl: false,
+      sampleRate: 48000,
+      channelCount: 1,
     }
 
     try {
