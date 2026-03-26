@@ -3,8 +3,8 @@ import { RouterView } from 'vue-router'
 import Navbar from './components/ui/Navbar.vue'
 import { onBeforeMount, onMounted, ref } from 'vue'
 
-import bgUrl from '@/assets/img/background.png'
-import bgDarkUrl from '@/assets/img/background-dark.png'
+const bgUrl = '/images/background.png'
+const bgDarkUrl = '/images/background-dark.png'
 import logoUrl from '@/assets/img/saftLogoOrange.png'
 import { Moon, Sun } from 'lucide-vue-next'
 
