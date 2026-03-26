@@ -15,7 +15,7 @@ export function useDrawingTool(canvasDimensions, canvasRef, overlayRef, spectrog
     let blockDrawingUntilAllTouchesUp = false;
 
     const brushDbAdd = 2;
-    const brushDbRemove = -2;
+    const brushDbRemove = -10;
     const minAmpAdd = 1e-1
     const minAmpRemove = 1e-8
 
