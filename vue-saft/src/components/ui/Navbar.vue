@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { spectrogramStore } from '@/store/store.js';
+import { audioStore, spectrogramStore } from '@/store/store.js';
 
 const route = useRoute()
 
@@ -9,10 +9,14 @@ function spectrogramDataAvailable() {
   return spectrogramStore.renderData
 }
 
+function audioFileAvailable() {
+  return audioStore.audioFile
+}
+
 const steps = computed(() => ([
   { name: 'upload', label: 'Upload', enabled: true },
   { name: 'canvas', label: 'Canvas', enabled: spectrogramDataAvailable() },
-  { name: 'download', label: 'Download', enabled: spectrogramDataAvailable() },
+  { name: 'download', label: 'Download', enabled: audioFileAvailable() },
 ]))
 
 function stepClass(enabled, active) {
