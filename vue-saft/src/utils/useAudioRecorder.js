@@ -94,9 +94,17 @@ export function useAudioRecorder() {
     recordChunks = []
     recordedFile.value = null
     recordedFileSelected.value = false
+    
+
+    recorderConstraints = {
+      // remove all audio processing to get the rawest possible input for better peak level analysis
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
+    }
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true, ...recorderConstraints })
       isRecording.value = true
 
       audioContext = new AudioContext()
