@@ -13,7 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: [
-        'favicon.png'
+        'images/*.png',
+        'images/*.jpg'
       ],
       manifest: {
         name: 'SAFT Audio File Transformer',
@@ -25,7 +26,7 @@ export default defineConfig({
         theme_color: '#ffffff',
         icons: [
           {
-            src: 'favicon.png',
+            src: 'images/favicon.png',
             sizes: '512x512',
             type: 'image/png'
           }
