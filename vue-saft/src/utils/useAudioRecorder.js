@@ -108,7 +108,7 @@ export function useAudioRecorder() {
     }
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ recorderConstraints })
+      stream = await navigator.mediaDevices.getUserMedia(recorderConstraints)
       isRecording.value = true
 
       audioContext = new AudioContext()
