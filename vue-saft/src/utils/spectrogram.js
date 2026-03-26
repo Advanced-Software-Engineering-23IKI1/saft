@@ -5,7 +5,7 @@ import { fft } from "./fft";
 const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
 
 /**
- * Compute a magnitude spectrogram from audio samples.
+ * Compute a magnitude + phase spectrogram from audio samples.
  *
  * @param {ArrayLike<number>} samples Real-valued audio samples (Float32Array).
  * @param {number} sampleRate Sample rate in Hz.
@@ -13,32 +13,46 @@ const nextFrame = () => new Promise(requestAnimationFrame); // yield to repaint
  * @param {number} [hopSize=512] Hop size between frames in samples.
  * @param {HTMLProgressElement} fftProgress Progress bar to update during FFT computation.
  * @returns {{
- *   data: number[][],
+ *   data: Float32Array[],
+ *   phase: Float32Array[],
  *   freqBins: number,
  *   timeFrames: number,
  *   freqResolution: number,
  *   timeResolution: number
  * }}
  */
-export async function computeSpectrogram(samples, sampleRate, windowSize = 2048, hopSize = 512, fftProgress) {
-    // FFT requires power-of-2 window size
+export async function computeSpectrogram(
+    samples,
+    sampleRate,
+    windowSize = 2048,
+    hopSize = 512,
+    fftProgress
+) {
     if ((windowSize & (windowSize - 1)) !== 0) {
         throw new Error(`windowSize must be power of 2, got ${windowSize}`);
     }
 
-    // Input sanity: fail fast if samples have NaN/Infinity
     let firstBad = -1;
     for (let i = 0; i < Math.min(samples.length, 500000); i++) {
-        if (!Number.isFinite(samples[i])) { firstBad = i; break; }
+        if (!Number.isFinite(samples[i])) {
+            firstBad = i;
+            break;
+        }
     }
     if (firstBad >= 0) {
         throw new Error(`Input samples contain NaN/Infinity at index ${firstBad}: ${samples[firstBad]}`);
     }
 
-    const { spectrogram, half } = await computeFFTs(windowSize, samples, hopSize, fftProgress);
+    const { spectrogram, phaseSpectrogram, half } = await computeFFTs(
+        windowSize,
+        samples,
+        hopSize,
+        fftProgress
+    );
 
     return {
         data: spectrogram,
+        phase: phaseSpectrogram,
         freqBins: half,
         timeFrames: spectrogram.length,
         freqResolution: sampleRate / windowSize,
@@ -49,46 +63,41 @@ export async function computeSpectrogram(samples, sampleRate, windowSize = 2048,
 
 
 /**
- * Compute FFT magnitudes over sliding windows to generate a spectrogram.
+ * Compute FFT magnitudes and phases over sliding windows to generate a spectrogram.
  *
  * @param {number} windowSize Number of samples per FFT window.
  * @param {Float32Array|Array<number>} samples Input audio samples.
  * @param {number} hopSize Step size between successive windows.
  * @param {HTMLProgressElement} fftProgress Progress bar to update during FFT computation.
- * @returns {{ spectrogram: Array<Array<number>>, half: number }}
- *          - spectrogram: 2D array [time][frequency] of magnitudes.
- *          - half: Number of positive frequency bins per window.
+ * @returns {{
+ *   spectrogram: Float32Array[],
+ *   phaseSpectrogram: Float32Array[],
+ *   half: number
+ * }}
  */
 async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
     const spectrogram = [];
+    const phaseSpectrogram = [];
     const half = Math.floor(windowSize / 2) + 1;
     const maxVal = samples.length;
     fftProgress.value = 0;
 
-    // figure out how many FFT frames we will generate (window-hopping)
     const numFrames = Math.floor((maxVal - windowSize) / hopSize) + 1;
-    // determine how frequently to update so we get ~50 progress steps
     const fftUpdateInterval = Math.max(1, Math.floor(numFrames / 50));
-    // index for progress updates
     let frameIndex = 0;
 
     for (let start = 0; start + windowSize <= maxVal; start += hopSize) {
-
-        // Frame (works for Float32Array too)
         const frame = samples.slice(start, start + windowSize);
-
-        // Window -> plain JS number[] (hardens against typed-array quirks)
         const windowed = applyHannWindow(frame, windowSize);
-
-        // Numeric FFT (returns {re, im})
         const out = fft(windowed);
 
         if (!out || !out.re || !out.im) {
             throw new TypeError('fft() must return an object { re, im }');
         }
-        const re = out.re, im = out.im;
 
-        // Tripwire: detect NaNs early in FFT output
+        const re = out.re;
+        const im = out.im;
+
         for (let k = 0; k < Math.min(16, re.length); k++) {
             if (!Number.isFinite(re[k]) || !Number.isFinite(im[k])) {
                 throw new Error(`FFT produced NaN/Infinity at bin ${k}`);
@@ -96,23 +105,33 @@ async function computeFFTs(windowSize, samples, hopSize, fftProgress) {
         }
 
         const magnitude = new Float32Array(half);
+        const phase = new Float32Array(half);
+
         for (let k = 0; k < half; k++) {
-            const mag = Math.hypot(re[k], im[k]);
+            const real = re[k];
+            const imag = im[k];
+
+            const mag = Math.hypot(real, imag);
             magnitude[k] = Number.isFinite(mag) ? mag : 0;
+
+            const ang = Math.atan2(imag, real);
+            phase[k] = Number.isFinite(ang) ? ang : 0;
         }
 
         spectrogram.push(magnitude);
+        phaseSpectrogram.push(phase);
 
-        // Update progress every N frames to avoid too many UI updates
         frameIndex += 1;
         if (frameIndex % fftUpdateInterval === 0) {
             fftProgress.value = frameIndex / numFrames;
             await nextFrame();
         }
     }
+
     fftProgress.value = 1;
-    return { spectrogram, half };
+    return { spectrogram, phaseSpectrogram, half };
 }
+
 
 /**
  * Apply a Hann window to a frame of samples.
@@ -151,6 +170,7 @@ export function applyHannWindow(frame, size) {
  */
 export async function computeSpectrogramRenderingData(
     data,
+    phase,
     freqBins,
     timeFrames,
     sampleRate,
@@ -164,7 +184,7 @@ export async function computeSpectrogramRenderingData(
     const width = timeFrames;
 
     const { maxDB, minDB } = await computeDBrange(width, data, minBin, maxBin, renderDataProgressBar);
-    return { data, width, height, minBin, maxBin, minDB, maxDB }
+    return { data, phase, width, height, minBin, maxBin, minDB, maxDB }
 }
 
 
