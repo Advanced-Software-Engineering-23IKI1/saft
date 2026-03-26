@@ -5,7 +5,7 @@ import { onBeforeMount, onMounted, ref } from 'vue'
 
 const bgUrl = '/images/background.png'
 const bgDarkUrl = '/images/background-dark.png'
-import logoUrl from '@/assets/img/saftLogoOrange.png'
+const logoUrl = '/images/favicon.png'
 import { Moon, Sun } from 'lucide-vue-next'
 
 const toggleDarkMode = (event) => {
