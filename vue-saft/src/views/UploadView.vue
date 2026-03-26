@@ -40,6 +40,7 @@ async function retrieveSample() {
     let hopSize = 250
 
     let spectrogram = null
+    let phase = null
     let sampleRate = null
     let freqBins = null
     let timeFrames = null
@@ -47,6 +48,7 @@ async function retrieveSample() {
     if (uploadedFile.value && (await isSpectrogram(uploadedFile.value))) {
         const importedSpectrogram = await importSpectrogram(uploadedFile.value)
         spectrogram = importedSpectrogram.spectrogram
+        phase = importedSpectrogram.phase
         freqBins = importedSpectrogram.freqBins
         timeFrames = importedSpectrogram.timeFrames
         sampleRate = importedSpectrogram.sampleRate
@@ -71,6 +73,7 @@ async function retrieveSample() {
             conversionProgress
         )
         spectrogram = computedSpectrogram.data
+        phase = computedSpectrogram.phase
         freqBins = computedSpectrogram.freqBins
         timeFrames = computedSpectrogram.timeFrames
 
@@ -83,6 +86,7 @@ async function retrieveSample() {
     conversionName.value = 'Prerendering Spectrogram'
     spectrogramStore.renderData = await computeSpectrogramRenderingData(
         spectrogram,
+        phase,
         freqBins,
         timeFrames,
         sampleRate,
@@ -210,6 +214,8 @@ async function goNext(navigate) {
                 <!-- Create Spectrogram Button -->
                 <button id="createSpectrogramButton" class="w-full max-w-sm py-4
                         text-lg text-white font-semibold
+                        bg-saft-blue-500
+                        hover:bg-saft-blue-600 
                         active:scale-[0.95]
                         rounded-full flex items-center justify-center 
                         shadow-xl
