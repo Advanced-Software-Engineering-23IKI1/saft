@@ -1,5 +1,11 @@
 # Getestete user Stories
+HTML test reports können mit dem folgenden Command erstellt werden. Sie werden `./coverage` gespeichert.
 
+```bash
+
+# Alle Tests mit HTML-Report
+npm run test:run -- --coverage
+```
 
 ## 1. US11: Audio zu Spektrogramm Umwandlung (Audiodateien entschlüsseln)
 
