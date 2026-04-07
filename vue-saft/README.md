@@ -1,5 +1,9 @@
 ## Project Setup
 
+Before installing, make sure you have a compatible version of Node.js installed:
+
+- Node.js ^20.19.0 or >=22.12.0
+
 ```sh
 npm install
 ```
